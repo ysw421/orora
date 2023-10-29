@@ -1,0 +1,19 @@
+f(x) = x**4 - 3x**3 + 3x
+
+step_size = 1e-4
+
+% {df(x) \over dx} = {f(x + (step_size) - f(x) \over (step_size)}
+
+
+x = -0.5
+v = 20
+
+\begin{for}{i \in {1 \cdot 10000}}
+    v := 0.98v - (step_size){df(x) \over dx}
+    x := x + v
+\end
+
+\begin{cases}
+    print("Fix your parameters") & x <= 2.073 or x >= 2.079 \\
+    print("Congrats") & else
+\end{cases}
