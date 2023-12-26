@@ -29,8 +29,8 @@ int main(int argc, char** argv)
     Token* token = (void*) 0;
     while ((token = lexer_get_token(root)) != (void*) 0)
       printf(
-          "value: %s\t\t col_first: %zd\t\t col: %zd\t\t row_char_first: %zd\t\t row_char: %zd\n",
-          token->value, token->col_first, token->col, token->row_char_first, token->row_char);
+          "value: %s\t\t type: %d\n",
+          token->value, token->type);
 //     printf("%s\n", lexer_get_token(root)->value);
 
     Parser* parser = init_parser(root);
