@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 //     printf("%s\n", lexer_get_token(root)->value);
 
     Parser* parser = init_parser(root);
-    parser_parse(parser, root_envs);
+//     parser_parse(parser, root_envs);
   }
   return 0;
 }
