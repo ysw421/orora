@@ -9,25 +9,25 @@ typedef struct
   
   enum {
     ID,                 // 00: Unknown string,
-                        // 01: e.g) variable... function name...
-    EQEQUAL,            // 02: =
-    COMMA,              // 03: ,
-    STRING,             // 04: In ' ' or " "...
-    PLUS,               // 05: +
-    MINUS,              // 06: -
-    STAR,               // 07: *
-    SLASH,              // 08: /
-    LPAR,               // 09: (
-    RPAR,               // 10: )
-    LBRACE,             // 11: {
-    RBRACE,             // 12: }
-    LSQB,               // 13: [
-    RSQB,               // 14: ]
-    DOLLAR,             // 15: $
-    DOUBLE_BACKSLASH,   // 16: '\\'
-    FLOAT,              // 17: e.g. 3.14
-    INT,                // 18: e.g. 421
-    // EXPONENTIAL      // 19: exponenetial notation number,
+                        //      e.g) variable... function name...
+    EQEQUAL,            // 01: =
+    COMMA,              // 02: ,
+    STRING,             // 03: In ' ' or " "...
+    PLUS,               // 04: +
+    MINUS,              // 05: -
+    STAR,               // 06: *
+    SLASH,              // 07: /
+    LPAR,               // 08: (
+    RPAR,               // 09: )
+    LBRACE,             // 10: {
+    RBRACE,             // 11: }
+    LSQB,               // 12: [
+    RSQB,               // 13: ]
+    DOLLAR,             // 14: $
+    DOUBLE_BACKSLASH,   // 15: '\\'
+    FLOAT,              // 16: e.g. 3.14
+    INT,                // 17: e.g. 421
+    // EXPONENTIAL      // 17: exponenetial notation number,
                         //      e.g. 3.2E+5
   } type;
 
