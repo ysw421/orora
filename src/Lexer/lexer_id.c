@@ -37,11 +37,15 @@ Token* lexer_get_id(Lexer* lexer)
       bool is_special_literal = true;
       switch (lexer->c)
       {
+        case 'a': s[0] = '\a'; break;
+        case 'b': s[0] = '\b'; break;
+        case 'f': s[0] = '\f'; break;
         case 'n': s[0] = '\n'; break;
-        case 't': s[0] = '\t'; break;
         case 'r': s[0] = '\r'; break;
+        case 't': s[0] = '\t'; break;
+        case 'v': s[0] = '\v'; break;
         case '\\': s[0] = '\\'; break;
-        case '\'': s[0] = '\''; break;
+        case '\'': s[0] = '\''; break;    // just i can't use a "" for string expression, because it is C lang :/
         case '"': s[0] = '"'; break;
         default: is_special_literal = false; break;
       }

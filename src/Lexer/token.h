@@ -8,26 +8,27 @@ typedef struct
   char* value;
   
   enum {
-    ID,                 // Unknown string,
-                        // e.g) variable... function name...
-    EQEQUAL,            // =
-    COMMA,              // ,
-    STRING,             // In ' ' or " "...
-    PLUS,               // +
-    MINUS,              // -
-    STAR,               // *
-    SLASH,              // /
-    LPAR,               // (
-    RPAR,               // )
-    LBRACE,             // {
-    RBRACE,             // }
-    LSQB,               // [
-    RSQB,               // ]
-    DOLLAR,             // $
-    DOUBLE_BACKSLASH,   // '\\'
-    FLOAT,              // e.g. 3.14
-    INT,                // e.g. 421
-    // EXPONENTIAL      // exponenetial notation number, e.g. 3.2E+5
+    ID,                 // 00: Unknown string,
+                        // 01: e.g) variable... function name...
+    EQEQUAL,            // 02: =
+    COMMA,              // 03: ,
+    STRING,             // 04: In ' ' or " "...
+    PLUS,               // 05: +
+    MINUS,              // 06: -
+    STAR,               // 07: *
+    SLASH,              // 08: /
+    LPAR,               // 09: (
+    RPAR,               // 10: )
+    LBRACE,             // 11: {
+    RBRACE,             // 12: }
+    LSQB,               // 13: [
+    RSQB,               // 14: ]
+    DOLLAR,             // 15: $
+    DOUBLE_BACKSLASH,   // 16: '\\'
+    FLOAT,              // 17: e.g. 3.14
+    INT,                // 18: e.g. 421
+    // EXPONENTIAL      // 19: exponenetial notation number,
+                        //      e.g. 3.2E+5
   } type;
 
   size_t col;

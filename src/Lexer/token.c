@@ -7,6 +7,7 @@ Token* init_token
 {
   Token* token = (Token*) malloc(sizeof(Token));
   token->value = value;
+  token->type = type;
   token->col = lexer->col;
   token->col_first = lexer->col_first;
   lexer->col_first = lexer->col;
