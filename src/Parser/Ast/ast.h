@@ -62,15 +62,15 @@ typedef struct ast_t
   } type;
 
   /* --COMPOUND-- */
-  struct ast_compound_t compound_v;
+  struct ast_compound_t* compound_v;
   /* --VARIABLE-- */
-  struct ast_variable_t variable_v;
+  struct ast_variable_t* variable_v;
   /* --FUNCTION-- */
-  struct ast_function_t function_v;
+  struct ast_function_t* function_v;
   /* ---STRING--- */
-  struct ast_string_t string_v;
+  struct ast_string_t* string_v;
   /* ----INT----- */
-  struct ast_int_t int_v;   // I can't use a 'int'
+  struct ast_int_t* int_v;   // I can't use a 'int'
                             //    by variable's name... 😢
                             //        Because it is a type's name...
   /* ---FLOAT---- */
@@ -85,7 +85,9 @@ typedef struct ast_t
   size_t row_char_first;
 } AST;
 
-AST* init_ast(int type);
+
+AST* init_ast(int type, AST* parent, size_t col, size_t col_first,
+              size_t row, size_t row_char, size_t row_char_first);
 
 AST_compound* init_ast_compound();
 AST_variable* init_ast_variable();
@@ -93,5 +95,7 @@ AST_function* init_ast_function();
 AST_string* init_ast_string(char* value);
 AST_int* init_ast_int(int value);
 AST_float* init_ast_float(float value);
+
+AST_compound* ast_compound_add(AST_compound* compound, AST* ast);
 
 #endif

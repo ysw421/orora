@@ -27,14 +27,24 @@ int main(int argc, char** argv)
     Lexer* root = init_lexer(file->contents, &file->length);
 
     Token* token = (void*) 0;
-    while ((token = lexer_get_token(root)) != (void*) 0)
-      printf(
-          "value: %s\t\t type: %d\n",
-          token->value, token->type);
+//     while ((token = lexer_get_token(root)) != (void*) 0)
+//       printf(
+//           "value: %s\t\t type: %d\n",
+//           token->value, token->type);
 //     printf("%s\n", lexer_get_token(root)->value);
 
     Parser* parser = init_parser(root);
-    parser_parse(parser, root_envs);
+    AST* ast_tree = parser_parse(parser, root_envs);
+
+    ast_tree->compound_v;
+    for (int i = 0; i < ast_tree->compound_v->size; i ++)
+    {
+      AST* checked_ast_tree = ast_tree->compound_v->items[i];
+      if (checked_ast_tree->type == AST_INT)
+      {
+        printf("%d\n", checked_ast_tree->int_v->value);
+      }
+    }
   }
   return 0;
 }

@@ -27,6 +27,9 @@ typedef struct
     DOUBLE_BACKSLASH,   // 15: '\\'
     FLOAT,              // 16: e.g. 3.14
     INT,                // 17: e.g. 421
+    SATISFY,            // 18: satisfy
+    BEGIN,              // 19: \begin
+    END,                // 20: \end
     // EXPONENTIAL      // 17: exponenetial notation number,
                         //      e.g. 3.2E+5
   } type;

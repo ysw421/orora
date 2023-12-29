@@ -46,17 +46,26 @@ Token* lexer_to_token_one_char(Lexer* lexer)
 // Starting with '\' like '\times'
 int get_special_string_type(int length, char* string)
 {
+  switch (length)
+  {
+    case 7:
+      if (!strcmp(string, "satisfy")) return SATISFY; break;
+  }
+
   if (string[0] != '\\')
     return -1;
 
   switch (length)
   {
     case 6:
+      if (!strcmp(string, "\\begin")) return BEGIN;
       if (!strcmp(string, "\\times")) return STAR;
       break;
     case 4:
+      if (!strcmp(string, "\\end")) return END;
       if (!strcmp(string, "\\div")) return SLASH;
-    default: -1;
+      break;
+    default: return -1; break;
   }
 
   return -1;

@@ -1,18 +1,19 @@
 #include "ast.h"
 #include <stdlib.h>
 
-AST* init_ast(int type)
+AST* init_ast(int type, AST* parent, size_t col, size_t col_first,
+              size_t row, size_t row_char, size_t row_char_first)
 {
   AST* ast = (AST*) malloc(sizeof(struct ast_t));
 
   ast->type = type;
 
-  ast->parent = 0;
-  ast->col = 0;
-  ast->col_first = 0;
-  ast->row = 0;
-  ast->row_char = 0;
-  ast->row_char_first= 0;
+  ast->parent = parent;
+  ast->col = col;
+  ast->col_first = col_first;
+  ast->row = row;
+  ast->row_char = row_char;
+  ast->row_char_first= row_char_first;
 
   return ast;
 }
@@ -72,4 +73,12 @@ AST_float* init_ast_float(float value)
   ast_float->value = value;
 
   return ast_float;
+}
+
+AST_compound* ast_compound_add(AST_compound* compound, AST* ast)
+{
+  compound->size ++;
+  compound->items = realloc(compound->items, compound->size * sizeof(struct ast_t));
+  compound->items[compound->size - 1] = ast;
+  return compound;
 }
