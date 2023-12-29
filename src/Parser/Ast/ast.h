@@ -52,13 +52,13 @@ typedef struct ast_t
     // 'AST_STRING' vs 'STRING'
     //  -> AST          -> Token
     // =========================
-    AST_COMPOUND,     // struct ast_t**
-    AST_VARIABLE,
-    AST_FUNCTION,
-    AST_STRING,
-    AST_INT,
-    AST_FLOAT,
-    AST_NOOP,         // Similar with NULL
+    AST_COMPOUND,     // 01: struct ast_t**
+    AST_VARIABLE,     // 02:
+    AST_FUNCTION,     // 03:
+    AST_STRING,       // 04:
+    AST_INT,          // 05:
+    AST_FLOAT,        // 06:
+    AST_NOOP,         // 07: Similar with NULL
   } type;
 
   /* --COMPOUND-- */

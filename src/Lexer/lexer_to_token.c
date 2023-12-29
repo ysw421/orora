@@ -19,6 +19,7 @@ int get_one_char_type(char c)
     case '[': return LSQB; break;
     case ']': return RSQB; break;
     case '$': return DOLLAR; break;
+    default: return -1; break;
   }
 
   return -1;
@@ -40,4 +41,23 @@ Token* lexer_to_token_one_char(Lexer* lexer)
 
   free(value);
   return (void*) 0;
+}
+
+// Starting with '\' like '\times'
+int get_special_string_type(int length, char* string)
+{
+  if (string[0] != '\\')
+    return -1;
+
+  switch (length)
+  {
+    case 6:
+      if (!strcmp(string, "\\times")) return STAR;
+      break;
+    case 4:
+      if (!strcmp(string, "\\div")) return SLASH;
+    default: -1;
+  }
+
+  return -1;
 }

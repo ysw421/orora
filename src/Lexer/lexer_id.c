@@ -21,6 +21,8 @@ Token* lexer_get_id(Lexer* lexer)
 
   lexer_advance(lexer);
 
+  int length = 1;
+
   bool is_next_backslash = false;
 
   while (!IS_LEXER_CONTENTS_END(lexer)
@@ -69,9 +71,13 @@ Token* lexer_get_id(Lexer* lexer)
     free(s);
 
     lexer_advance(lexer);
+
+    length ++;
   }
 
-  Token* token = init_token(lexer, ID, id);
+  int token_type = get_special_string_type(length, id);
+
+  Token* token = init_token(lexer, token_type == -1 ? ID : token_type, id);
   
   return token;
 }

@@ -1,14 +1,13 @@
 #include "parser.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include "../env.h"
-#include "Ast/ast.h"
 
 Parser* init_parser(Lexer* lexer)
 {
   Parser* parser = (Parser*) malloc(sizeof(struct parser_t));
   parser->lexer = lexer;
-  parser->prev_token = parser->token;
+//   parser->prev_token = parser->token;
+  parser->prev_token = (void*) 0;
   parser->token = lexer_get_token(lexer);
 
   return parser;
@@ -34,7 +33,7 @@ Parser* parser_advance(Parser* parser, int type)
 
 AST* parser_parse(Parser* parser, Envs* envs)
 {
-  AST* ast = (AST*) malloc(sizeof(struct ast_t));
+  AST* ast = init_ast(AST_COMPOUND);
 
   while (parser->token != (void*) 0)
   {}

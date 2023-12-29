@@ -24,6 +24,7 @@ bool lexer_advance(Lexer* lexer);
 /* In lexer_to_token.c */
 Token* lexer_to_token_one_char(Lexer* lexer);
 int get_one_char_type(char c);
+int get_special_string_type(int length, char* string);
 
 /* In lexer_string.c */
 Token* lexer_get_string(Lexer* lexer, char c);
