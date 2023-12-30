@@ -55,6 +55,9 @@ Parser* parser_value_define(Parser* parser, AST* ast, Token* last_token)
     printf("에러, '=' 사용에 목적이 없음.");
     exit(1);
   }
+  bool is_checked_type = false;
+
+
   switch (token->type)
   {
     case TOKEN_INT:

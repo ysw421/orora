@@ -14,13 +14,11 @@ void init_orora()
   push_value_type_list(&value_type_list, "float", TOKEN_FLOAT);
 
   orora_value_type* p = value_type_list;
-  while(1)
+  do
   {
     printf(":::%s\n", p->name);
-    if (p->next == (void*) 0)
-      break;
     p = p->next;
-  }
+  } while (p);
 }
 
 int main(int argc, char** argv)
