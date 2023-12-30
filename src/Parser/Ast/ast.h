@@ -41,7 +41,7 @@ typedef struct ast_int_t
 
 typedef struct ast_float_t
 {
-  float value;
+  double value;   // double
 } AST_float;
 
 typedef struct ast_t
@@ -52,13 +52,13 @@ typedef struct ast_t
     // 'AST_STRING' vs 'STRING'
     //  -> AST          -> Token
     // =========================
-    AST_COMPOUND,     // 01: struct ast_t**
-    AST_VARIABLE,     // 02:
-    AST_FUNCTION,     // 03:
-    AST_STRING,       // 04:
-    AST_INT,          // 05:
-    AST_FLOAT,        // 06:
-    AST_NOOP,         // 07: Similar with NULL
+    AST_COMPOUND,       // 01: struct ast_t**
+    AST_VARIABLE,       // 02:
+    AST_FUNCTION,       // 03:
+    AST_STRING,         // 04:
+    AST_INT,            // 05:
+    AST_FLOAT,          // 06:
+    AST_NOOP,           // 07: Similar with NULL
   } type;
 
   /* --COMPOUND-- */
@@ -74,7 +74,7 @@ typedef struct ast_t
                             //    by variable's name... 😢
                             //        Because it is a type's name...
   /* ---FLOAT---- */
-  struct ast_float_t float_v;
+  struct ast_float_t* float_v;
 
   struct ast_t* parent;
 
@@ -90,11 +90,11 @@ AST* init_ast(int type, AST* parent, size_t col, size_t col_first,
               size_t row, size_t row_char, size_t row_char_first);
 
 AST_compound* init_ast_compound();
-AST_variable* init_ast_variable();
+AST_variable* init_ast_variable(char* name, size_t length);
 AST_function* init_ast_function();
 AST_string* init_ast_string(char* value);
 AST_int* init_ast_int(int value);
-AST_float* init_ast_float(float value);
+AST_float* init_ast_float(double value);
 
 AST_compound* ast_compound_add(AST_compound* compound, AST* ast);
 

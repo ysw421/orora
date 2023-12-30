@@ -34,15 +34,35 @@ int main(int argc, char** argv)
 //     printf("%s\n", lexer_get_token(root)->value);
 
     Parser* parser = init_parser(root);
-    AST* ast_tree = parser_parse(parser, root_envs);
+    AST* ast_tree = parser_parse(parser);
 
     ast_tree->compound_v;
     for (int i = 0; i < ast_tree->compound_v->size; i ++)
     {
       AST* checked_ast_tree = ast_tree->compound_v->items[i];
-      if (checked_ast_tree->type == AST_INT)
+
+      switch (checked_ast_tree->type)
       {
-        printf("%d\n", checked_ast_tree->int_v->value);
+        case AST_INT:
+        {
+          printf("int: %d\n", checked_ast_tree->int_v->value);
+        }
+        break;
+        case AST_FLOAT:
+        {
+          printf("float: %f\n", checked_ast_tree->float_v->value);
+        }
+        break;
+        case AST_STRING:
+        {
+          printf("string: %s\n", checked_ast_tree->string_v->value);
+        }
+        break;
+        case AST_VARIABLE:
+        {
+          printf("varialbe: %s\n", checked_ast_tree->variable_v->name);
+          printf("\t->value: %d\n", checked_ast_tree->variable_v->value->int_v->value);
+        }
       }
     }
   }

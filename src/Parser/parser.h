@@ -13,7 +13,7 @@ typedef struct parser_t
 } Parser;
 
 Parser* init_parser(Lexer* lexer);
-
-AST* parser_parse(Parser* parser, Envs* envs);
+Parser* parser_advance(Parser* parser, int type);
+AST* parser_parse(Parser* parser);
 
 #endif

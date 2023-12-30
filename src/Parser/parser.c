@@ -1,6 +1,5 @@
-#include "parser.h"
+#include "parser_id.h"
 #include <stdlib.h>
-#include <stdio.h>
 
 Parser* init_parser(Lexer* lexer)
 {
@@ -31,7 +30,15 @@ Parser* parser_advance(Parser* parser, int type)
   return parser;
 }
 
-AST* parser_parse(Parser* parser, Envs* envs)
+AST* parser_parse(Parser* parser)
+{
+  AST* ast = parser_get_compound(parser);
+  // Root AST...
+
+  return ast;
+}
+
+AST* parser_get_compound(Parser* parser)
 {
   AST* ast = init_ast(AST_COMPOUND, (void*) 0, 0, 0, 0, 0, 0);
   ast->compound_v = init_ast_compound();
@@ -39,17 +46,47 @@ AST* parser_parse(Parser* parser, Envs* envs)
   Token* token = parser->token;
   while (token != (void*) 0)
   {
-    if (token->type == INT)
+    switch (token->type)
     {
-      AST* new_ast_node =
-        init_ast(AST_INT, ast, token->col, token->col_first,
-                  token->row, token->row_char, token->row_char_first);
-      new_ast_node->int_v = init_ast_int(atoi(token->value));
-      ast_compound_add(ast->compound_v, new_ast_node);
+      case INT:
+      {
+        parser = parser_get_int(parser, ast, token);
+        token = parser->token;
+        continue;
+      } break;
 
-      parser = parser_advance(parser, INT);
-      token = parser->token;
-      continue;
+      case FLOAT:
+      {
+        parser = parser_get_float(parser, ast, token);
+        token = parser->token;
+        continue;
+      } break;
+
+      case STRING:
+      {
+        parser = parser_get_string(parser, ast, token);
+        token = parser->token;
+        continue;
+      } break;
+
+      case EQEQUAL:
+      {
+        printf("에러, '='의 주어가 존재하지 않음");
+        exit(1);
+      } break;
+
+      case ID:
+      {
+        parser = parser_get_id(parser, ast, token);
+        token = parser->token;
+        continue;
+      } break;
+
+      default:
+      {
+        parser = parser_advance(parser, token->type);
+        token = parser->token;
+      } break;
     }
 //     if (parser->prev_token != (void*) 0)
 //     {
@@ -66,8 +103,6 @@ AST* parser_parse(Parser* parser, Envs* envs)
 //         printf("%s\n", printed_string);
 //       }
 //     }
-    parser = parser_advance(parser, token->type);
-    token = parser->token;
   }
 
   return ast;

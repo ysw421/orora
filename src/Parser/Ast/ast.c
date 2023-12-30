@@ -23,15 +23,18 @@ AST_compound* init_ast_compound()
   AST_compound* ast_compound =
     (AST_compound*) malloc(sizeof(struct ast_compound_t));
   ast_compound->size = 0;
+  ast_compound->items = (struct ast_t**) malloc(sizeof(struct ast_t*));
 
   return ast_compound;
 }
 
-AST_variable* init_ast_variable()
+AST_variable* init_ast_variable(char* name, size_t length)
 {
   AST_variable* ast_variable =
     (AST_variable*) malloc(sizeof(struct ast_variable_t));
-  ast_variable->name_length = 0;
+  ast_variable->name = name;
+  ast_variable->value = (void*) 0;
+  ast_variable->name_length = length;
 
   return ast_variable;
 }
@@ -66,7 +69,7 @@ AST_int* init_ast_int(int value)
   return ast_int;
 }
 
-AST_float* init_ast_float(float value)
+AST_float* init_ast_float(double value)
 {
   AST_float* ast_float =
     (AST_float*) malloc(sizeof(struct ast_float_t));
