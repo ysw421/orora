@@ -98,4 +98,17 @@ AST_float* init_ast_float(double value);
 
 AST_compound* ast_compound_add(AST_compound* compound, AST* ast);
 
+typedef struct orora_value_type_t
+{
+  struct orora_value_type_t* next;
+  char* name;
+  int token_id;
+} orora_value_type;
+
+orora_value_type* push_value_type_list
+  (
+   orora_value_type** head, char* name,
+   int token_id
+  );
+
 #endif

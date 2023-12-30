@@ -82,7 +82,7 @@ Token* lexer_get_string(Lexer* lexer, char c)
 
   lexer_advance(lexer);   // Last char
 
-  Token* token = init_token(lexer, STRING, string);
+  Token* token = init_token(lexer, TOKEN_STRING, string);
   
   return token;
 }

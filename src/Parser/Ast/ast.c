@@ -1,4 +1,5 @@
 #include "ast.h"
+#include <string.h>
 #include <stdlib.h>
 
 AST* init_ast(int type, AST* parent, size_t col, size_t col_first,
@@ -84,4 +85,38 @@ AST_compound* ast_compound_add(AST_compound* compound, AST* ast)
   compound->items = realloc(compound->items, compound->size * sizeof(struct ast_t));
   compound->items[compound->size - 1] = ast;
   return compound;
+}
+
+orora_value_type* init_value_type_list(orora_value_type** head)
+{
+  orora_value_type* node =
+    (orora_value_type*) malloc(sizeof(struct orora_value_type_t));
+  node->name = (void*) 0;
+
+  *head = node;
+  
+  return node;
+}
+
+orora_value_type* push_value_type_list
+  (
+   orora_value_type** head,
+   char* name,
+   int token_id
+  )
+{
+  static orora_value_type* pointer = NULL;
+
+  orora_value_type* point = *head;
+  init_value_type_list(&point);
+  point->name = (char*) malloc((strlen(name) + 1) * sizeof(char));
+  point->name = name;
+  point->token_id = token_id;
+
+  point->next = pointer;
+
+  pointer = point;
+  *head = point;
+
+  return point;
 }

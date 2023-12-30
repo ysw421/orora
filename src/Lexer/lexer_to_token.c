@@ -6,19 +6,19 @@ int get_one_char_type(char c)
 {
   switch (c)
   {
-    case '=': return EQEQUAL; break;
-    case ',': return COMMA; break;
-    case '+': return PLUS; break;
-    case '-': return MINUS; break;
-    case '*': return STAR; break;
-    case '/': return SLASH; break;
-    case '(': return LPAR; break;
-    case ')': return RPAR; break;
-    case '{': return LBRACE; break;
-    case '}': return RBRACE; break;
-    case '[': return LSQB; break;
-    case ']': return RSQB; break;
-    case '$': return DOLLAR; break;
+    case '=': return TOKEN_EQEQUAL; break;
+    case ',': return TOKEN_COMMA; break;
+    case '+': return TOKEN_PLUS; break;
+    case '-': return TOKEN_MINUS; break;
+    case '*': return TOKEN_STAR; break;
+    case '/': return TOKEN_SLASH; break;
+    case '(': return TOKEN_LPAR; break;
+    case ')': return TOKEN_RPAR; break;
+    case '{': return TOKEN_LBRACE; break;
+    case '}': return TOKEN_RBRACE; break;
+    case '[': return TOKEN_LSQB; break;
+    case ']': return TOKEN_RSQB; break;
+    case '$': return TOKEN_DOLLAR; break;
     default: return -1; break;
   }
 
@@ -49,7 +49,7 @@ int get_special_string_type(int length, char* string)
   switch (length)
   {
     case 7:
-      if (!strcmp(string, "satisfy")) return SATISFY; break;
+      if (!strcmp(string, "satisfy")) return TOKEN_SATISFY; break;
   }
 
   if (string[0] != '\\')
@@ -58,12 +58,12 @@ int get_special_string_type(int length, char* string)
   switch (length)
   {
     case 6:
-      if (!strcmp(string, "\\begin")) return BEGIN;
-      if (!strcmp(string, "\\times")) return STAR;
+      if (!strcmp(string, "\\begin")) return TOKEN_BEGIN;
+      if (!strcmp(string, "\\times")) return TOKEN_STAR;
       break;
     case 4:
-      if (!strcmp(string, "\\end")) return END;
-      if (!strcmp(string, "\\div")) return SLASH;
+      if (!strcmp(string, "\\end")) return TOKEN_END;
+      if (!strcmp(string, "\\div")) return TOKEN_SLASH;
       break;
     default: return -1; break;
   }

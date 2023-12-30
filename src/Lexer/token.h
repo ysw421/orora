@@ -8,30 +8,30 @@ typedef struct
   char* value;
   
   enum {
-    ID,                 // 00: Unknown string,
-                        //      e.g) variable... function name...
-    EQEQUAL,            // 01: =
-    COMMA,              // 02: ,
-    STRING,             // 03: In ' ' or " "...
-    PLUS,               // 04: +
-    MINUS,              // 05: -
-    STAR,               // 06: *
-    SLASH,              // 07: /
-    LPAR,               // 08: (
-    RPAR,               // 09: )
-    LBRACE,             // 10: {
-    RBRACE,             // 11: }
-    LSQB,               // 12: [
-    RSQB,               // 13: ]
-    DOLLAR,             // 14: $
-    DOUBLE_BACKSLASH,   // 15: '\\'
-    FLOAT,              // 16: e.g. 3.14
-    INT,                // 17: e.g. 421
-    SATISFY,            // 18: satisfy
-    BEGIN,              // 19: \begin
-    END,                // 20: \end
-    // EXPONENTIAL      // 17: exponenetial notation number,
-                        //      e.g. 3.2E+5
+    TOKEN_ID,                 // 00: Unknown string,
+                              //      e.g) variable... function name...
+    TOKEN_EQEQUAL,            // 01: =
+    TOKEN_COMMA,              // 02: ,
+    TOKEN_STRING,             // 03: In ' ' or " "...
+    TOKEN_PLUS,               // 04: +
+    TOKEN_MINUS,              // 05: -
+    TOKEN_STAR,               // 06: *
+    TOKEN_SLASH,              // 07: /
+    TOKEN_LPAR,               // 08: (
+    TOKEN_RPAR,               // 09: )
+    TOKEN_LBRACE,             // 10: {
+    TOKEN_RBRACE,             // 11: }
+    TOKEN_LSQB,               // 12: [
+    TOKEN_RSQB,               // 13: ]
+    TOKEN_DOLLAR,             // 14: $
+    TOKEN_DOUBLE_BACKSLASH,   // 15: '\\'
+    TOKEN_FLOAT,              // 16: e.g. 3.14
+    TOKEN_INT,                // 17: e.g. 421
+    TOKEN_SATISFY,            // 18: satisfy
+    TOKEN_BEGIN,              // 19: \begin
+    TOKEN_END,                // 20: \end
+    // TOKEN_EXPONENTIAL      // 17: exponenetial notation number,
+                              //      e.g. 3.2E+5
   } type;
 
   size_t col;

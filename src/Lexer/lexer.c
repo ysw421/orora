@@ -138,7 +138,7 @@ Token* lexer_get_token(Lexer* lexer)
       lexer_advance(lexer);
       lexer_advance(lexer);
       
-      return init_token(lexer, DOUBLE_BACKSLASH, symbol);
+      return init_token(lexer, TOKEN_DOUBLE_BACKSLASH, symbol);
     }
     /* ======== */
 

@@ -27,7 +27,7 @@ Token* lexer_get_number(Lexer* lexer)
     lexer_advance(lexer);
   }
 
-  Token* token = init_token(lexer, is_first_dot ? INT : FLOAT, number);
+  Token* token = init_token(lexer, is_first_dot ? TOKEN_INT : TOKEN_FLOAT, number);
 
   return token;
 }

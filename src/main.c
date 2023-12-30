@@ -5,8 +5,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static orora_value_type* value_type_list;
+
+void init_orora()
+{
+  push_value_type_list(&value_type_list, "string", TOKEN_STRING);
+  push_value_type_list(&value_type_list, "int", TOKEN_INT);
+  push_value_type_list(&value_type_list, "float", TOKEN_FLOAT);
+
+  orora_value_type* p = value_type_list;
+  while(1)
+  {
+    printf(":::%s\n", p->name);
+    if (p->next == (void*) 0)
+      break;
+    p = p->next;
+  }
+}
+
 int main(int argc, char** argv)
 {
+  init_orora();
+
 #ifndef GLOBAL_ENV_DEFINE
 #define GLOBAL_ENV_DEFINE
   Env* global_env = init_env();
@@ -61,7 +81,27 @@ int main(int argc, char** argv)
         case AST_VARIABLE:
         {
           printf("varialbe: %s\n", checked_ast_tree->variable_v->name);
-          printf("\t->value: %d\n", checked_ast_tree->variable_v->value->int_v->value);
+          if (checked_ast_tree->variable_v->value == (void*) 0)
+            break;
+          switch (checked_ast_tree->variable_v->value->type)
+          {
+            case AST_INT:
+              printf(
+                  "\t->value: %d\n",
+                  checked_ast_tree->variable_v->value->int_v->value);
+              break;
+            case AST_FLOAT:
+              printf(
+                  "\t->value: %f\n",
+                  checked_ast_tree->variable_v->value->float_v->value);
+              break;
+            case AST_STRING:
+              printf(
+                  "\t->value: %s\n",
+                  checked_ast_tree->variable_v->value->string_v->value);
+              break;
+            default: break;
+          }
         }
       }
     }

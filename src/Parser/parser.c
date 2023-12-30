@@ -30,14 +30,6 @@ Parser* parser_advance(Parser* parser, int type)
   return parser;
 }
 
-AST* parser_parse(Parser* parser)
-{
-  AST* ast = parser_get_compound(parser);
-  // Root AST...
-
-  return ast;
-}
-
 AST* parser_get_compound(Parser* parser)
 {
   AST* ast = init_ast(AST_COMPOUND, (void*) 0, 0, 0, 0, 0, 0);
@@ -48,34 +40,34 @@ AST* parser_get_compound(Parser* parser)
   {
     switch (token->type)
     {
-      case INT:
+      case TOKEN_INT:
       {
         parser = parser_get_int(parser, ast, token);
         token = parser->token;
         continue;
       } break;
 
-      case FLOAT:
+      case TOKEN_FLOAT:
       {
         parser = parser_get_float(parser, ast, token);
         token = parser->token;
         continue;
       } break;
 
-      case STRING:
+      case TOKEN_STRING:
       {
         parser = parser_get_string(parser, ast, token);
         token = parser->token;
         continue;
       } break;
 
-      case EQEQUAL:
+      case TOKEN_EQEQUAL:
       {
         printf("에러, '='의 주어가 존재하지 않음");
         exit(1);
       } break;
 
-      case ID:
+      case TOKEN_ID:
       {
         parser = parser_get_id(parser, ast, token);
         token = parser->token;
@@ -104,6 +96,14 @@ AST* parser_get_compound(Parser* parser)
 //       }
 //     }
   }
+
+  return ast;
+}
+
+AST* parser_parse(Parser* parser)
+{
+  AST* ast = parser_get_compound(parser);
+  // Root AST...
 
   return ast;
 }

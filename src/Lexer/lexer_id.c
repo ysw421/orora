@@ -77,7 +77,7 @@ Token* lexer_get_id(Lexer* lexer)
 
   int token_type = get_special_string_type(length, id);
 
-  Token* token = init_token(lexer, token_type == -1 ? ID : token_type, id);
+  Token* token = init_token(lexer, token_type == -1 ? TOKEN_ID : token_type, id);
   
   return token;
 }
