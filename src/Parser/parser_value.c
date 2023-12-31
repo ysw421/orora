@@ -1,6 +1,10 @@
 #include "parser_id.h"
 #include <stdlib.h>
 
+AST* parser_get_value(Parser* parser)
+{
+}
+
 AST* parser_get_new_int_ast(AST* ast, Token* token)
 {
   AST* new_ast_node =

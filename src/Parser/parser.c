@@ -50,7 +50,9 @@ AST* parser_get_compound(Parser* parser)
     {
       if (token->type == p->token_id)
       {
-        parser = p->parser_get(parser, ast, token);
+        ast_compound_add(ast->compound_v, p->parser_get_new_ast(ast, token));
+        parser = parser_advance(parser, p->token_id);
+//         parser = p->parser_get(parser, ast, token);
         token = parser->token;
 
         is_checked_type = true;

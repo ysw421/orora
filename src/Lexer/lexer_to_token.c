@@ -60,6 +60,10 @@ int get_special_string_type(int length, char* string)
     case 6:
       if (!strcmp(string, "\\begin")) return TOKEN_BEGIN;
       if (!strcmp(string, "\\times")) return TOKEN_STAR;
+      if (!strcmp(string, "\\right")) return TOKEN_RIGHT;
+      break;
+    case 5:
+      if (!strcmp(string, "\\left")) return TOKEN_LEFT;
       break;
     case 4:
       if (!strcmp(string, "\\end")) return TOKEN_END;

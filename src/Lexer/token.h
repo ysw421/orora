@@ -30,6 +30,8 @@ typedef struct
     TOKEN_SATISFY,            // 18: satisfy
     TOKEN_BEGIN,              // 19: \begin
     TOKEN_END,                // 20: \end
+    TOKEN_LEFT,               // 21: \left
+    TOKEN_RIGHT               // 22: \right
     // TOKEN_EXPONENTIAL      // 17: exponenetial notation number,
                               //      e.g. 3.2E+5
   } type;

@@ -73,7 +73,6 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
       new_ast_node->variable_v =
         init_ast_variable(last_token->value, last_token->length);
       new_ast_node->variable_v->value = p->parser_get_new_ast(ast, token);
-//       ast_compound_add(ast->compound_v, new_ast_node);
 
       parser = parser_advance(parser, p->token_id);
       Token* token = parser->token;
