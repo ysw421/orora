@@ -3,6 +3,62 @@
 #include "../main.h"
 #include "string.h"
 
+Parser* after_get_parser(Parser* parser)
+{
+  Token* token = parser->token;
+  Token* next_token = parser->next_token;
+
+  if (token->type == TOKEN_LEFT && next_token->type == TOKEN_LPAR)
+  {
+    if (token->col_first != next_token->col_first)
+    {
+      printf("에러, '\\left'와 '('가 다른 줄에 존재함.");
+      exit(1);
+    }
+    int new_value_length = 6 + next_token->row_char_first - token->row_char;
+    char* new_value = malloc((new_value_length + 1) * sizeof(char));
+    new_value[0] = '\0';
+    strcat(new_value, "\\left");
+    for (int i = 0; i < new_value_length - 6; i ++)
+    {
+      strcat(new_value, " ");
+    }
+    strcat(new_value, "(");
+    parser->token->value = new_value;
+    parser->token->length = new_value_length;
+    parser->token->col = next_token->col;
+    parser->token->row_char = next_token->row_char;
+
+    parser->next_token = lexer_get_token(parser->lexer);
+  }
+
+  if (token->type == TOKEN_RIGHT && next_token->type == TOKEN_RPAR)
+  {
+    if (token->col_first != next_token->col_first)
+    {
+      printf("에러, '\\right'와 ')'가 다른 줄에 존재함.");
+      exit(1);
+    }
+    int new_value_length = 7 + next_token->row_char_first - token->row_char;
+    char* new_value = malloc((new_value_length + 1) * sizeof(char));
+    new_value[0] = '\0';
+    strcat(new_value, "\\right");
+    for (int i = 0; i < new_value_length - 7; i ++)
+    {
+      strcat(new_value, " ");
+    }
+    strcat(new_value, ")");
+    parser->token->value = new_value;
+    parser->token->length = new_value_length;
+    parser->token->col = next_token->col;
+    parser->token->row_char = next_token->row_char;
+
+    parser->next_token = lexer_get_token(parser->lexer);
+  }
+
+  return parser;
+}
+
 Parser* init_parser(Lexer* lexer)
 {
   Parser* parser = (Parser*) malloc(sizeof(struct parser_t));
@@ -12,7 +68,10 @@ Parser* init_parser(Lexer* lexer)
   parser->token = lexer_get_token(lexer);
   parser->next_token = lexer_get_token(lexer);
 
-  return parser;
+  if (!parser->next_token)
+    return parser;
+
+  return after_get_parser(parser);
 }
 
 Parser* parser_advance(Parser* parser, int type)
@@ -31,7 +90,10 @@ Parser* parser_advance(Parser* parser, int type)
   parser->token = parser->next_token;
   parser->next_token = lexer_get_token(parser->lexer);
 
-  return parser;
+  if (!parser->next_token)
+    return parser;
+
+  return after_get_parser(parser);
 }
 
 AST* parser_get_compound(Parser* parser)
