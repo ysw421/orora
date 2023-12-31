@@ -6,7 +6,7 @@ int get_one_char_type(char c)
 {
   switch (c)
   {
-    case '=': return TOKEN_EQEQUAL; break;
+    case '=': return TOKEN_EQUAL; break;
     case ',': return TOKEN_COMMA; break;
     case '+': return TOKEN_PLUS; break;
     case '-': return TOKEN_MINUS; break;

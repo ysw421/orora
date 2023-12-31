@@ -2,6 +2,8 @@
 #define AST_H
 
 #include <stddef.h>
+#include "../../Lexer/token.h"
+#include "../parser_T.h"
 
 typedef struct ast_compound_t
 {
@@ -103,12 +105,15 @@ typedef struct orora_value_type_t
   struct orora_value_type_t* next;
   char* name;
   int token_id;
+  AST* (*parser_get_new_ast)(AST*, Token*);
+  Parser* (*parser_get)(Parser*, AST*, Token*);
 } orora_value_type;
 
 orora_value_type* push_value_type_list
   (
-   orora_value_type** head, char* name,
-   int token_id
+   orora_value_type** head, char* name, int token_id,
+   AST* (*parser_get_new_ast)(AST*, Token*),
+   Parser* (*parser_get)(Parser*, AST*, Token*);
   );
 
 #endif

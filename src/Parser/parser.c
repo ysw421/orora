@@ -1,5 +1,7 @@
 #include "parser_id.h"
 #include <stdlib.h>
+#include "../main.h"
+#include "string.h"
 
 Parser* init_parser(Lexer* lexer)
 {
@@ -8,6 +10,7 @@ Parser* init_parser(Lexer* lexer)
 //   parser->prev_token = parser->token;
   parser->prev_token = (void*) 0;
   parser->token = lexer_get_token(lexer);
+  parser->next_token = lexer_get_token(lexer);
 
   return parser;
 }
@@ -25,7 +28,8 @@ Parser* parser_advance(Parser* parser, int type)
     exit(1);
   }
   parser->prev_token = parser->token;
-  parser->token = lexer_get_token(parser->lexer);
+  parser->token = parser->next_token;
+  parser->next_token = lexer_get_token(parser->lexer);
 
   return parser;
 }
@@ -36,32 +40,33 @@ AST* parser_get_compound(Parser* parser)
   ast->compound_v = init_ast_compound();
 
   Token* token = parser->token;
+
   while (token != (void*) 0)
   {
+    // check value
+    bool is_checked_type = false;
+    orora_value_type* p = value_type_list;
+    do
+    {
+      if (token->type == p->token_id)
+      {
+        parser = p->parser_get(parser, ast, token);
+        token = parser->token;
+
+        is_checked_type = true;
+        break;
+      }
+
+      p = p->next;
+    } while (p);
+
+    if (is_checked_type)
+      continue;
+    // -----------
+
     switch (token->type)
     {
-      case TOKEN_INT:
-      {
-        parser = parser_get_int(parser, ast, token);
-        token = parser->token;
-        continue;
-      } break;
-
-      case TOKEN_FLOAT:
-      {
-        parser = parser_get_float(parser, ast, token);
-        token = parser->token;
-        continue;
-      } break;
-
-      case TOKEN_STRING:
-      {
-        parser = parser_get_string(parser, ast, token);
-        token = parser->token;
-        continue;
-      } break;
-
-      case TOKEN_EQEQUAL:
+      case TOKEN_EQUAL:
       {
         printf("에러, '='의 주어가 존재하지 않음");
         exit(1);

@@ -2,4 +2,5 @@ a = 6
 b=7
 c=3.22
 d="hello"
-d
+d = b
+q=w=e=30

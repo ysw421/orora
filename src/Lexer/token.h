@@ -10,7 +10,7 @@ typedef struct
   enum {
     TOKEN_ID,                 // 00: Unknown string,
                               //      e.g) variable... function name...
-    TOKEN_EQEQUAL,            // 01: =
+    TOKEN_EQUAL,              // 01: =
     TOKEN_COMMA,              // 02: ,
     TOKEN_STRING,             // 03: In ' ' or " "...
     TOKEN_PLUS,               // 04: +

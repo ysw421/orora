@@ -1,17 +1,30 @@
 #include "main.h"
+#include "file.h"
 #include "Lexer/lexer.h"
-#include "Parser/parser.h"
+#include "Parser/parser_value.h"
 #include "env.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-static orora_value_type* value_type_list;
+orora_value_type* value_type_list;
 
 void init_orora()
 {
-  push_value_type_list(&value_type_list, "string", TOKEN_STRING);
-  push_value_type_list(&value_type_list, "int", TOKEN_INT);
-  push_value_type_list(&value_type_list, "float", TOKEN_FLOAT);
+  push_value_type_list
+    (
+     &value_type_list, "string", TOKEN_STRING, parser_get_new_string_ast,
+     parser_get_string
+    );
+  push_value_type_list
+    (
+     &value_type_list, "int", TOKEN_INT, parser_get_new_int_ast,
+     parser_get_int
+    );
+  push_value_type_list
+    (
+     &value_type_list, "float", TOKEN_FLOAT, parser_get_new_float_ast,
+     parser_get_float
+    );
 
   orora_value_type* p = value_type_list;
   do
@@ -98,6 +111,39 @@ int main(int argc, char** argv)
                   "\t->value: %s\n",
                   checked_ast_tree->variable_v->value->string_v->value);
               break;
+            case AST_VARIABLE:
+            {
+              AST* p = checked_ast_tree->variable_v->value;
+              do
+              {
+                switch (p->type)
+                {
+                  case AST_INT:
+                    printf(
+                        "\t->value: %d\n",
+                        p->int_v->value);
+                    break;
+                  case AST_FLOAT:
+                    printf(
+                        "\t->value: %f\n",
+                        p->float_v->value);
+                    break;
+                  case AST_STRING:
+                    printf(
+                        "\t->value: %s\n",
+                        p->string_v->value);
+                    break;
+                  case AST_VARIABLE:
+                  {
+                    printf("\t->variable: %s\n",
+                    p->variable_v->name);
+                  } break;
+                }
+                if (p->type != AST_VARIABLE)
+                  break;
+                p = p->variable_v->value;
+              } while (p);
+            } break;
             default: break;
           }
         }
