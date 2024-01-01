@@ -3,6 +3,15 @@
 #include "../main.h"
 #include "string.h"
 
+GET_COMPOUND_ENV* init_get_compound_env()
+{
+  GET_COMPOUND_ENV* new_env = malloc(sizeof(GET_COMPOUND_ENV));
+  new_env->is_in_parentheses = false;
+  new_env->is_usefull_comma = false;
+
+  return new_env;
+}
+
 Parser* after_get_parser(Parser* parser)
 {
   Token* token = parser->token;
@@ -26,6 +35,7 @@ Parser* after_get_parser(Parser* parser)
     strcat(new_value, "(");
     parser->token->value = new_value;
     parser->token->length = new_value_length;
+    parser->token->type = TOKEN_LPAR;
     parser->token->col = next_token->col;
     parser->token->row_char = next_token->row_char;
 
@@ -50,6 +60,7 @@ Parser* after_get_parser(Parser* parser)
     strcat(new_value, ")");
     parser->token->value = new_value;
     parser->token->length = new_value_length;
+    parser->token->type = TOKEN_RPAR;
     parser->token->col = next_token->col;
     parser->token->row_char = next_token->row_char;
 
@@ -63,7 +74,7 @@ Parser* init_parser(Lexer* lexer)
 {
   Parser* parser = (Parser*) malloc(sizeof(struct parser_t));
   parser->lexer = lexer;
-//   parser->prev_token = parser->token;
+  parser->prev_token = parser->token;
   parser->prev_token = (void*) 0;
   parser->token = lexer_get_token(lexer);
   parser->next_token = lexer_get_token(lexer);
@@ -96,7 +107,13 @@ Parser* parser_advance(Parser* parser, int type)
   return after_get_parser(parser);
 }
 
-AST* parser_get_compound(Parser* parser)
+AST* parser_get_compound_end(AST* ast, GET_COMPOUND_ENV* compound_env)
+{
+  free(compound_env);
+  return ast;
+}
+
+AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
 {
   AST* ast = init_ast(AST_COMPOUND, (void*) 0, (void*) 0);
   ast->compound_v = init_ast_compound();
@@ -105,6 +122,13 @@ AST* parser_get_compound(Parser* parser)
 
   while (token != (void*) 0)
   {
+    if (!compound_env->is_in_parentheses && parser->prev_token &&
+        parser->prev_token->col == token->col_first)
+    {
+      printf("에러, 각 명령어는 줄바꿈으로 구분됨::%ld\n", token->col_first);
+      exit(1);
+    }
+
     // check value
     bool is_checked_type = false;
     orora_value_type* p = value_type_list;
@@ -114,13 +138,11 @@ AST* parser_get_compound(Parser* parser)
       {
         ast_compound_add(ast->compound_v, p->parser_get_new_ast(ast, token));
         parser = parser_advance(parser, p->token_id);
-//         parser = p->parser_get(parser, ast, token);
         token = parser->token;
 
         is_checked_type = true;
         break;
       }
-
       p = p->next;
     } while (p);
 
@@ -130,6 +152,25 @@ AST* parser_get_compound(Parser* parser)
 
     switch (token->type)
     {
+      case TOKEN_COMMA:
+      {
+        if (compound_env->is_usefull_comma)
+          return parser_get_compound_end(ast, compound_env);
+      } break;
+
+      case TOKEN_RPAR:
+      {
+        if (compound_env->is_in_parentheses)
+          return parser_get_compound_end(ast, compound_env);
+        // !!!!!! FOR TEST !!!!!!!
+        else
+        {
+          parser = parser_advance(parser, token->type);
+          token = parser->token;
+        }
+        // !!!!!!!!!!!!!!!!!!!!!!!
+      } break;
+
       case TOKEN_EQUAL:
       {
         printf("에러, '='의 주어가 존재하지 않음");
@@ -145,18 +186,40 @@ AST* parser_get_compound(Parser* parser)
 
       default:
       {
-        parser = parser_advance(parser, token->type);
-        token = parser->token;
+        // For develop
+        switch (token->type)
+        {
+          case TOKEN_LPAR:
+          case TOKEN_RPAR:
+          case TOKEN_LEFT:
+          case TOKEN_RIGHT:
+          case TOKEN_MINUS:
+          {
+            parser = parser_advance(parser, token->type);
+            token = parser->token;
+          } break;
+          default:
+          {
+            printf("에러, %s가 무엇이죠??::type: %d\n", token->value, token->type);
+            exit(1);
+          } break;
+        }
+        // End for develop
+
+        // Free Condition
+//         parser = parser_advance(parser, token->type);
+//         token = parser->token;
+        // End free condition
       } break;
     }
   }
 
-  return ast;
+  return parser_get_compound_end(ast, compound_env);
 }
 
 AST* parser_parse(Parser* parser)
 {
-  AST* ast = parser_get_compound(parser);
+  AST* ast = parser_get_compound(parser, init_get_compound_env());
   // Root AST...
 
   return ast;

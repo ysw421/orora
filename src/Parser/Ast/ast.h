@@ -27,7 +27,7 @@ typedef struct ast_function_t
   struct ast_t** codes;   // I wonder
                           //    I should use a Lexer struct
                           //    or AST struct... or Token...
-  size_t codes_length;
+  size_t codes_size;
 } AST_function;
 
 typedef struct ast_string_t
@@ -87,8 +87,15 @@ typedef struct ast_t
   size_t row_char_first;
 } AST;
 
+typedef struct
+{
+  AST* ast;
+  Parser* parser;
+} AST_PARSER;
+
 
 AST* init_ast(int type, AST* parent, Token* token);
+AST_PARSER* init_ast_parser(AST* ast, Parser* parser);
 
 AST_compound* init_ast_compound();
 AST_variable* init_ast_variable(char* name, size_t length);

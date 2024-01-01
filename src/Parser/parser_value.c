@@ -1,16 +1,19 @@
 #include "parser_id.h"
 #include <stdlib.h>
 
-GET_VALUE_SETTING* init_get_value_setting()
+GET_VALUE_ENV* init_get_value_env()
 {
-  GET_VALUE_SETTING* new_setting = malloc(sizeof(GET_VALUE_SETTING));
-  new_setting->is_in_parentheses = false;
+  GET_VALUE_ENV* new_env = malloc(sizeof(GET_VALUE_ENV));
+  new_env->is_in_parentheses = false;
 
-  return new_setting;
+  return new_env;
 }
 
-AST* parser_get_value(Parser* parser, GET_VALUE_SETTING* setting)
+AST* parser_get_value(Parser* parser, GET_VALUE_ENV* value_env)
 {
+  
+  free(value_env);
+  return (void*) 0;
 }
 
 AST* parser_get_new_int_ast(AST* ast, Token* token)

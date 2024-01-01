@@ -34,6 +34,15 @@ AST* init_ast(int type, AST* parent, Token* token)
   return ast;
 }
 
+AST_PARSER* init_ast_parser(AST* ast, Parser* parser)
+{
+  AST_PARSER* new_ast_parser = malloc(sizeof(AST_PARSER));
+  new_ast_parser->ast = ast;
+  new_ast_parser->parser = parser;
+
+  return new_ast_parser;
+}
+
 AST_compound* init_ast_compound()
 {
   AST_compound* ast_compound =
@@ -62,7 +71,8 @@ AST_function* init_ast_function(char* name, size_t length)
   ast_function->name = name;
   ast_function->name_length = length;
   ast_function->args_size = 0;
-  ast_function->codes_length = 0;
+  ast_function->codes_size = 0;
+  ast_function->args = malloc(sizeof(AST));
 
   return ast_function;
 }

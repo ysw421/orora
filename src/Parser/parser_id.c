@@ -13,6 +13,8 @@ struct value_t
   } type;
 } Value;
 
+AST* parser_get_function(Parser* parser, AST* ast);
+
 AST* parser_set_value(Parser* parser, AST* ast, Token* last_token)
 {
   AST* new_ast_node =
@@ -38,6 +40,13 @@ AST* parser_get_id(Parser* parser, AST* ast, Token* last_token)
     return parser_set_value(parser, ast, last_token);
   }
 
+  // Function
+  AST* function_ast = parser_get_function(parser, ast);
+  if (function_ast)
+    return function_ast;
+  // End function
+
+  // Variable
   switch (token->type)
   {
     case TOKEN_EQUAL:   // Define variable
@@ -50,12 +59,8 @@ AST* parser_get_id(Parser* parser, AST* ast, Token* last_token)
       
       return new_ast;
     } break;
-    case TOKEN_LPAR:  // function
-    {
-      if (parser->prev_token->col != token->col_first)
-        break;
-    } break;
   }
+  // End variable
 
   return parser_set_value(parser, ast, last_token);
 }
@@ -70,7 +75,8 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
     exit(1);
   }
 
-  // check value
+  // Check value
+  // ToDo: use get_value function
   orora_value_type* p = value_type_list;
   do
   {
@@ -90,8 +96,8 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
 
     p = p->next;
   } while (p);
-  // -----------
-
+  // End check value
+  
   switch (token->type)
   {
     case TOKEN_ID:
@@ -144,10 +150,36 @@ AST* parser_get_function(Parser* parser, AST* ast)
     return (void*) 0;
 
   if (token->col != parser->next_token->col_first)
-    return parser_set_value(parser, ast, token);
-  
+    return parser_set_value(parser, ast, parser->prev_token);
+
   AST* new_ast = init_ast(AST_FUNCTION, ast, token);
   new_ast->function_v = init_ast_function(token->value, token->length);
+  parser = parser_advance(parser, TOKEN_ID);
+  parser = parser_advance(parser, TOKEN_LPAR);
+  token = parser->token;
+
+  if (token->type != TOKEN_RPAR)    // if the argument is not empty
+  {
+    int num_of_lpar = 0;
+    while (!(num_of_lpar == 0 && token->type == TOKEN_RPAR))
+    {
+      GET_COMPOUND_ENV* new_env = init_get_compound_env();
+      new_env->is_in_parentheses = true;
+      new_env->is_usefull_comma = true;
+      AST* new_arg_ast = parser_get_compound(parser, new_env);
+      token = parser->token;
+
+      if (new_arg_ast->compound_v->size != 1)
+      {
+        printf("에러, 함수 %s의 argument가 %ld줄로 구성됨",
+            new_ast->function_v->name, new_arg_ast->compound_v->size);
+        exit(1);
+      }
+      if (token->type == TOKEN_COMMA)
+        parser = parser_advance(parser, TOKEN_COMMA);
+    }
+  }
+  parser = parser_advance(parser, TOKEN_RPAR);
 
   return new_ast;
 }
