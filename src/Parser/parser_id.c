@@ -171,8 +171,8 @@ AST* parser_get_function(Parser* parser, AST* ast)
 
       if (new_arg_ast->compound_v->size != 1)
       {
-        printf("에러, 함수 %s의 argument가 %ld줄로 구성됨",
-            new_ast->function_v->name, new_arg_ast->compound_v->size);
+        printf("에러, 함수 %s의 각 argument는 ','로 구분되어야 함\n",
+            new_ast->function_v->name);
         exit(1);
       }
       if (token->type == TOKEN_COMMA)
