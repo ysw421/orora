@@ -13,7 +13,18 @@ struct value_t
   } type;
 } Value;
 
-Parser* parser_get_id(Parser* parser, AST* ast, Token* last_token)
+AST* parser_set_value(Parser* parser, AST* ast, Token* last_token)
+{
+  AST* new_ast_node =
+    init_ast(AST_VARIABLE, ast, last_token);
+  new_ast_node->variable_v =
+    init_ast_variable(last_token->value, last_token->length);
+  ast_compound_add(ast->compound_v, new_ast_node);
+
+  return new_ast_node;
+}
+
+AST* parser_get_id(Parser* parser, AST* ast, Token* last_token)
 {
   struct value_t* value = malloc(sizeof(struct value_t));
   value->name = last_token->value;
@@ -24,14 +35,7 @@ Parser* parser_get_id(Parser* parser, AST* ast, Token* last_token)
 
   if (token == (void*) 0)
   {
-    AST* new_ast_node =
-      init_ast(AST_VARIABLE, ast, last_token->col, last_token->col_first,
-               last_token->row, last_token->row_char, last_token->row_char_first);
-    new_ast_node->variable_v =
-      init_ast_variable(last_token->value, last_token->length);
-    ast_compound_add(ast->compound_v, new_ast_node);
-
-    return parser;
+    return parser_set_value(parser, ast, last_token);
   }
 
   switch (token->type)
@@ -43,11 +47,17 @@ Parser* parser_get_id(Parser* parser, AST* ast, Token* last_token)
       
       if (new_ast)
         ast_compound_add(ast->compound_v, new_ast);
-      token = parser->token;
+      
+      return new_ast;
+    } break;
+    case TOKEN_LPAR:  // function
+    {
+      if (parser->prev_token->col != token->col_first)
+        break;
     } break;
   }
 
-  return parser;
+  return parser_set_value(parser, ast, last_token);
 }
 
 AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
@@ -67,9 +77,7 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
     if (token->type == p->token_id)
     {
       AST* new_ast_node =
-        init_ast(AST_VARIABLE, ast, last_token->col, last_token->col_first,
-                  last_token->row, last_token->row_char,
-                  last_token->row_char_first);
+        init_ast(AST_VARIABLE, ast, last_token);
       new_ast_node->variable_v =
         init_ast_variable(last_token->value, last_token->length);
       new_ast_node->variable_v->value = p->parser_get_new_ast(ast, token);
@@ -89,9 +97,7 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
     case TOKEN_ID:
     {
       AST* new_ast_node =
-        init_ast(AST_VARIABLE, ast, last_token->col, last_token->col_first,
-                  last_token->row, last_token->row_char,
-                  last_token->row_char_first);
+        init_ast(AST_VARIABLE, ast, last_token);
       new_ast_node->variable_v =
         init_ast_variable(last_token->value, last_token->length);
 
@@ -108,8 +114,7 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
       else
       {
         AST* new_ast_node2 =
-          init_ast(AST_VARIABLE, ast, token->col, token->col_first,
-                   token->row, token->row_char, token->row_char_first);
+          init_ast(AST_VARIABLE, ast, token);
         new_ast_node2->variable_v =
           init_ast_variable(token->value, token->length);
         new_ast_node->variable_v->value = new_ast_node2;
@@ -129,4 +134,20 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
   }
 
   return (void*) 0;
+}
+
+AST* parser_get_function(Parser* parser, AST* ast)
+{
+  Token* token = parser->token;
+
+  if (token->type != TOKEN_ID || parser->next_token->type != TOKEN_LPAR)
+    return (void*) 0;
+
+  if (token->col != parser->next_token->col_first)
+    return parser_set_value(parser, ast, token);
+  
+  AST* new_ast = init_ast(AST_FUNCTION, ast, token);
+  new_ast->function_v = init_ast_function(token->value, token->length);
+
+  return new_ast;
 }

@@ -88,12 +88,11 @@ typedef struct ast_t
 } AST;
 
 
-AST* init_ast(int type, AST* parent, size_t col, size_t col_first,
-              size_t row, size_t row_char, size_t row_char_first);
+AST* init_ast(int type, AST* parent, Token* token);
 
 AST_compound* init_ast_compound();
 AST_variable* init_ast_variable(char* name, size_t length);
-AST_function* init_ast_function();
+AST_function* init_ast_function(char* name, size_t length);
 AST_string* init_ast_string(char* value);
 AST_int* init_ast_int(int value);
 AST_float* init_ast_float(double value);

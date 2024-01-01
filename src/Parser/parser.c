@@ -98,7 +98,7 @@ Parser* parser_advance(Parser* parser, int type)
 
 AST* parser_get_compound(Parser* parser)
 {
-  AST* ast = init_ast(AST_COMPOUND, (void*) 0, 0, 0, 0, 0, 0);
+  AST* ast = init_ast(AST_COMPOUND, (void*) 0, (void*) 0);
   ast->compound_v = init_ast_compound();
 
   Token* token = parser->token;
@@ -138,7 +138,7 @@ AST* parser_get_compound(Parser* parser)
 
       case TOKEN_ID:
       {
-        parser = parser_get_id(parser, ast, token);
+        parser_get_id(parser, ast, token);
         token = parser->token;
         continue;
       } break;
@@ -149,21 +149,6 @@ AST* parser_get_compound(Parser* parser)
         token = parser->token;
       } break;
     }
-//     if (parser->prev_token != (void*) 0)
-//     {
-//       if (parser->prev_token->type == ID && parser->token->type == LPAR)
-//       {
-//         parser = parser_advance(parser, LPAR);
-//         char* printed_string = "";
-//         if (parser->token->type == STRING)
-//         {
-//           printed_string = parser->token->value;
-//         }
-//         parser = parser_advance(parser, STRING);
-//         parser = parser_advance(parser, RPAR);
-//         printf("%s\n", printed_string);
-//       }
-//     }
   }
 
   return ast;

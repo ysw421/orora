@@ -2,19 +2,34 @@
 #include <string.h>
 #include <stdlib.h>
 
-AST* init_ast(int type, AST* parent, size_t col, size_t col_first,
-              size_t row, size_t row_char, size_t row_char_first)
+AST* init_ast(int type, AST* parent, Token* token)
 {
   AST* ast = (AST*) malloc(sizeof(struct ast_t));
 
   ast->type = type;
 
   ast->parent = parent;
-  ast->col = col;
-  ast->col_first = col_first;
-  ast->row = row;
-  ast->row_char = row_char;
-  ast->row_char_first= row_char_first;
+  if (token)
+  {
+    ast->col = token->col;
+    ast->col_first = token->col_first;
+    ast->row = token->row;
+    ast->row_char = token->row_char;
+    ast->row_char_first = token->row_char_first;
+  }
+  else
+  {
+    ast->col = 0;
+    ast->col_first = 0;
+    ast->row = 0;
+    ast->row_char = 0;
+    ast->row_char_first = 0;
+  }
+//   ast->col = col;
+//   ast->col_first = col_first;
+//   ast->row = row;
+//   ast->row_char = row_char;
+//   ast->row_char_first= row_char_first;
 
   return ast;
 }
@@ -40,11 +55,12 @@ AST_variable* init_ast_variable(char* name, size_t length)
   return ast_variable;
 }
 
-AST_function* init_ast_function()
+AST_function* init_ast_function(char* name, size_t length)
 {
   AST_function* ast_function =
     (AST_function*) malloc(sizeof(struct ast_function_t));
-  ast_function->name_length = 0;
+  ast_function->name = name;
+  ast_function->name_length = length;
   ast_function->args_size = 0;
   ast_function->codes_length = 0;
 

@@ -5,6 +5,11 @@
 #include <stdio.h>
 #include "../Lexer/token.h"
 
+typedef struct get_value_setting_t
+{
+  bool is_in_parentheses;
+} GET_VALUE_SETTING;
+
 AST* parser_get_new_int_ast(AST* ast, Token* token);
 AST* parser_get_new_float_ast(AST* ast, Token* token);
 AST* parser_get_new_string_ast(AST* ast, Token* token);

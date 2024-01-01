@@ -3,7 +3,7 @@
 
 #include "parser_value.h"
 
-Parser* parser_get_id(Parser* parser, AST* ast, Token* last_token);
+AST* parser_get_id(Parser* parser, AST* ast, Token* last_token);
 AST* parser_value_define(Parser* parser, AST* ast, Token* last_token);
 
 #endif
