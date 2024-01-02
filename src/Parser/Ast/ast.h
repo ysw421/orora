@@ -54,13 +54,13 @@ typedef struct ast_t
     // 'AST_STRING' vs 'STRING'
     //  -> AST          -> Token
     // =========================
-    AST_COMPOUND,       // 01: struct ast_t**
-    AST_VARIABLE,       // 02:
-    AST_FUNCTION,       // 03:
-    AST_STRING,         // 04:
-    AST_INT,            // 05:
-    AST_FLOAT,          // 06:
-    AST_NOOP,           // 07: Similar with NULL
+    AST_COMPOUND,       // 00: struct ast_t**
+    AST_VARIABLE,       // 01:
+    AST_FUNCTION,       // 02:
+    AST_STRING,         // 03:
+    AST_INT,            // 04:
+    AST_FLOAT,          // 05:
+    AST_NOOP,           // 06: Similar with NULL
   } type;
 
   /* --COMPOUND-- */
@@ -112,14 +112,12 @@ typedef struct orora_value_type_t
   char* name;
   int token_id;
   AST* (*parser_get_new_ast)(AST*, Token*);
-  Parser* (*parser_get)(Parser*, AST*, Token*);
 } orora_value_type;
 
 orora_value_type* push_value_type_list
   (
    orora_value_type** head, char* name, int token_id,
-   AST* (*parser_get_new_ast)(AST*, Token*),
-   Parser* (*parser_get)(Parser*, AST*, Token*);
+   AST* (*parser_get_new_ast)(AST*, Token*)
   );
 
 #endif

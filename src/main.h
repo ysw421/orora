@@ -8,4 +8,6 @@
 // type tree...
 extern orora_value_type* value_type_list;
 
+void error(char* error_message, Parser* parser, Token* token);
+
 #endif

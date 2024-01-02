@@ -9,6 +9,8 @@ typedef struct parser_t
   Token* token;
   Token* prev_token;
   Token* next_token;
+  Token** row_tokens;
+  size_t row_size;
 } Parser;
 
 #endif

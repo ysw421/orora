@@ -74,10 +74,12 @@ Parser* init_parser(Lexer* lexer)
 {
   Parser* parser = (Parser*) malloc(sizeof(struct parser_t));
   parser->lexer = lexer;
-  parser->prev_token = parser->token;
   parser->prev_token = (void*) 0;
+  parser->prev_token = parser->token;
   parser->token = lexer_get_token(lexer);
   parser->next_token = lexer_get_token(lexer);
+  parser->row_size = 0;
+  parser->row_tokens = malloc(sizeof(Token*));
 
   if (!parser->next_token)
     return parser;
@@ -97,12 +99,27 @@ Parser* parser_advance(Parser* parser, int type)
     );
     exit(1);
   }
+//   free(parser->prev_token);
   parser->prev_token = parser->token;
   parser->token = parser->next_token;
   parser->next_token = lexer_get_token(parser->lexer);
 
   if (!parser->next_token)
     return parser;
+
+  if (parser->prev_token->col == parser->token->col_first)
+  {
+    parser->row_size ++;
+    parser->row_tokens = realloc(parser->row_tokens,
+        parser->row_size * sizeof(Token*));
+    parser->row_tokens[parser->row_size - 1] = parser->prev_token;
+  }
+  else
+  {
+    free(parser->row_tokens);
+    parser->row_size = 0;
+    parser->row_tokens = malloc(sizeof(Token*));
+  }
 
   return after_get_parser(parser);
 }
@@ -179,7 +196,7 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
 
       case TOKEN_ID:
       {
-        parser_get_id(parser, ast, token);
+        ast_compound_add(ast->compound_v, parser_get_id(parser, ast, token));
         token = parser->token;
         continue;
       } break;
@@ -200,8 +217,14 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
           } break;
           default:
           {
-            printf("에러, %s가 무엇이죠??::type: %d\n", token->value, token->type);
-            exit(1);
+            int required =
+              snprintf(NULL, 0, "에러, %s가 무엇이죠??::type: %d",
+                  token->value, token->type);
+            char* error_message = malloc((required + 1) * sizeof(char));
+            snprintf(error_message, required + 1,
+                "에러, %s가 무엇이죠??::type: %d",
+                token->value, token->type);
+            error(error_message, parser, token);
           } break;
         }
         // End for develop

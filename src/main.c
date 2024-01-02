@@ -12,18 +12,15 @@ void init_orora()
 {
   push_value_type_list
     (
-     &value_type_list, "string", TOKEN_STRING, parser_get_new_string_ast,
-     parser_get_string
+     &value_type_list, "string", TOKEN_STRING, parser_get_new_string_ast
     );
   push_value_type_list
     (
-     &value_type_list, "int", TOKEN_INT, parser_get_new_int_ast,
-     parser_get_int
+     &value_type_list, "int", TOKEN_INT, parser_get_new_int_ast
     );
   push_value_type_list
     (
-     &value_type_list, "float", TOKEN_FLOAT, parser_get_new_float_ast,
-     parser_get_float
+     &value_type_list, "float", TOKEN_FLOAT, parser_get_new_float_ast
     );
 
   orora_value_type* p = value_type_list;
@@ -89,9 +86,31 @@ int main(int argc, char** argv)
           printf("string: %s\n", checked_ast_tree->string_v->value);
         }
         break;
+        case AST_FUNCTION:
+        {
+          printf("function: %s\n", checked_ast_tree->function_v->name);
+          AST_function* checked_function = checked_ast_tree->function_v;
+          printf("arguments:\n");
+          for (int i = 0; i < checked_function->args_size; i ++)
+          {
+            switch (checked_function->args[i]->type)
+            {
+              case AST_INT:
+                printf("\t->value: %d\n", checked_function->args[i]->int_v->value);
+                break;
+              case AST_VARIABLE:
+                printf("\t->variable: %s\n",
+                    checked_function->args[i]->variable_v->name);
+                printf("\t\t->value: %d\n",
+                    checked_function->args[i]->variable_v->value->int_v->value);
+                break;
+            }
+          }
+        }
+        break;
         case AST_VARIABLE:
         {
-          printf("varialbe: %s\n", checked_ast_tree->variable_v->name);
+          printf("variable: %s\n", checked_ast_tree->variable_v->name);
           if (checked_ast_tree->variable_v->value == (void*) 0)
             break;
           switch (checked_ast_tree->variable_v->value->type)

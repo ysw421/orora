@@ -21,7 +21,6 @@ AST* parser_set_value(Parser* parser, AST* ast, Token* last_token)
     init_ast(AST_VARIABLE, ast, last_token);
   new_ast_node->variable_v =
     init_ast_variable(last_token->value, last_token->length);
-  ast_compound_add(ast->compound_v, new_ast_node);
 
   return new_ast_node;
 }
@@ -53,9 +52,6 @@ AST* parser_get_id(Parser* parser, AST* ast, Token* last_token)
     {
       parser = parser_advance(parser, TOKEN_EQUAL);
       AST* new_ast = parser_value_define(parser, ast, last_token);
-      
-      if (new_ast)
-        ast_compound_add(ast->compound_v, new_ast);
       
       return new_ast;
     } break;
@@ -169,7 +165,19 @@ AST* parser_get_function(Parser* parser, AST* ast)
       AST* new_arg_ast = parser_get_compound(parser, new_env);
       token = parser->token;
 
-      if (new_arg_ast->compound_v->size != 1)
+      if (new_arg_ast->compound_v->size == 0)
+      {
+        int required =
+          snprintf(NULL, 0, "에러, 함수 %s의 ',' 사이 argument가 비어있음",
+            new_ast->function_v->name);
+        char* error_message = malloc((required + 1) * sizeof(char));
+        snprintf(error_message, required + 1,
+            "에러, 함수 %s의 ',' 사이 argument가 비어있음",
+            new_ast->function_v->name);
+        error(error_message, parser, token);
+      }
+
+      if (new_arg_ast->compound_v->size > 1)
       {
         printf("에러, 함수 %s의 각 argument는 ','로 구분되어야 함\n",
             new_ast->function_v->name);
@@ -177,6 +185,11 @@ AST* parser_get_function(Parser* parser, AST* ast)
       }
       if (token->type == TOKEN_COMMA)
         parser = parser_advance(parser, TOKEN_COMMA);
+
+      int args_num = ++ new_ast->function_v->args_size;
+      new_ast->function_v->args = realloc(new_ast->function_v->args,
+          args_num * sizeof(struct ast_t*));
+      new_ast->function_v->args[args_num - 1] = new_arg_ast->compound_v->items[0];
     }
   }
   parser = parser_advance(parser, TOKEN_RPAR);

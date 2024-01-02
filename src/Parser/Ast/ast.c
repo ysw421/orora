@@ -25,11 +25,6 @@ AST* init_ast(int type, AST* parent, Token* token)
     ast->row_char = 0;
     ast->row_char_first = 0;
   }
-//   ast->col = col;
-//   ast->col_first = col_first;
-//   ast->row = row;
-//   ast->row_char = row_char;
-//   ast->row_char_first= row_char_first;
 
   return ast;
 }
@@ -107,8 +102,11 @@ AST_float* init_ast_float(double value)
 
 AST_compound* ast_compound_add(AST_compound* compound, AST* ast)
 {
+  if (!ast)
+    return (void*) 0;
   compound->size ++;
-  compound->items = realloc(compound->items, compound->size * sizeof(struct ast_t));
+  compound->items =
+    realloc(compound->items, compound->size * sizeof(struct ast_t));
   compound->items[compound->size - 1] = ast;
   return compound;
 }
@@ -129,8 +127,7 @@ orora_value_type* push_value_type_list
    orora_value_type** head,
    char* name,
    int token_id,
-   AST* (*parser_get_new_ast)(AST*, Token*),
-   Parser* (*parser_get)(Parser*, AST*, Token*)
+   AST* (*parser_get_new_ast)(AST*, Token*)
   )
 {
   static orora_value_type* pointer = NULL;
@@ -141,7 +138,6 @@ orora_value_type* push_value_type_list
   point->name = name;
   point->token_id = token_id;
   point->parser_get_new_ast = parser_get_new_ast;
-  point->parser_get = parser_get;
 
   point->next = pointer;
 

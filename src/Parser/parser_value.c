@@ -42,24 +42,3 @@ AST* parser_get_new_string_ast(AST* ast, Token* token)
 
   return new_ast_node;
 }
-
-Parser* parser_get_int(Parser* parser, AST* ast, Token* token)
-{ 
-  ast_compound_add(ast->compound_v, parser_get_new_int_ast(ast, token));
-
-  return parser_advance(parser, TOKEN_INT);
-}
-
-Parser* parser_get_float(Parser* parser, AST* ast, Token* token)
-{
-  ast_compound_add(ast->compound_v, parser_get_new_float_ast(ast, token));
-
-  return parser_advance(parser, TOKEN_FLOAT);
-}
-
-Parser* parser_get_string(Parser* parser, AST* ast, Token* token)
-{
-  ast_compound_add(ast->compound_v, parser_get_new_string_ast(ast, token));
-
-  return parser_advance(parser, TOKEN_STRING);
-}
