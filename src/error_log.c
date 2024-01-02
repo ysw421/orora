@@ -37,6 +37,16 @@ void error(char* error_message, Parser* parser, Token* token)
     }
   }
 
+  char* blank2 = malloc((nu + 1) * sizeof(char));
+  blank2[0] = '\0';
+  for (int i = 0; i < before_error_length; i ++)
+    strcat(blank2, " ");
+
+  char* underbars = malloc(token->length * sizeof(char));
+  underbars[0] = '\0';
+  for (int i = 0; i < token->length - 1; i ++)
+    strcat(underbars, "-");
+
   int after_error_length = 1;
   char* after_error = malloc(sizeof(char));
   after_error[0] = '\0';
@@ -48,21 +58,19 @@ void error(char* error_message, Parser* parser, Token* token)
   Token* cheked_token = parser->token;
   while (cheked_token && token->col == cheked_token->col_first)
   {
-    after_error_length += cheked_token->length;
-    after_error = realloc(after_error, after_error_length * sizeof(char));
-
-    strcat(after_error, cheked_token->value);
-
-    if (!parser->next_token)
-      break;
     for (int i = 0;
-        i < parser->next_token->row_char_first - cheked_token->row_char;
+        i < cheked_token->row_char_first - parser->prev_token->row_char;
         i ++)
     {
       after_error_length ++;
       after_error = realloc(after_error, after_error_length * sizeof(char));
       strcat(after_error, " ");
     }
+
+    after_error_length += cheked_token->length;
+    after_error = realloc(after_error, after_error_length * sizeof(char));
+
+    strcat(after_error, cheked_token->value);
 
     parser->prev_token = parser->token;
     parser->token = parser->next_token;
@@ -71,9 +79,9 @@ void error(char* error_message, Parser* parser, Token* token)
     cheked_token  = parser->token;
   }
 
+  printf("%s%ld | %s\033[0;31m%s\033[0m%s\n       |%s\033[0;31m^%s\033[0m\n",
+      blank, nu, before_error, token->value, after_error, blank2, underbars);
   printf("%s\n", error_message);
-  printf("%s%ld | %s\033[0;31m%s\033[0m%s\n       |\n",
-      blank, nu, before_error, token->value, after_error);
 
   free(nu_str);
   exit(1);

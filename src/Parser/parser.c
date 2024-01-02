@@ -104,9 +104,6 @@ Parser* parser_advance(Parser* parser, int type)
   parser->token = parser->next_token;
   parser->next_token = lexer_get_token(parser->lexer);
 
-  if (!parser->next_token)
-    return parser;
-
   if (parser->prev_token->col == parser->token->col_first)
   {
     parser->row_size ++;
@@ -120,6 +117,9 @@ Parser* parser_advance(Parser* parser, int type)
     parser->row_size = 0;
     parser->row_tokens = malloc(sizeof(Token*));
   }
+
+  if (!parser->next_token)
+    return parser;
 
   return after_get_parser(parser);
 }
