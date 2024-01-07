@@ -146,7 +146,8 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     if (!compound_env->is_in_parentheses && parser->prev_token &&
         parser->prev_token->col == token->col_first)
     {
-      printf("에러, 각 명령어는 줄바꿈으로 구분됨::%ld\n", token->col_first);
+      printf("에러, 각 명령어는 줄바꿈으로 구분됨::%s::%ld\n",
+          token->value, token->col_first + 1);
       exit(1);
     }
 
@@ -174,13 +175,11 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     switch (token->type)
     {
       case TOKEN_COMMA:
-      {
         if (compound_env->is_usefull_comma)
           return parser_get_compound_end(ast, compound_env);
-      } break;
+        break;
 
       case TOKEN_RPAR:
-      {
         if (compound_env->is_in_parentheses)
           return parser_get_compound_end(ast, compound_env);
         // !!!!!! FOR TEST !!!!!!!
@@ -190,23 +189,20 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
           token = parser->token;
         }
         // !!!!!!!!!!!!!!!!!!!!!!!
-      } break;
+        break;
 
       case TOKEN_EQUAL:
-      {
         printf("에러, '='의 주어가 존재하지 않음");
         exit(1);
-      } break;
+        break;
 
       case TOKEN_ID:
-      {
         ast_compound_add(ast->compound_v, parser_get_id(parser, ast, token));
         token = parser->token;
         continue;
-      } break;
+        break;
 
       default:
-      {
         // For develop
         switch (token->type)
         {
@@ -215,12 +211,10 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
           case TOKEN_LEFT:
           case TOKEN_RIGHT:
           case TOKEN_MINUS:
-          {
             parser = parser_advance(parser, token->type);
             token = parser->token;
-          } break;
+            break;
           default:
-          {
             int required =
               snprintf(NULL, 0, "에러, %s가 무엇이죠??",
                   token->value);
@@ -230,7 +224,7 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
                 token->value);
             printf("@@@%s\n", parser->token->value);
             error(error_message, parser);
-          } break;
+            break;
         }
         // End for develop
 
@@ -238,7 +232,7 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
 //         parser = parser_advance(parser, token->type);
 //         token = parser->token;
         // End free condition
-      } break;
+        break;
     }
   }
 

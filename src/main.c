@@ -22,13 +22,6 @@ void init_orora()
     (
      &value_type_list, "float", TOKEN_FLOAT, parser_get_new_float_ast
     );
-
-  orora_value_type* p = value_type_list;
-  do
-  {
-    printf(":::%s\n", p->name);
-    p = p->next;
-  } while (p);
 }
 
 int main(int argc, char** argv)
@@ -97,6 +90,9 @@ int main(int argc, char** argv)
             {
               case AST_INT:
                 printf("\t->value: %d\n", checked_function->args[i]->int_v->value);
+                break;
+              case AST_STRING:
+                printf("\t->value: %s\n", checked_function->args[i]->string_v->value);
                 break;
               case AST_VARIABLE:
                 printf("\t->variable: %s\n",

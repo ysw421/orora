@@ -13,7 +13,7 @@ struct value_t
   } type;
 } Value;
 
-AST* parser_get_function(Parser* parser, AST* ast);
+AST* parser_get_function(Parser* parser, AST* ast, Token* last_token);
 
 AST* parser_set_value(Parser* parser, AST* ast, Token* last_token)
 {
@@ -40,9 +40,32 @@ AST* parser_get_id(Parser* parser, AST* ast, Token* last_token)
   }
 
   // Function
-  AST* function_ast = parser_get_function(parser, ast);
+  AST* function_ast = parser_get_function(parser, ast, last_token);
   if (function_ast)
+  {
+    token = parser->token;
+
+    if (token->type == TOKEN_EQUAL)
+    {
+      AST_function* fa = function_ast->function_v;
+      for (int i = 0; i < fa->args_size; i ++)
+        if (fa->args[i]->type != AST_VARIABLE)
+        {
+          int required =
+            snprintf(NULL, 0, "에러, 함수 %s의 정의를 위해 argument는 변수여야함",
+                fa->name);
+          char* error_message = malloc((required + 1) * sizeof(char));
+          snprintf(error_message, required + 1,
+              "에러, 함수 %s의 정의를 위해 argument는 변수여야함",
+              fa->name);
+          error(error_message, parser);
+        }
+
+      parser = parser_advance(parser, TOKEN_EQUAL);
+    }
+
     return function_ast;
+  }
   // End function
 
   // Variable
@@ -138,19 +161,19 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
   return (void*) 0;
 }
 
-AST* parser_get_function(Parser* parser, AST* ast)
+AST* parser_get_function(Parser* parser, AST* ast, Token* last_token)
 {
   Token* token = parser->token;
 
-  if (token->type != TOKEN_ID || parser->next_token->type != TOKEN_LPAR)
+  if (last_token->type != TOKEN_ID || token->type != TOKEN_LPAR)
     return (void*) 0;
 
   if (token->col != parser->next_token->col_first)
     return parser_set_value(parser, ast, parser->prev_token);
 
-  AST* new_ast = init_ast(AST_FUNCTION, ast, token);
-  new_ast->function_v = init_ast_function(token->value, token->length);
-  parser = parser_advance(parser, TOKEN_ID);
+  AST* new_ast = init_ast(AST_FUNCTION, ast, last_token);
+  new_ast->function_v =
+    init_ast_function(last_token->value, last_token->length);
   parser = parser_advance(parser, TOKEN_LPAR);
   token = parser->token;
 
