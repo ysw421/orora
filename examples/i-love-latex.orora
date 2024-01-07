@@ -28,6 +28,11 @@ q=w=e=30
 
 cc
 b
-f(a  =3,b   =2323,3 ,  2)
+% satisfy a > 3
+f(a=3,b=2323, 3  "hello"      ,  2)
 
-satisfy a>  3
+a = 3
+b = 2
+a
+3
+% satisfy

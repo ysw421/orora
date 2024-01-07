@@ -77,6 +77,7 @@ AST_string* init_ast_string(char* value)
   AST_string* ast_string =
     (AST_string*) malloc(sizeof(struct ast_string_t));
   ast_string->value = value;
+  ast_string->real_value = value;
   ast_string->value_length = 0;
 
   return ast_string;

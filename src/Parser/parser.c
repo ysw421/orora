@@ -80,6 +80,7 @@ Parser* init_parser(Lexer* lexer)
   parser->next_token = lexer_get_token(lexer);
   parser->row_size = 0;
   parser->row_tokens = malloc(sizeof(Token*));
+  parser->row_tokens[0] = malloc(sizeof(Token));
 
   if (!parser->next_token)
     return parser;
@@ -103,6 +104,9 @@ Parser* parser_advance(Parser* parser, int type)
   parser->prev_token = parser->token;
   parser->token = parser->next_token;
   parser->next_token = lexer_get_token(parser->lexer);
+
+  if (!parser->token)
+    return parser;
 
   if (parser->prev_token->col == parser->token->col_first)
   {
@@ -218,13 +222,14 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
           default:
           {
             int required =
-              snprintf(NULL, 0, "에러, %s가 무엇이죠??::type: %d",
-                  token->value, token->type);
+              snprintf(NULL, 0, "에러, %s가 무엇이죠??",
+                  token->value);
             char* error_message = malloc((required + 1) * sizeof(char));
             snprintf(error_message, required + 1,
-                "에러, %s가 무엇이죠??::type: %d",
-                token->value, token->type);
-            error(error_message, parser, token);
+                "에러, %s가 무엇이죠??",
+                token->value);
+            printf("@@@%s\n", parser->token->value);
+            error(error_message, parser);
           } break;
         }
         // End for develop

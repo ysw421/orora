@@ -33,6 +33,7 @@ typedef struct ast_function_t
 typedef struct ast_string_t
 {
   char* value;
+  char* real_value;
   size_t value_length;
 } AST_string;
 

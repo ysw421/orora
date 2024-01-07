@@ -24,8 +24,11 @@ char* lexer_get_string_add_char(char* string, char* s)
 
 Token* lexer_get_string(Lexer* lexer, char c)
 {
-  char* string = (char*) malloc(sizeof(char));
-  string[0] = '\0';
+//   char* string = (char*) malloc(sizeof(char));
+//   string[0] = '\0';
+  char* string = (char*) malloc(2 * sizeof(char));
+  string[0] = c;
+  string[1] = '\0';
 
   lexer_advance(lexer);   // First char, " or '
  
@@ -40,7 +43,7 @@ Token* lexer_get_string(Lexer* lexer, char c)
     {
       is_next_backslash = false;
       char* s = (char*) malloc(2 * sizeof(char));
-      s[1] = '\0';
+      s[0] = '\0';
       bool is_special_literal = true;
       switch (lexer->c)
       {
@@ -81,8 +84,9 @@ Token* lexer_get_string(Lexer* lexer, char c)
   }
 
   lexer_advance(lexer);   // Last char
+  string = lexer_get_string_add_char(string, c == '\''? "'" : "\"");
 
   Token* token = init_token(lexer, TOKEN_STRING, string);
-  
+
   return token;
 }

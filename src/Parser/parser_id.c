@@ -174,14 +174,20 @@ AST* parser_get_function(Parser* parser, AST* ast)
         snprintf(error_message, required + 1,
             "에러, 함수 %s의 ',' 사이 argument가 비어있음",
             new_ast->function_v->name);
-        error(error_message, parser, token);
+        error(error_message, parser);
       }
 
       if (new_arg_ast->compound_v->size > 1)
       {
-        printf("에러, 함수 %s의 각 argument는 ','로 구분되어야 함\n",
+        int required =
+          snprintf(NULL, 0, "에러, 함수 %s의 각 argument는 ','로 구분되어야 함",
             new_ast->function_v->name);
-        exit(1);
+        char* error_message = malloc((required + 1) * sizeof(char));
+        snprintf(error_message, required + 1,
+            "에러, 함수 %s의 각 argument는 ','로 구분되어야 함",
+            new_ast->function_v->name);
+
+        error_prev_token(error_message, parser);
       }
       if (token->type == TOKEN_COMMA)
         parser = parser_advance(parser, TOKEN_COMMA);
@@ -189,7 +195,8 @@ AST* parser_get_function(Parser* parser, AST* ast)
       int args_num = ++ new_ast->function_v->args_size;
       new_ast->function_v->args = realloc(new_ast->function_v->args,
           args_num * sizeof(struct ast_t*));
-      new_ast->function_v->args[args_num - 1] = new_arg_ast->compound_v->items[0];
+      new_ast->function_v->args[args_num - 1] =
+        new_arg_ast->compound_v->items[0];
     }
   }
   parser = parser_advance(parser, TOKEN_RPAR);

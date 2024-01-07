@@ -25,3 +25,6 @@ clean:
 
 lint:
 	clang-tidy scr/*.c src/*/*.h src/*/*.c
+
+debug:
+	gdb $(exec)
