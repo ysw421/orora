@@ -3,6 +3,7 @@
 #include "Lexer/lexer.h"
 #include "Parser/parser_value.h"
 #include "env.h"
+#include "Visitor/visitor.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -56,8 +57,15 @@ int main(int argc, char** argv)
 
     Parser* parser = init_parser(root);
     AST* ast_tree = parser_parse(parser);
+    
+    printf("======================\n");
 
-    ast_tree->compound_v;
+    for (int i = 0; i < ast_tree->compound_v->size; i ++)
+    {
+      visitor_visit(global_env, ast_tree->compound_v->items[i]);
+    }
+    printf("\n======================\n");
+
     for (int i = 0; i < ast_tree->compound_v->size; i ++)
     {
       AST* checked_ast_tree = ast_tree->compound_v->items[i];

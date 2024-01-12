@@ -9,9 +9,41 @@ GET_VALUE_ENV* init_get_value_env()
   return new_env;
 }
 
+int parser_get_value_precedence(Token* token)
+{
+  switch (token->type)
+  {
+//     case :
+  }
+}
+
 AST* parser_get_value(Parser* parser, GET_VALUE_ENV* value_env)
 {
-  
+  orora_value_type* value_type_list;
+
+  AST_value* value = init_ast_value();
+  bool is_last_value = false;
+  Token* token = parser->token;
+
+  while (token != (void*) 0)
+  {
+
+    bool is_single_value = false;
+    orora_value_type* p = value_type_list;
+    do
+    {
+      if (token->type == p->token_id)
+      {
+        is_single_value = true;
+        break;
+      }
+      p = p->next;
+    } while (p);
+
+    if (is_single_value)
+    {}
+  }
+
   free(value_env);
   return (void*) 0;
 }

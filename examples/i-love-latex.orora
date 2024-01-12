@@ -1,6 +1,7 @@
 11
 
 f(a = 3, b=1) =
+print("hello")
 a = 1
 b = 2
 c = 3

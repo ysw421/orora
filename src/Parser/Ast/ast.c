@@ -38,6 +38,16 @@ AST_PARSER* init_ast_parser(AST* ast, Parser* parser)
   return new_ast_parser;
 }
 
+AST_value* init_ast_value()
+{
+  AST_value* ast_value =
+    (AST_value*) malloc(sizeof(struct ast_value_t));
+  ast_value->size = 0;
+  ast_value->stack =  malloc(sizeof(struct ast_value_stack_t));
+
+  return ast_value;
+}
+
 AST_compound* init_ast_compound()
 {
   AST_compound* ast_compound =
@@ -77,8 +87,11 @@ AST_string* init_ast_string(char* value)
   AST_string* ast_string =
     (AST_string*) malloc(sizeof(struct ast_string_t));
   ast_string->value = value;
-  ast_string->real_value = value;
-  ast_string->value_length = 0;
+  char* real_value = malloc((strlen(value) - 2) * sizeof(char));
+  for (int i = 1; i < strlen(value) - 1; i ++)
+    real_value[i - 1] = value[i];
+  ast_string->real_value = real_value;
+  ast_string->value_length = strlen(value);
 
   return ast_string;
 }

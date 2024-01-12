@@ -47,6 +47,40 @@ typedef struct ast_float_t
   double value;   // double
 } AST_float;
 
+typedef struct ast_value_stack_t
+{
+  enum
+  {
+    AST_VALUE_INT,
+    AST_VALUE_FLOAT,
+    AST_VALUE_STRING,
+    AST_VALUE_PLUS,
+    AST_VALUE_MINUS,
+    AST_VALUE_PRODUCT,
+    AST_VALUE_DOT_PRODUCT,
+    AST_VALUE_DIV,
+    AST_VALUE_NEG,              //  !
+  } type;
+
+  struct ast_string_t* string_v;
+  struct ast_int_t* int_v;
+  struct ast_float_t* float_v;
+
+  struct ast_value_stack_t* next;
+
+  size_t col;
+  size_t col_first;
+  size_t row;
+  size_t row_char;
+  size_t row_char_first;
+} AST_value_stack;
+
+typedef struct ast_value_t
+{
+  size_t size;
+  struct ast_value_stack_t* stack;
+} AST_value;
+
 typedef struct ast_t
 {
   enum
@@ -61,7 +95,8 @@ typedef struct ast_t
     AST_STRING,         // 03:
     AST_INT,            // 04:
     AST_FLOAT,          // 05:
-    AST_NOOP,           // 06: Similar with NULL
+    AST_VALUE,          // 06:
+    AST_NOOP,           // 07: Similar with NULL
   } type;
 
   /* --COMPOUND-- */
@@ -78,6 +113,8 @@ typedef struct ast_t
                             //        Because it is a type's name...
   /* ---FLOAT---- */
   struct ast_float_t* float_v;
+  /* ---VALUE---- */
+  struct ast_value_t* value_t;
 
   struct ast_t* parent;
 
@@ -99,6 +136,7 @@ AST* init_ast(int type, AST* parent, Token* token);
 AST_PARSER* init_ast_parser(AST* ast, Parser* parser);
 
 AST_compound* init_ast_compound();
+AST_value* init_ast_value();
 AST_variable* init_ast_variable(char* name, size_t length);
 AST_function* init_ast_function(char* name, size_t length);
 AST_string* init_ast_string(char* value);

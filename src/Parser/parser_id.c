@@ -44,8 +44,7 @@ AST* parser_get_id(Parser* parser, AST* ast, Token* last_token)
   if (function_ast)
   {
     token = parser->token;
-
-    if (token->type == TOKEN_EQUAL)
+    if (token && token->type == TOKEN_EQUAL)
     {
       AST_function* fa = function_ast->function_v;
       for (int i = 0; i < fa->args_size; i ++)
