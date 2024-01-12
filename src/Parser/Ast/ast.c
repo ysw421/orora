@@ -48,6 +48,22 @@ AST_value* init_ast_value()
   return ast_value;
 }
 
+AST_value_stack* init_ast_value_stack(int type, Token* token)
+{
+  AST_value_stack* ast =
+    (AST_value_stack*) malloc(sizeof(struct ast_value_stack_t));
+
+  ast->type = type;
+
+  ast->col = token->col;
+  ast->col_first = token->col_first;
+  ast->row = token->row;
+  ast->row_char = token->row_char;
+  ast->row_char_first = token->row_char_first;
+
+  return ast;
+}
+
 AST_compound* init_ast_compound()
 {
   AST_compound* ast_compound =

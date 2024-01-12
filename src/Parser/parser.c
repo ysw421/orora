@@ -152,24 +152,26 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     }
 
     // check value
-    bool is_checked_type = false;
-    orora_value_type* p = value_type_list;
-    do
-    {
-      if (token->type == p->token_id)
-      {
-        ast_compound_add(ast->compound_v, p->parser_get_new_ast(ast, token));
-        parser = parser_advance(parser, p->token_id);
-        token = parser->token;
-
-        is_checked_type = true;
-        break;
-      }
-      p = p->next;
-    } while (p);
-
-    if (is_checked_type)
-      continue;
+    parser_get_value(parser, ast, init_get_value_env());
+    printf("-------------\n");
+//     bool is_checked_type = false;
+//     orora_value_type* p = value_type_list;
+//     do
+//     {
+//       if (token->type == p->token_id)
+//       {
+//         ast_compound_add(ast->compound_v, p->parser_get_new_ast(ast, token));
+//         parser = parser_advance(parser, p->token_id);
+//         token = parser->token;
+// 
+//         is_checked_type = true;
+//         break;
+//       }
+//       p = p->next;
+//     } while (p);
+// 
+//     if (is_checked_type)
+//       continue;
     // -----------
 
     switch (token->type)

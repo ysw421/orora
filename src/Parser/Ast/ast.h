@@ -51,6 +51,8 @@ typedef struct ast_value_stack_t
 {
   enum
   {
+    AST_VALUE_VARIABLE,
+    AST_VALUE_FUNCTION,
     AST_VALUE_INT,
     AST_VALUE_FLOAT,
     AST_VALUE_STRING,
@@ -65,6 +67,8 @@ typedef struct ast_value_stack_t
   struct ast_string_t* string_v;
   struct ast_int_t* int_v;
   struct ast_float_t* float_v;
+  struct ast_variable_t* variable_v;
+  struct ast_function_t* function_v;
 
   struct ast_value_stack_t* next;
 
@@ -99,22 +103,41 @@ typedef struct ast_t
     AST_NOOP,           // 07: Similar with NULL
   } type;
 
-  /* --COMPOUND-- */
-  struct ast_compound_t* compound_v;
-  /* --VARIABLE-- */
-  struct ast_variable_t* variable_v;
-  /* --FUNCTION-- */
-  struct ast_function_t* function_v;
-  /* ---STRING--- */
-  struct ast_string_t* string_v;
-  /* ----INT----- */
-  struct ast_int_t* int_v;   // I can't use a 'int'
+  union
+  {
+    struct ast_compound_t* compound_v;
+    /* --VARIABLE-- */
+    struct ast_variable_t* variable_v;
+    /* --FUNCTION-- */
+    struct ast_function_t* function_v;
+    /* ---STRING--- */
+    struct ast_string_t* string_v;
+    /* ----INT----- */
+    struct ast_int_t* int_v;   // I can't use a 'int'
                             //    by variable's name... 😢
                             //        Because it is a type's name...
-  /* ---FLOAT---- */
-  struct ast_float_t* float_v;
-  /* ---VALUE---- */
-  struct ast_value_t* value_t;
+    /* ---FLOAT---- */
+    struct ast_float_t* float_v;
+    /* ---VALUE---- */
+    struct ast_value_t* value_t;
+  } value;
+
+//   /* --COMPOUND-- */
+//   struct ast_compound_t* compound_v;
+//   /* --VARIABLE-- */
+//   struct ast_variable_t* variable_v;
+//   /* --FUNCTION-- */
+//   struct ast_function_t* function_v;
+//   /* ---STRING--- */
+//   struct ast_string_t* string_v;
+//   /* ----INT----- */
+//   struct ast_int_t* int_v;   // I can't use a 'int'
+//                             //    by variable's name... 😢
+//                             //        Because it is a type's name...
+//   /* ---FLOAT---- */
+//   struct ast_float_t* float_v;
+//   /* ---VALUE---- */
+//   struct ast_value_t* value_t;
 
   struct ast_t* parent;
 
@@ -136,6 +159,7 @@ AST* init_ast(int type, AST* parent, Token* token);
 AST_PARSER* init_ast_parser(AST* ast, Parser* parser);
 
 AST_compound* init_ast_compound();
+AST_value_stack* init_ast_value_stack(int type, Token* token);
 AST_value* init_ast_value();
 AST_variable* init_ast_variable(char* name, size_t length);
 AST_function* init_ast_function(char* name, size_t length);
