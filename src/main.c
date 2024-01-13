@@ -90,6 +90,28 @@ int main(int argc, char** argv)
           printf("string: %s\n", checked_ast_tree->string_v->value);
         }
         break;
+        case AST_VALUE:
+          AST_value* checked = checked_ast_tree->value_v;
+          printf("value: ->size: %ld\n", checked->size);
+          struct ast_value_stack_t* stack = checked->stack;
+          for (int i = 0; i < checked->size; i ++)
+          {
+            switch (stack->type)
+            {
+              case AST_VALUE_INT:
+                printf("\t->int: %d\n", stack->value.int_v->value);
+                break;
+              case AST_VALUE_PLUS:
+                printf("\t->+\n");
+                break;
+              default:
+                printf("\t->unkwon type: %d\n", stack->type);
+                break;
+            }
+
+            stack = stack->next;
+          }
+          break;
         case AST_FUNCTION:
         {
           printf("function: %s\n", checked_ast_tree->function_v->name);
@@ -108,8 +130,8 @@ int main(int argc, char** argv)
               case AST_VARIABLE:
                 printf("\t->variable: %s\n",
                     checked_function->args[i]->variable_v->name);
-                printf("\t\t->value: %d\n",
-                    checked_function->args[i]->variable_v->value->int_v->value);
+//                 printf("\t\t->value: %d\n",
+//                     checked_function->args[i]->variable_v->value->int_v->value);
                 break;
             }
           }

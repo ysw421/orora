@@ -14,8 +14,8 @@ a
 :=
 6
 
-\left(
-\right    )
+% \left(
+% \right    )
 
 a := 6
 b := 7

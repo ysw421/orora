@@ -144,7 +144,7 @@ typedef struct ast_t
   /* ---FLOAT---- */
   struct ast_float_t* float_v;
   /* ---VALUE---- */
-  struct ast_value_t* value_t;
+  struct ast_value_t* value_v;
 
   struct ast_t* parent;
 

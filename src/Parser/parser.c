@@ -152,8 +152,14 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     }
 
     // check value
-    parser_get_value(parser, ast, init_get_value_env());
-    printf("-------------\n");
+    AST* value_node =
+      parser_get_value(parser, ast, token, init_get_value_env());
+    if (value_node)
+    {
+      ast_compound_add(ast->compound_v, value_node);
+      token = parser->token;
+      continue;
+    }
 //     bool is_checked_type = false;
 //     orora_value_type* p = value_type_list;
 //     do
