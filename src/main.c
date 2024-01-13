@@ -13,15 +13,18 @@ void init_orora()
 {
   push_value_type_list
     (
-     &value_type_list, "string", TOKEN_STRING, parser_get_new_string_ast
+     &value_type_list, "string", TOKEN_STRING, parser_get_new_string_ast,
+     parser_get_new_string_ast_value_stack
     );
   push_value_type_list
     (
-     &value_type_list, "int", TOKEN_INT, parser_get_new_int_ast
+     &value_type_list, "int", TOKEN_INT, parser_get_new_int_ast,
+     parser_get_new_int_ast_value_stack
     );
   push_value_type_list
     (
-     &value_type_list, "float", TOKEN_FLOAT, parser_get_new_float_ast
+     &value_type_list, "float", TOKEN_FLOAT, parser_get_new_float_ast,
+     parser_get_new_float_ast_value_stack
     );
 }
 
@@ -48,7 +51,7 @@ int main(int argc, char** argv)
 
     Lexer* root = init_lexer(file->contents, &file->length);
 
-    Token* token = (void*) 0;
+//     Token* token = (void*) 0;
 //     while ((token = lexer_get_token(root)) != (void*) 0)
 //       printf(
 //           "value: %s\t\t type: %d\n",

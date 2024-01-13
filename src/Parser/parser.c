@@ -146,32 +146,32 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     if (!compound_env->is_in_parentheses && parser->prev_token &&
         parser->prev_token->col == token->col_first)
     {
-      printf("에러, 각 명령어는 줄바꿈으로 구분됨::%s::%ld\n",
-          token->value, token->col_first + 1);
+      printf("에러, 각 명령어는 줄바꿈으로 구분됨:: %s와 %s 사이:: 줄: %ld\n",
+          parser->prev_token->value, token->value, token->col_first + 1);
       exit(1);
     }
 
     // check value
-    parser_get_value(parser, ast, init_get_value_env());
+//     parser_get_value(parser, ast, init_get_value_env());
     printf("-------------\n");
-//     bool is_checked_type = false;
-//     orora_value_type* p = value_type_list;
-//     do
-//     {
-//       if (token->type == p->token_id)
-//       {
-//         ast_compound_add(ast->compound_v, p->parser_get_new_ast(ast, token));
-//         parser = parser_advance(parser, p->token_id);
-//         token = parser->token;
-// 
-//         is_checked_type = true;
-//         break;
-//       }
-//       p = p->next;
-//     } while (p);
-// 
-//     if (is_checked_type)
-//       continue;
+    bool is_checked_type = false;
+    orora_value_type* p = value_type_list;
+    do
+    {
+      if (token->type == p->token_id)
+      {
+        ast_compound_add(ast->compound_v, p->parser_get_new_ast(ast, token));
+        parser = parser_advance(parser, p->token_id);
+        token = parser->token;
+
+        is_checked_type = true;
+        break;
+      }
+      p = p->next;
+    } while (p);
+
+    if (is_checked_type)
+      continue;
     // -----------
 
     switch (token->type)
@@ -193,8 +193,8 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         // !!!!!!!!!!!!!!!!!!!!!!!
         break;
 
-      case TOKEN_EQUAL:
-        printf("에러, '='의 주어가 존재하지 않음");
+      case TOKEN_DEFINE:
+        printf("에러, '%s'의 주어가 존재하지 않음\n", token->value);
         exit(1);
         break;
 

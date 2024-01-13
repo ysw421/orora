@@ -94,6 +94,11 @@ Token* lexer_get_token(Lexer* lexer)
       continue;
     }
 
+    Token* two_char = lexer_to_token_two_char(lexer);
+    if (two_char)
+      return two_char;
+    else
+      free(two_char);
     /* Get token... Like '=', ',' ... */
     Token* one_char = lexer_to_token_one_char(lexer);
     if (one_char)

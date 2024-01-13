@@ -22,7 +22,15 @@ void lexer_advance_by_token(Lexer* lexer, unsigned int length);
 bool lexer_advance(Lexer* lexer);
 
 /* In lexer_to_token.c */
+typedef struct
+{
+  int int_v;
+  char* string_v;
+} INT_STRING_T;
+
 Token* lexer_to_token_one_char(Lexer* lexer);
+INT_STRING_T* get_two_char_type(Lexer* lexer);
+Token* lexer_to_token_two_char(Lexer* lexer);
 int get_one_char_type(char c);
 int get_special_string_type(int length, char* string);
 

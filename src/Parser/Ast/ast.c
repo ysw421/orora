@@ -98,34 +98,34 @@ AST_function* init_ast_function(char* name, size_t length)
   return ast_function;
 }
 
-AST_string* init_ast_string(char* value)
+AST_string* init_ast_string(Token* token)
 {
   AST_string* ast_string =
     (AST_string*) malloc(sizeof(struct ast_string_t));
-  ast_string->value = value;
-  char* real_value = malloc((strlen(value) - 2) * sizeof(char));
-  for (int i = 1; i < strlen(value) - 1; i ++)
-    real_value[i - 1] = value[i];
+  ast_string->value = token->value;
+  char* real_value = malloc((strlen(token->value) - 2) * sizeof(char));
+  for (int i = 1; i < strlen(token->value) - 1; i ++)
+    real_value[i - 1] = token->value[i];
   ast_string->real_value = real_value;
-  ast_string->value_length = strlen(value);
+  ast_string->value_length = strlen(token->value);
 
   return ast_string;
 }
 
-AST_int* init_ast_int(int value)
+AST_int* init_ast_int(Token* token)
 {
   AST_int* ast_int =
     (AST_int*) malloc(sizeof(struct ast_int_t));
-  ast_int->value = value;
+  ast_int->value = atoi(token->value);
 
   return ast_int;
 }
 
-AST_float* init_ast_float(double value)
+AST_float* init_ast_float(Token* token)
 {
   AST_float* ast_float =
     (AST_float*) malloc(sizeof(struct ast_float_t));
-  ast_float->value = value;
+  ast_float->value = atof(token->value);
 
   return ast_float;
 }
@@ -157,7 +157,8 @@ orora_value_type* push_value_type_list
    orora_value_type** head,
    char* name,
    int token_id,
-   AST* (*parser_get_new_ast)(AST*, Token*)
+   AST* (*parser_get_new_ast)(AST*, Token*),
+   AST_value_stack* (*parser_get_new_ast_value_stack)(Token*)
   )
 {
   static orora_value_type* pointer = NULL;
@@ -168,6 +169,7 @@ orora_value_type* push_value_type_list
   point->name = name;
   point->token_id = token_id;
   point->parser_get_new_ast = parser_get_new_ast;
+  point->parser_get_new_ast_value_stack = parser_get_new_ast_value_stack;
 
   point->next = pointer;
 

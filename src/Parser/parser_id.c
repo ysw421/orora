@@ -44,7 +44,7 @@ AST* parser_get_id(Parser* parser, AST* ast, Token* last_token)
   if (function_ast)
   {
     token = parser->token;
-    if (token && token->type == TOKEN_EQUAL)
+    if (token && token->type == TOKEN_DEFINE)
     {
       AST_function* fa = function_ast->function_v;
       for (int i = 0; i < fa->args_size; i ++)
@@ -60,7 +60,7 @@ AST* parser_get_id(Parser* parser, AST* ast, Token* last_token)
           error(error_message, parser);
         }
 
-      parser = parser_advance(parser, TOKEN_EQUAL);
+      parser = parser_advance(parser, TOKEN_DEFINE);
     }
 
     return function_ast;
@@ -70,9 +70,9 @@ AST* parser_get_id(Parser* parser, AST* ast, Token* last_token)
   // Variable
   switch (token->type)
   {
-    case TOKEN_EQUAL:   // Define variable
+    case TOKEN_DEFINE:   // Define variable
     {
-      parser = parser_advance(parser, TOKEN_EQUAL);
+      parser = parser_advance(parser, TOKEN_DEFINE);
       AST* new_ast = parser_value_define(parser, ast, last_token);
       
       return new_ast;
@@ -125,10 +125,10 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
       new_ast_node->variable_v =
         init_ast_variable(last_token->value, last_token->length);
 
-      if (parser->next_token && parser->next_token->type == TOKEN_EQUAL)
+      if (parser->next_token && parser->next_token->type == TOKEN_DEFINE)
       {
         parser = parser_advance(parser, TOKEN_ID);
-        parser = parser_advance(parser, TOKEN_EQUAL);
+        parser = parser_advance(parser, TOKEN_DEFINE);
 
         new_ast_node->variable_v->value =
           parser_value_define(parser, new_ast_node, token);
@@ -168,7 +168,8 @@ AST* parser_get_function(Parser* parser, AST* ast, Token* last_token)
     return (void*) 0;
 
   if (token->col != parser->next_token->col_first)
-    return parser_set_value(parser, ast, parser->prev_token);
+    return (void*) 0;
+//     return parser_set_value(parser, ast, parser->prev_token);
 
   AST* new_ast = init_ast(AST_FUNCTION, ast, last_token);
   new_ast->function_v =

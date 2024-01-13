@@ -29,7 +29,8 @@ Token* lexer_get_id(Lexer* lexer)
         && !IS_WHITESPACE(lexer->c)
         && !(lexer->c == '\\' && is_next_backslash == false)
         && lexer->c != '\n'
-        && get_one_char_type(lexer->c) == -1)
+        && get_one_char_type(lexer->c) == -1
+        && get_two_char_type(lexer)->int_v == -1)
   {
     if (is_next_backslash) // Special literal, e.g.) \n, \t, \r
     {

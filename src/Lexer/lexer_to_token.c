@@ -2,6 +2,53 @@
 #include <stdlib.h>
 #include <string.h>
 
+INT_STRING_T* get_two_char_type(Lexer* lexer)
+{
+  if (lexer->length - 2 < lexer->pointer)
+  {
+    INT_STRING_T* result = malloc(sizeof(INT_STRING_T));
+    result->int_v = -1;
+    return result;
+  }
+
+  INT_STRING_T* result = malloc(sizeof(INT_STRING_T));
+
+  char* value = (char*) malloc(3 * sizeof(char));
+  value[0] = lexer->c;
+  value[1] = lexer->contents[lexer->pointer + 1];
+  value[2] = '\0';
+  result->string_v = value;
+
+  if (!strcmp(value, ":="))
+    result->int_v = TOKEN_DEFINE;
+  else
+  {
+    result->string_v = (void*) 0;
+    result->int_v = -1;
+    free(value);
+  }
+  return result;
+}
+
+Token* lexer_to_token_two_char(Lexer* lexer)
+{
+  INT_STRING_T* cheker = get_two_char_type(lexer);
+
+  int token_type = cheker->int_v;
+  char* value = cheker->string_v;
+  free(cheker);
+
+  if (token_type == -1)
+  {
+    free(value);
+    return (void*) 0;
+  }
+  lexer_advance(lexer);
+  lexer_advance(lexer);
+
+  return init_token(lexer, token_type, value);
+}
+
 int get_one_char_type(char c)
 {
   switch (c)
@@ -68,6 +115,9 @@ int get_special_string_type(int length, char* string)
     case 4:
       if (!strcmp(string, "\\end")) return TOKEN_END;
       if (!strcmp(string, "\\div")) return TOKEN_SLASH;
+      break;
+    case 10:
+      if (!strcmp(string, "\\leftarrow")) return TOKEN_DEFINE;
       break;
     default: return -1; break;
   }

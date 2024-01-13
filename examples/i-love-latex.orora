@@ -1,28 +1,28 @@
 11
 
-f(a = 3, b=1) =
+a:=3
+f(a:= 3, b\leftarrow 1) :=
 print("hello")
-a = 1
-b = 2
-c = 3
+a := 1
+b \leftarrow 2
+c := 3
 3
 2
 1
 
 a
-=
+:=
 6
-a
 
 \left(
 \right    )
 
-a = 6
-b=7
-c=3.22
-d="hello"
-d = b
-q=w=e=30
+a := 6
+b := 7
+c :=3.22
+d \leftarrow "hello"
+d := b
+q:=w:=e:=30
 3.141592
 "i love you"
 
@@ -33,10 +33,10 @@ q=w=e=30
 cc
 b
 % satisfy a > 3
-f(a=3,b=2323, 3,  "hello"      ,  2)
+f(a:=3,b\leftarrow 2323, 3,  "hello"      ,  2)
 
-a = 3
-b = 2
+a := 3
+b := 2
 a
 3
 % satisfy
