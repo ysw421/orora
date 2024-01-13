@@ -110,12 +110,16 @@ void error_prev_token(char* error_message, Parser* parser)
   blank[0] = '\0';
   for (int i = 0; i < 6 - strlen(nu_str); i ++)
     strcat(blank, " ");
-
+  
   int before_error_length = 1;
   char* before_error = malloc(sizeof(char));
   before_error[0] = '\0';
+
   for (int i = 0; i < parser->row_size - 1; i ++)
   {
+    if (parser->row_size < 1)
+      break;
+
     Token* token = parser->row_tokens[i];
     before_error_length += token->length;
     before_error = realloc(before_error, before_error_length * sizeof(char));
@@ -157,14 +161,18 @@ void error_prev_token(char* error_message, Parser* parser)
   after_error[0] = '\0';
 
   root_num = parser->token->row_char_first - parser->prev_token->row_char;
-  after_error_length += root_num;
+  after_error_length += root_num > 0 ? root_num : 0;
   after_error = realloc(after_error, after_error_length * sizeof(char));
-  for (int i = 0; i < root_num; i ++)
-    strcat(after_error, " ");
+  if (root_num > 0)
+    for (int i = 0; i < root_num; i ++)
+      strcat(after_error, " ");
 
-  after_error_length += parser->token->length;
-  after_error = realloc(after_error, after_error_length * sizeof(char));
-  strcat(after_error, parser->token->value);
+  if (parser->token->col_first == parser->prev_token->col)
+  {
+    after_error_length += parser->token->length;
+    after_error = realloc(after_error, after_error_length * sizeof(char));
+    strcat(after_error, parser->token->value);
+  }
 
   parser->prev_token = parser->token;
   parser->token = parser->next_token;

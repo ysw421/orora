@@ -39,10 +39,8 @@ Token* lexer_to_token_two_char(Lexer* lexer)
   free(cheker);
 
   if (token_type == -1)
-  {
-    free(value);
     return (void*) 0;
-  }
+
   lexer_advance(lexer);
   lexer_advance(lexer);
 

@@ -12,13 +12,9 @@ GET_VALUE_ENV* init_get_value_env()
   return new_env;
 }
 
-int parser_precedence(Token* token, AST_value_stack* stack)
+int parser_precedence(int type_id)
 {
-  if (token)
-  {}
-  else
-  {}
-  switch (token->type)
+  switch (type_id)
   {
 //     case :
   }
@@ -61,7 +57,7 @@ AST_value* push_value(AST_value* value, AST_value_stack* node)
 AST* parser_get_value(Parser* parser, AST* ast, GET_VALUE_ENV* value_env)
 {
   AST_value* stack = init_ast_value();
-  AST_value* postfix_expression = init_ast_value();
+  AST_value* postfix_expression = init_ast_value();   // result
   bool is_last_value = false;       // 3x -> 3 * x
   Token* token = parser->token;
 
@@ -72,16 +68,13 @@ AST* parser_get_value(Parser* parser, AST* ast, GET_VALUE_ENV* value_env)
   while (token != (void*) 0)
   {
     if (!value_env->is_in_parentheses && parser->prev_token &&
-        parser->prev_token->col == token->col_first)
+        parser->prev_token->col != token->col_first)
       break;
 
     if (token->type == TOKEN_LPAR)
     {
       count_of_dearkelly ++;
       value_env->is_in_parentheses = true;
-      parser = parser_advance(parser, TOKEN_LPAR);
-
-      continue;
     }
     else if (token->type == TOKEN_RPAR)
     {
@@ -90,8 +83,6 @@ AST* parser_get_value(Parser* parser, AST* ast, GET_VALUE_ENV* value_env)
       count_of_dearkelly --;
       if (!count_of_dearkelly)
         value_env->is_in_parentheses = false;
-
-      continue;
     }
 
     bool is_single_value = false;
@@ -111,7 +102,8 @@ AST* parser_get_value(Parser* parser, AST* ast, GET_VALUE_ENV* value_env)
       if (is_last_value)
       {
         while (stack->size
-            && parser_precedence((void*) 0, stack->stack))
+            && parser_precedence(stack->stack->type)
+                >= parser_precedence(AST_VALUE_PRODUCT))
         {
           save_value = pop_value(stack);
           push_value(postfix_expression, save_value);
@@ -125,9 +117,9 @@ AST* parser_get_value(Parser* parser, AST* ast, GET_VALUE_ENV* value_env)
     }
 
     // For develop
-//     parser_advance(parser, token->type);
-//     token = parser->token;
-    break;
+    parser_advance(parser, token->type);
+    token = parser->token;
+//     break;
     // end for
   }
 

@@ -75,7 +75,7 @@ Parser* init_parser(Lexer* lexer)
   Parser* parser = (Parser*) malloc(sizeof(struct parser_t));
   parser->lexer = lexer;
   parser->prev_token = (void*) 0;
-  parser->prev_token = parser->token;
+//   parser->prev_token = parser->token;
   parser->token = lexer_get_token(lexer);
   parser->next_token = lexer_get_token(lexer);
   parser->row_size = 0;
@@ -152,26 +152,26 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     }
 
     // check value
-//     parser_get_value(parser, ast, init_get_value_env());
+    parser_get_value(parser, ast, init_get_value_env());
     printf("-------------\n");
-    bool is_checked_type = false;
-    orora_value_type* p = value_type_list;
-    do
-    {
-      if (token->type == p->token_id)
-      {
-        ast_compound_add(ast->compound_v, p->parser_get_new_ast(ast, token));
-        parser = parser_advance(parser, p->token_id);
-        token = parser->token;
-
-        is_checked_type = true;
-        break;
-      }
-      p = p->next;
-    } while (p);
-
-    if (is_checked_type)
-      continue;
+//     bool is_checked_type = false;
+//     orora_value_type* p = value_type_list;
+//     do
+//     {
+//       if (token->type == p->token_id)
+//       {
+//         ast_compound_add(ast->compound_v, p->parser_get_new_ast(ast, token));
+//         parser = parser_advance(parser, p->token_id);
+//         token = parser->token;
+// 
+//         is_checked_type = true;
+//         break;
+//       }
+//       p = p->next;
+//     } while (p);
+// 
+//     if (is_checked_type)
+//       continue;
     // -----------
 
     switch (token->type)
@@ -225,7 +225,7 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
                 "에러, %s가 무엇이죠??",
                 token->value);
             printf("@@@%s\n", parser->token->value);
-            error(error_message, parser);
+            error_prev_token(error_message, parser);
             break;
         }
         // End for develop
