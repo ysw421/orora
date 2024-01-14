@@ -13,7 +13,7 @@ AST* parser_get_id(Parser* parser, AST* ast, Token* last_token)
     return parser_set_value(parser, ast, last_token);
 
   // Function
-  AST* function_ast = parser_get_function(parser, ast, last_token);
+  AST* function_ast = parser_get_function(parser, ast);
   if (function_ast)
   {
     token = parser->token;
@@ -123,23 +123,24 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
   return (void*) 0;
 }
 
-AST* parser_get_function(Parser* parser, AST* ast, Token* last_token)
+AST* parser_get_function(Parser* parser, AST* ast)
 {
 //   parser = parser_advance(parser, TOKEN_ID);
   Token* token = parser->token;
 
   if (!parser->next_token
-      ||last_token->type != TOKEN_ID
+      || token->type != TOKEN_ID
       || parser->next_token->type != TOKEN_LPAR)
     return (void*) 0;
 
-  if (!parser->prev_token || parser->prev_token->col != token->col_first)
+  if (token->col != parser->next_token->col_first)
     return (void*) 0;
 //     return parser_set_value(parser, ast, parser->prev_token);
 
-  AST* new_ast = init_ast(AST_FUNCTION, ast, last_token);
+  AST* new_ast = init_ast(AST_FUNCTION, ast, token);
   new_ast->function_v =
-    init_ast_function(last_token->value, last_token->length);
+    init_ast_function(token->value, token->length);
+  parser = parser_advance(parser, TOKEN_ID);
   parser = parser_advance(parser, TOKEN_LPAR);
   token = parser->token;
 

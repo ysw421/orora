@@ -118,12 +118,12 @@ AST* parser_get_value(Parser* parser, AST* ast,
           push_value(stack, init_ast_value_stack(AST_VALUE_PRODUCT, token));
         }
         
-        AST* function_ast = parser_get_function(parser, ast, token);
+        AST* function_ast = parser_get_function(parser, ast);
+        token = parser->token;
 
         AST_value_stack* new;
         if (function_ast)
         {
-          printf("fun!!!\n");
           new = init_ast_value_stack(AST_VALUE_FUNCTION, token);
           new->value.function_v = function_ast->function_v;
           push_value(postfix_expression, new);
@@ -145,7 +145,7 @@ AST* parser_get_value(Parser* parser, AST* ast,
         break;
     }
 
-    parser_advance(parser, token->type);
+    parser = parser_advance(parser, token->type);
     token = parser->token;
   }
   while (stack->size)

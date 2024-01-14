@@ -8,6 +8,29 @@
 #include <stdlib.h>
 
 void print_variable(AST_variable* node);
+void print_value(AST* ast);
+
+void print_function(AST_function* checked_function)
+{
+  printf("function: %s\n", checked_function->name);
+  printf("  ->arguments:\n");
+  for (int i = 0; i < checked_function->args_size; i ++)
+  {
+    switch (checked_function->args[i]->type)
+    {
+      case AST_VALUE:
+        printf("    ->");
+        print_value(checked_function->args[i]);
+        printf("\n");
+        break;
+      case AST_VARIABLE:
+        printf("    ->");
+        print_variable(checked_function->args[i]->variable_v);
+        printf("\n");
+        break;
+    }
+  }
+}
 
     void print_value(AST* ast)
     {
@@ -20,6 +43,12 @@ void print_variable(AST_variable* node);
         {
           case AST_VALUE_INT:
             printf("\t->int: %d\n", stack->value.int_v->value);
+            break;
+          case AST_VALUE_FLOAT:
+            printf("\t->float: %f\n", stack->value.float_v->value);
+            break;
+          case AST_VALUE_STRING:
+            printf("\t->string: %s\n", stack->value.string_v->real_value);
             break;
           case AST_VALUE_PLUS:
             printf("\t->+\n");
@@ -36,6 +65,12 @@ void print_variable(AST_variable* node);
           case AST_VALUE_VARIABLE:
             printf("    ->");
             print_variable(stack->value.variable_v);
+            printf("\n");
+            break;
+          case AST_VALUE_FUNCTION:
+            printf("    ->");
+            print_function(stack->value.function_v);
+            printf("\n");
             break;
           default:
             printf("\t->unkwon type: %d\n", stack->type);
@@ -66,6 +101,7 @@ void print_variable(AST_variable* node);
               case AST_VALUE:
                 printf("    ->in variable");
                 print_value(p);
+                printf("\n");
                 break;
               case AST_VARIABLE:
                 printf("\t->variable: %s\n",
@@ -154,30 +190,8 @@ int main(int argc, char** argv)
           print_value(checked_ast_tree);
           break;
         case AST_FUNCTION:
-        {
-          printf("function: %s\n", checked_ast_tree->function_v->name);
-          AST_function* checked_function = checked_ast_tree->function_v;
-          printf("arguments:\n");
-          for (int i = 0; i < checked_function->args_size; i ++)
-          {
-            switch (checked_function->args[i]->type)
-            {
-              case AST_INT:
-                printf("\t->value: %d\n", checked_function->args[i]->int_v->value);
-                break;
-              case AST_STRING:
-                printf("\t->value: %s\n", checked_function->args[i]->string_v->value);
-                break;
-              case AST_VARIABLE:
-                printf("\t->variable: %s\n",
-                    checked_function->args[i]->variable_v->name);
-//                 printf("\t\t->value: %d\n",
-//                     checked_function->args[i]->variable_v->value->int_v->value);
-                break;
-            }
-          }
-        }
-        break;
+          print_function(checked_ast_tree->function_v);
+          break;
         case AST_VARIABLE:
           print_variable(checked_ast_tree->variable_v);
           break;
