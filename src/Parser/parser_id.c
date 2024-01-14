@@ -45,10 +45,13 @@ AST* parser_get_id(Parser* parser, AST* ast, Token* last_token)
   {
     case TOKEN_DEFINE:   // Define variable
     {
-      parser = parser_advance(parser, TOKEN_DEFINE);
-      AST* new_ast = parser_value_define(parser, ast, last_token);
+      if (parser->prev_token->col == token->col_first)
+      {
+        parser = parser_advance(parser, TOKEN_DEFINE);
+        AST* new_ast = parser_value_define(parser, ast, last_token);
       
-      return new_ast;
+        return new_ast;
+      }
     } break;
   }
   // End variable
@@ -67,6 +70,11 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
   }
 
   // Check value
+  if (parser->prev_token->col != token->col_first)
+  {
+    printf("에러, ':=' 뒤에는 값이 와야함.");
+    exit(1);
+  }
   AST* value_node =
       parser_get_value(parser, ast, token, init_get_value_env());
   token = parser->prev_token;
@@ -80,7 +88,8 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
       new_ast_node->variable_v =
         init_ast_variable(last_token->value, last_token->length);
 
-      if (parser->token && parser->token->type == TOKEN_DEFINE)
+      if (parser->token && parser->token->type == TOKEN_DEFINE
+          && parser->prev_token->col == parser->token->col)
       {
         Token* stoken = parser->prev_token;
         parser = parser_advance(parser, TOKEN_DEFINE);
