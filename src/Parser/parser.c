@@ -93,10 +93,12 @@ Parser* parser_advance(Parser* parser, int type)
   if (parser->token->type != type)
   {
     printf(
-        "에러, %s의 타입은 %d가 아닌 %d여야함",
+        "에러, %s의 타입은 %d가 아닌 %d여야함\nprev: %s, next: %s\n",
         parser->token->value,
         parser->token->type,
-        type
+        type,
+        parser->prev_token ? parser->prev_token->value : "",
+        parser->next_token ? parser->next_token->value : ""
     );
     exit(1);
   }

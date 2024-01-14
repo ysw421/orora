@@ -5,5 +5,6 @@
 
 AST* parser_get_id(Parser* parser, AST* ast, Token* last_token);
 AST* parser_value_define(Parser* parser, AST* ast, Token* last_token);
+AST* parser_get_function(Parser* parser, AST* ast, Token* last_token);
 
 #endif

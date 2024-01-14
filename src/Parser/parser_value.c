@@ -118,14 +118,28 @@ AST* parser_get_value(Parser* parser, AST* ast,
           push_value(stack, init_ast_value_stack(AST_VALUE_PRODUCT, token));
         }
         
-        // ToDo... check function
-        AST_value_stack* new =
-          init_ast_value_stack(AST_VALUE_VARIABLE, token);
-        new->value.variable_v =
-          init_ast_variable(token->value, token->length);
-        push_value(postfix_expression, new);
+        AST* function_ast = parser_get_function(parser, ast, token);
 
-        is_last_value = true;
+        AST_value_stack* new;
+        if (function_ast)
+        {
+          printf("fun!!!\n");
+          new = init_ast_value_stack(AST_VALUE_FUNCTION, token);
+          new->value.function_v = function_ast->function_v;
+          push_value(postfix_expression, new);
+
+          is_last_value = true;
+          continue;
+        }
+        else
+        {
+          new = init_ast_value_stack(AST_VALUE_VARIABLE, token);
+          new->value.variable_v =
+            init_ast_variable(token->value, token->length);
+          push_value(postfix_expression, new);
+
+          is_last_value = true;
+        }
       }
       else
         break;

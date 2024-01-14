@@ -1,9 +1,13 @@
+(A+B)*C+(D+E)
 (A+B*(C-D))/E
 5+2
 3a
 q:=2
 a := b \leftarrow c := 3
 3+2
+
+% f(3):=
+
 % a := v := 3
 %b\leftarrow 3
 

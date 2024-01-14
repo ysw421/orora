@@ -2,17 +2,7 @@
 #include <stdlib.h>
 #include "../main.h"
 
-AST* parser_get_function(Parser* parser, AST* ast, Token* last_token);
-
-AST* parser_set_value(Parser* parser, AST* ast, Token* last_token)
-{
-  AST* new_ast_node =
-    init_ast(AST_VARIABLE, ast, last_token);
-  new_ast_node->variable_v =
-    init_ast_variable(last_token->value, last_token->length);
-
-  return new_ast_node;
-}
+AST* parser_set_value(Parser* parser, AST* ast, Token* last_token);
 
 AST* parser_get_id(Parser* parser, AST* ast, Token* last_token)
 {
@@ -20,9 +10,7 @@ AST* parser_get_id(Parser* parser, AST* ast, Token* last_token)
   Token* token = parser->token;
 
   if (token == (void*) 0)
-  {
     return parser_set_value(parser, ast, last_token);
-  }
 
   // Function
   AST* function_ast = parser_get_function(parser, ast, last_token);
@@ -79,7 +67,6 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
   }
 
   // Check value
-  // ToDo: use get_value function
   AST* value_node =
       parser_get_value(parser, ast, token, init_get_value_env());
   token = parser->prev_token;
@@ -133,79 +120,20 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
     exit(1);
   }
 
-//   orora_value_type* p = value_type_list;
-//   do
-//   {
-//     if (token->type == p->token_id)
-//     {
-//       AST* new_ast_node =
-//         init_ast(AST_VARIABLE, ast, last_token);
-//       new_ast_node->variable_v =
-//         init_ast_variable(last_token->value, last_token->length);
-//       new_ast_node->variable_v->value = p->parser_get_new_ast(ast, token);
-// 
-//       parser = parser_advance(parser, p->token_id);
-//       Token* token = parser->token;
-// 
-//       return new_ast_node;
-//     }
-// 
-//     p = p->next;
-//   } while (p);
-//   // End check value
-//   
-//   switch (token->type)
-//   {
-//     case TOKEN_ID:
-//     {
-//       AST* new_ast_node =
-//         init_ast(AST_VARIABLE, ast, last_token);
-//       new_ast_node->variable_v =
-//         init_ast_variable(last_token->value, last_token->length);
-// 
-//       if (parser->next_token && parser->next_token->type == TOKEN_DEFINE)
-//       {
-//         parser = parser_advance(parser, TOKEN_ID);
-//         parser = parser_advance(parser, TOKEN_DEFINE);
-// 
-//         new_ast_node->variable_v->value =
-//           parser_value_define(parser, new_ast_node, token);
-//         
-//         token = parser->token;
-//       }
-//       else
-//       {
-//         AST* new_ast_node2 =
-//           init_ast(AST_VARIABLE, ast, token);
-//         new_ast_node2->variable_v =
-//           init_ast_variable(token->value, token->length);
-//         new_ast_node->variable_v->value = new_ast_node2;
-// 
-//         parser = parser_advance(parser, TOKEN_ID);
-//         token = parser->token;
-//       }
-// 
-//       return new_ast_node;
-//     } break;
-// 
-//     default:
-//     {
-//       printf("에러, '=' 뒤에는 값이 와야함.");
-//       exit(1);
-//     } break;
-//   }
-
   return (void*) 0;
 }
 
 AST* parser_get_function(Parser* parser, AST* ast, Token* last_token)
 {
+//   parser = parser_advance(parser, TOKEN_ID);
   Token* token = parser->token;
 
-  if (last_token->type != TOKEN_ID || token->type != TOKEN_LPAR)
+  if (!parser->next_token
+      ||last_token->type != TOKEN_ID
+      || parser->next_token->type != TOKEN_LPAR)
     return (void*) 0;
 
-  if (token->col != parser->next_token->col_first)
+  if (!parser->prev_token || parser->prev_token->col != token->col_first)
     return (void*) 0;
 //     return parser_set_value(parser, ast, parser->prev_token);
 
@@ -263,4 +191,14 @@ AST* parser_get_function(Parser* parser, AST* ast, Token* last_token)
   parser = parser_advance(parser, TOKEN_RPAR);
 
   return new_ast;
+}
+
+AST* parser_set_value(Parser* parser, AST* ast, Token* last_token)
+{
+  AST* new_ast_node =
+    init_ast(AST_VARIABLE, ast, last_token);
+  new_ast_node->variable_v =
+    init_ast_variable(last_token->value, last_token->length);
+
+  return new_ast_node;
 }
