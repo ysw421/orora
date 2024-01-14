@@ -148,27 +148,39 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     if (!compound_env->is_in_parentheses && parser->prev_token &&
         parser->prev_token->col == token->col_first)
     {
-      printf("에러, 각 명령어는 줄바꿈으로 구분됨:: %s와 %s 사이:: 줄: %ld\n",
-          parser->prev_token->value, token->value, token->col_first + 1);
+      printf("에러, 각 명령어는 줄바꿈으로 구분됨:: %s 전:: 줄: %ld\n",
+          token->value, token->col_first + 1);
       exit(1);
     }
 
     // check value
+    Token* stoken = parser->token;
+    GET_VALUE_ENV* new_get_value_env = init_get_value_env();
+    if (compound_env->is_in_parentheses)
+      new_get_value_env->is_in_parentheses = true;
     AST* value_node =
-      parser_get_value(parser, ast, token, init_get_value_env());
+      parser_get_value(&parser, ast, token, new_get_value_env);
     token = parser->token;
-    if (value_node && !(value_node->value_v->size == 1
-        && (value_node->value_v->stack->type == AST_VALUE_FUNCTION)))
+    if (value_node)
     {
       if (value_node->value_v->size == 1
           && value_node->value_v->stack->type == AST_VALUE_VARIABLE)
       {
         ast_compound_add(ast->compound_v,
-            parser_get_id(parser, ast, parser->prev_token));
+            parser_parse_variable(parser, ast, parser->prev_token));
+        token = parser->token;
+      }
+      else if (value_node->value_v->size == 1
+          && value_node->value_v->stack->type == AST_VALUE_FUNCTION)
+      {
+        ast_compound_add(ast->compound_v,
+            parser_parse_function(parser, ast, stoken,
+                value_node->value_v->stack->value.function_v));
         token = parser->token;
       }
       else
       {
+        free(stoken);
         ast_compound_add(ast->compound_v, value_node);
         token = parser->token;
       }
@@ -187,13 +199,6 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
       case TOKEN_RPAR:
         if (compound_env->is_in_parentheses)
           return parser_get_compound_end(ast, compound_env);
-        // !!!!!! FOR TEST !!!!!!!
-        else
-        {
-          parser = parser_advance(parser, token->type);
-          token = parser->token;
-        }
-        // !!!!!!!!!!!!!!!!!!!!!!!
         break;
 
       case TOKEN_DEFINE:
@@ -201,25 +206,12 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         exit(1);
         break;
 
-      case TOKEN_ID:
-        ast_compound_add(ast->compound_v, parser_get_id(parser, ast, token));
-        token = parser->token;
-        continue;
-        break;
-
       default:
         // For develop
         switch (token->type)
         {
-          case TOKEN_LPAR:
-          case TOKEN_RPAR:
-          case TOKEN_LEFT:
-          case TOKEN_RIGHT:
-          case TOKEN_MINUS:
-            parser = parser_advance(parser, token->type);
-            token = parser->token;
-            break;
           default:
+            printf("@@@ %s\n", token->value);
             int required =
               snprintf(NULL, 0, "에러, %s가 무엇이죠??",
                   token->value);

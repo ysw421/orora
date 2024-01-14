@@ -11,9 +11,11 @@ bool is_operator(int token_id);
 int get_ast_value_type(int token_id);
 
 
-AST* parser_get_value(Parser* parser, AST* ast,
+AST* parser_get_value(Parser** parser_, AST* ast,
     Token* last_token, GET_VALUE_ENV* value_env)
 {
+  bool is_in_parentheses_save = value_env->is_in_parentheses;
+  Parser* parser = *parser_;
   AST_value* stack = init_ast_value();
   AST_value* postfix_expression = init_ast_value();   // result
   bool is_last_value = false;       // 3x -> 3 * x
@@ -48,7 +50,7 @@ AST* parser_get_value(Parser* parser, AST* ast,
         break;
 
       count_of_dearkelly --;
-      if (!count_of_dearkelly)
+      if (!count_of_dearkelly && !is_in_parentheses_save)
         value_env->is_in_parentheses = false;
       while (stack->stack->type != AST_VALUE_LPAR)
       {
@@ -162,6 +164,8 @@ AST* parser_get_value(Parser* parser, AST* ast,
   AST* new_ast_node =
     init_ast(AST_VALUE, ast, last_token);
   new_ast_node->value_v = postfix_expression;
+
+  *parser_ = parser;
   return new_ast_node;
 }
 

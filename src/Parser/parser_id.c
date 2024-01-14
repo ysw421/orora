@@ -3,48 +3,19 @@
 #include "../main.h"
 
 AST* parser_set_value(Parser* parser, AST* ast, Token* last_token);
+AST* parser_set_function(Parser* parser, AST* ast, Token* last_token);
 
-AST* parser_get_id(Parser* parser, AST* ast, Token* last_token)
+AST* parser_parse_variable(Parser* parser, AST* ast, Token* last_token)
 {
-//   parser = parser_advance(parser, TOKEN_ID);
   Token* token = parser->token;
 
   if (token == (void*) 0)
     return parser_set_value(parser, ast, last_token);
 
-  // Function
-  AST* function_ast = parser_get_function(parser, ast);
-  if (function_ast)
-  {
-    token = parser->token;
-    if (token && token->type == TOKEN_DEFINE)
-    {
-      AST_function* fa = function_ast->function_v;
-      for (int i = 0; i < fa->args_size; i ++)
-        if (fa->args[i]->type != AST_VARIABLE)
-        {
-          int required =
-            snprintf(NULL, 0, "에러, 함수 %s의 정의를 위해 argument는 변수여야함",
-                fa->name);
-          char* error_message = malloc((required + 1) * sizeof(char));
-          snprintf(error_message, required + 1,
-              "에러, 함수 %s의 정의를 위해 argument는 변수여야함",
-              fa->name);
-          error(error_message, parser);
-        }
-
-      parser = parser_advance(parser, TOKEN_DEFINE);
-    }
-
-    return function_ast;
-  }
-  // End function
-
   // Variable
   switch (token->type)
   {
     case TOKEN_DEFINE:   // Define variable
-    {
       if (parser->prev_token->col == token->col_first)
       {
         parser = parser_advance(parser, TOKEN_DEFINE);
@@ -52,18 +23,87 @@ AST* parser_get_id(Parser* parser, AST* ast, Token* last_token)
       
         return new_ast;
       }
-    } break;
+      break;
   }
   // End variable
 
   return parser_set_value(parser, ast, last_token);
 }
 
+AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
+    AST_function* fa)
+{
+  Token* token = parser->token;
+
+  AST* new_ast_node =
+    init_ast(AST_FUNCTION, ast, last_token);
+  new_ast_node->function_v = fa;
+
+  if (token == (void*) 0)
+    return new_ast_node;
+
+  switch (token->type)
+  {
+    case TOKEN_DEFINE:
+      if (parser->prev_token->col == token->col_first)
+      {
+        parser = parser_advance(parser, TOKEN_DEFINE);
+        for (int i = 0; i < fa->args_size; i ++)
+          if (fa->args[i]->type != AST_VARIABLE)
+          {
+            int required =
+              snprintf(NULL, 0, "에러, 함수 %s의 정의를 위해 argument는 변수여야함",
+                  fa->name);
+            char* error_message = malloc((required + 1) * sizeof(char));
+            snprintf(error_message, required + 1,
+                "에러, 함수 %s의 정의를 위해 argument는 변수여야함",
+                fa->name);
+            error(error_message, parser);
+          }
+        token = parser->token;
+
+        if (!token)
+        {
+          printf("에러, ':=' 사용에 목적이 없음.");
+          exit(1);
+        }
+        if (parser->prev_token->col != token->col_first)
+        {
+          printf("에러, ':=' 뒤에는 값이 와야함.");
+          exit(1);
+        }
+
+        AST* value_node =
+            parser_get_value(&parser, ast, token, init_get_value_env());
+        token = parser->prev_token;
+
+        if (value_node)
+        {
+          new_ast_node->function_v->codes_size = 1;
+          new_ast_node->function_v->codes = malloc(sizeof(struct AST*));
+          new_ast_node->function_v->codes[0] = value_node;
+        }
+        else
+        {
+          // ToDo: type2 function....
+          // like....
+          // f(x) := \begin{code}print(x)\begin{end}
+          printf("에러, ':=' 뒤에는 값이 와야함.");
+          exit(1);
+        }
+        return new_ast_node;
+      }
+      break;
+  }
+
+  return new_ast_node;
+}
+
 AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
 {
   Token* token = parser->token;
 
-  if (token == (void*) 0)
+  if (!token)
   {
     printf("에러, ':=' 사용에 목적이 없음.");
     exit(1);
@@ -76,7 +116,7 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
     exit(1);
   }
   AST* value_node =
-      parser_get_value(parser, ast, token, init_get_value_env());
+      parser_get_value(&parser, ast, token, init_get_value_env());
   token = parser->prev_token;
   if (value_node)
   {
@@ -209,6 +249,16 @@ AST* parser_set_value(Parser* parser, AST* ast, Token* last_token)
     init_ast(AST_VARIABLE, ast, last_token);
   new_ast_node->variable_v =
     init_ast_variable(last_token->value, last_token->length);
+
+  return new_ast_node;
+}
+
+AST* parser_set_function(Parser* parser, AST* ast, Token* last_token)
+{
+  AST* new_ast_node =
+    init_ast(AST_FUNCTION, ast, last_token);
+  new_ast_node->function_v =
+    init_ast_function(last_token->value, last_token->length);
 
   return new_ast_node;
 }
