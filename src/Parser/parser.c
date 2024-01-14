@@ -154,30 +154,25 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     // check value
     AST* value_node =
       parser_get_value(parser, ast, token, init_get_value_env());
-    if (value_node)
+    token = parser->token;
+    if (value_node && !(value_node->value_v->size == 1
+        && (value_node->value_v->stack->type == AST_VALUE_FUNCTION)))
     {
-      ast_compound_add(ast->compound_v, value_node);
-      token = parser->token;
+      if (value_node->value_v->size == 1
+          && value_node->value_v->stack->type == AST_VALUE_VARIABLE)
+      {
+        ast_compound_add(ast->compound_v,
+            parser_get_id(parser, ast, parser->prev_token));
+        token = parser->token;
+      }
+      else
+      {
+        ast_compound_add(ast->compound_v, value_node);
+        token = parser->token;
+      }
       continue;
     }
-//     bool is_checked_type = false;
-//     orora_value_type* p = value_type_list;
-//     do
-//     {
-//       if (token->type == p->token_id)
-//       {
-//         ast_compound_add(ast->compound_v, p->parser_get_new_ast(ast, token));
-//         parser = parser_advance(parser, p->token_id);
-//         token = parser->token;
-// 
-//         is_checked_type = true;
-//         break;
-//       }
-//       p = p->next;
-//     } while (p);
-// 
-//     if (is_checked_type)
-//       continue;
+    free(value_node);
     // -----------
 
     switch (token->type)

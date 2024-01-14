@@ -7,6 +7,80 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void print_variable(AST_variable* node);
+
+    void print_value(AST* ast)
+    {
+      AST_value* checked = ast->value_v;
+      printf("value: ->size: %ld\n", checked->size);
+      struct ast_value_stack_t* stack = checked->stack;
+      for (int i = 0; i < checked->size; i ++)
+      {
+        switch (stack->type)
+        {
+          case AST_VALUE_INT:
+            printf("\t->int: %d\n", stack->value.int_v->value);
+            break;
+          case AST_VALUE_PLUS:
+            printf("\t->+\n");
+            break;
+          case AST_VALUE_MINUS:
+            printf("\t->-\n");
+            break;
+          case AST_VALUE_PRODUCT:
+            printf("\t->*\n");
+            break;
+          case AST_VALUE_DIV:
+            printf("\t->/\n");
+            break;
+          case AST_VALUE_VARIABLE:
+            printf("    ->");
+            print_variable(stack->value.variable_v);
+            break;
+          default:
+            printf("\t->unkwon type: %d\n", stack->type);
+            break;
+        }
+
+        stack = stack->next;
+      }
+    }
+    
+    void print_variable(AST_variable* node)
+    {
+      printf("variable: %s\n", node->name);
+      if (node->value == (void*) 0)
+        return;
+      switch (node->value->type)
+      {
+        case AST_VALUE:
+          printf("    ->in variable");
+          print_value(node->value);
+          break;
+        case AST_VARIABLE:
+          AST* p = node->value;
+          do
+          {
+            switch (p->type)
+            {
+              case AST_VALUE:
+                printf("    ->in variable");
+                print_value(p);
+                break;
+              case AST_VARIABLE:
+                printf("\t->variable: %s\n",
+                        p->variable_v->name);
+                break;
+            }
+            if (p->type != AST_VARIABLE)
+              break;
+            p = p->variable_v->value;
+          } while (p);
+          break;
+        default: break;
+      }
+    }
+
 orora_value_type* value_type_list;
 
 void init_orora()
@@ -69,48 +143,15 @@ int main(int argc, char** argv)
     }
     printf("\n======================\n");
 
+    // For Develop....
     for (int i = 0; i < ast_tree->compound_v->size; i ++)
     {
       AST* checked_ast_tree = ast_tree->compound_v->items[i];
 
       switch (checked_ast_tree->type)
       {
-        case AST_INT:
-        {
-          printf("int: %d\n", checked_ast_tree->int_v->value);
-        }
-        break;
-        case AST_FLOAT:
-        {
-          printf("float: %f\n", checked_ast_tree->float_v->value);
-        }
-        break;
-        case AST_STRING:
-        {
-          printf("string: %s\n", checked_ast_tree->string_v->value);
-        }
-        break;
         case AST_VALUE:
-          AST_value* checked = checked_ast_tree->value_v;
-          printf("value: ->size: %ld\n", checked->size);
-          struct ast_value_stack_t* stack = checked->stack;
-          for (int i = 0; i < checked->size; i ++)
-          {
-            switch (stack->type)
-            {
-              case AST_VALUE_INT:
-                printf("\t->int: %d\n", stack->value.int_v->value);
-                break;
-              case AST_VALUE_PLUS:
-                printf("\t->+\n");
-                break;
-              default:
-                printf("\t->unkwon type: %d\n", stack->type);
-                break;
-            }
-
-            stack = stack->next;
-          }
+          print_value(checked_ast_tree);
           break;
         case AST_FUNCTION:
         {
@@ -138,63 +179,8 @@ int main(int argc, char** argv)
         }
         break;
         case AST_VARIABLE:
-        {
-          printf("variable: %s\n", checked_ast_tree->variable_v->name);
-          if (checked_ast_tree->variable_v->value == (void*) 0)
-            break;
-          switch (checked_ast_tree->variable_v->value->type)
-          {
-            case AST_INT:
-              printf(
-                  "\t->value: %d\n",
-                  checked_ast_tree->variable_v->value->int_v->value);
-              break;
-            case AST_FLOAT:
-              printf(
-                  "\t->value: %f\n",
-                  checked_ast_tree->variable_v->value->float_v->value);
-              break;
-            case AST_STRING:
-              printf(
-                  "\t->value: %s\n",
-                  checked_ast_tree->variable_v->value->string_v->value);
-              break;
-            case AST_VARIABLE:
-            {
-              AST* p = checked_ast_tree->variable_v->value;
-              do
-              {
-                switch (p->type)
-                {
-                  case AST_INT:
-                    printf(
-                        "\t->value: %d\n",
-                        p->int_v->value);
-                    break;
-                  case AST_FLOAT:
-                    printf(
-                        "\t->value: %f\n",
-                        p->float_v->value);
-                    break;
-                  case AST_STRING:
-                    printf(
-                        "\t->value: %s\n",
-                        p->string_v->value);
-                    break;
-                  case AST_VARIABLE:
-                  {
-                    printf("\t->variable: %s\n",
-                    p->variable_v->name);
-                  } break;
-                }
-                if (p->type != AST_VARIABLE)
-                  break;
-                p = p->variable_v->value;
-              } while (p);
-            } break;
-            default: break;
-          }
-        }
+          print_variable(checked_ast_tree->variable_v);
+          break;
       }
     }
   }

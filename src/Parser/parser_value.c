@@ -23,14 +23,12 @@ AST* parser_get_value(Parser* parser, AST* ast,
 
   int count_of_dearkelly = 0;
 
-  printf("### %s\n", token->value);
   bool is_first_turn = true;
-  while (token != (void*) 0)
+  while (token)
   {
     if (!is_first_turn && !value_env->is_in_parentheses &&
         parser->prev_token && parser->prev_token->col != token->col_first)
       break;
-    printf("@@@ %s\n", token->value);
 
     if (is_first_turn)
       is_first_turn = false;
@@ -99,24 +97,43 @@ AST* parser_get_value(Parser* parser, AST* ast,
             save_value = pop_value(stack);
             push_value(postfix_expression, save_value);
           }
-          push_value(postfix_expression,
-              init_ast_value_stack(AST_VALUE_PRODUCT, token));
+          push_value(stack, init_ast_value_stack(AST_VALUE_PRODUCT, token));
         }
         save_value = get_single_value(parser, ast);
         push_value(postfix_expression, save_value);
+        
+        is_last_value = true;
+      }
+      else if (token->type == TOKEN_ID)
+      {
+        if (is_last_value)
+        {
+          while (stack->size
+              && parser_precedence(stack->stack->type)
+                  >= parser_precedence(AST_VALUE_PRODUCT))
+          {
+            save_value = pop_value(stack);
+            push_value(postfix_expression, save_value);
+          }
+          push_value(stack, init_ast_value_stack(AST_VALUE_PRODUCT, token));
+        }
+        
+        // ToDo... check function
+        AST_value_stack* new =
+          init_ast_value_stack(AST_VALUE_VARIABLE, token);
+        new->value.variable_v =
+          init_ast_variable(token->value, token->length);
+        push_value(postfix_expression, new);
+
         is_last_value = true;
       }
       else
         break;
     }
 
-    // For develop
     parser_advance(parser, token->type);
     token = parser->token;
-//     break;
-    // end for
   }
-  printf("end: %s\n", token->value);
   while (stack->size)
     push_value(postfix_expression, pop_value(stack));
   free(stack);
@@ -243,18 +260,24 @@ GET_VALUE_ENV* init_get_value_env()
   return new_env;
 }
 
-int parser_precedence(int type_id)
+int parser_precedence(int ast_stack_id)
 {
-  switch (type_id)
+  switch (ast_stack_id)
   {
-    case TOKEN_LPAR:
+    case AST_VALUE_LPAR:
       return 1;
       break;
-    case TOKEN_PLUS:
+    case AST_VALUE_PLUS:
+    case AST_VALUE_MINUS:
       return 2;
       break;
-    case TOKEN_RPAR:
+    case AST_VALUE_DOT_PRODUCT:
+    case AST_VALUE_PRODUCT:
+    case AST_VALUE_DIV:
       return 3;
+      break;
+    case AST_VALUE_RPAR:
+      return 99;
       break;
   }
   
@@ -266,6 +289,9 @@ bool is_operator(int token_id)
   switch (token_id)
   {
     case TOKEN_PLUS:
+    case TOKEN_MINUS:
+    case TOKEN_STAR:
+    case TOKEN_SLASH:
       return true;
   }
 
@@ -278,7 +304,12 @@ int get_ast_value_type(int token_id)
   {
     case TOKEN_PLUS:
       return AST_VALUE_PLUS;
-      break;
+    case TOKEN_MINUS:
+      return AST_VALUE_MINUS;
+    case TOKEN_STAR:
+      return AST_VALUE_PRODUCT;
+    case TOKEN_SLASH:
+      return AST_VALUE_DIV;
   }
 
   return -1;

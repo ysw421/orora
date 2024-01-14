@@ -1,8 +1,14 @@
-a := 3
-b\leftarrow 3
+(A+B*(C-D))/E
+5+2
+3a
+q:=2
+a := b \leftarrow c := 3
+3+2
+% a := v := 3
+%b\leftarrow 3
 
-f(2+3)
+%f(2+3)
 
-g(2, 3, a, "hello")
+%g(2, 3, a, "hello")
 
-a := b:=c:=3
+%a := b:=c:=3
