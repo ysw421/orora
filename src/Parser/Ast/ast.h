@@ -16,6 +16,8 @@ typedef struct ast_variable_t
   char* name;
   size_t name_length;
   struct ast_t* value;
+  size_t satisfy_size;
+  struct ast_t** satisfy;
 } AST_variable;
 
 typedef struct ast_function_t
@@ -108,43 +110,24 @@ typedef struct ast_t
     AST_NOOP,           // 07: Similar with NULL
   } type;
 
-// ToDo: union...
-//   union
-//   {
-//     struct ast_compound_t* compound_v;
-//     /* --VARIABLE-- */
-//     struct ast_variable_t* variable_v;
-//     /* --FUNCTION-- */
-//     struct ast_function_t* function_v;
-//     /* ---STRING--- */
-//     struct ast_string_t* string_v;
-//     /* ----INT----- */
-//     struct ast_int_t* int_v;   // I can't use a 'int'
-//                             //    by variable's name... 😢
-//                             //        Because it is a type's name...
-//     /* ---FLOAT---- */
-//     struct ast_float_t* float_v;
-//     /* ---VALUE---- */
-//     struct ast_value_t* value_t;
-//   } value;
-// end ToDo
-
-  /* --COMPOUND-- */
-  struct ast_compound_t* compound_v;
-  /* --VARIABLE-- */
-  struct ast_variable_t* variable_v;
-  /* --FUNCTION-- */
-  struct ast_function_t* function_v;
-  /* ---STRING--- */
-  struct ast_string_t* string_v;
-  /* ----INT----- */
-  struct ast_int_t* int_v;   // I can't use a 'int'
+  union
+  {
+    struct ast_compound_t* compound_v;
+    /* --VARIABLE-- */
+    struct ast_variable_t* variable_v;
+    /* --FUNCTION-- */
+    struct ast_function_t* function_v;
+    /* ---STRING--- */
+    struct ast_string_t* string_v;
+    /* ----INT----- */
+    struct ast_int_t* int_v;   // I can't use a 'int'
                             //    by variable's name... 😢
                             //        Because it is a type's name...
-  /* ---FLOAT---- */
-  struct ast_float_t* float_v;
-  /* ---VALUE---- */
-  struct ast_value_t* value_v;
+    /* ---FLOAT---- */
+    struct ast_float_t* float_v;
+    /* ---VALUE---- */
+    struct ast_value_t* value_v;
+  } value;
 
   struct ast_t* parent;
 

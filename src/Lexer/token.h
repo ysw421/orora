@@ -32,7 +32,8 @@ typedef struct
     TOKEN_END,                // 20: \end
     TOKEN_LEFT,               // 21: \left
     TOKEN_RIGHT,              // 22: \right
-    TOKEN_DEFINE              // 23: :=, \leftarrow
+    TOKEN_DEFINE,             // 23: :=, \leftarrow
+    TOKEN_COLON               // 24: :
     // TOKEN_EXPONENTIAL      // 17: exponenetial notation number,
                               //      e.g. 3.2E+5
   } type;

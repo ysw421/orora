@@ -81,6 +81,8 @@ AST_variable* init_ast_variable(char* name, size_t length)
   ast_variable->name = name;
   ast_variable->value = (void*) 0;
   ast_variable->name_length = length;
+  ast_variable->satisfy_size = 0;
+  ast_variable->satisfy = malloc(sizeof(AST));
 
   return ast_variable;
 }

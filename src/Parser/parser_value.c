@@ -127,7 +127,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         if (function_ast)
         {
           new = init_ast_value_stack(AST_VALUE_FUNCTION, token);
-          new->value.function_v = function_ast->function_v;
+          new->value.function_v = function_ast->value.function_v;
           push_value(postfix_expression, new);
 
           is_last_value = true;
@@ -160,10 +160,10 @@ AST* parser_get_value(Parser** parser_, AST* ast,
     return (void*) 0;
   }
 
-  free(value_env);
+//   free(value_env);
   AST* new_ast_node =
     init_ast(AST_VALUE, ast, last_token);
-  new_ast_node->value_v = postfix_expression;
+  new_ast_node->value.value_v = postfix_expression;
 
   *parser_ = parser;
   return new_ast_node;
@@ -188,7 +188,7 @@ AST* parser_get_new_int_ast(AST* ast, Token* token)
 {
   AST* new_ast_node =
     init_ast(AST_INT, ast, token);
-  new_ast_node->int_v = init_ast_int(token);
+  new_ast_node->value.int_v = init_ast_int(token);
 
   return new_ast_node;
 }
@@ -197,7 +197,7 @@ AST* parser_get_new_float_ast(AST* ast, Token* token)
 {
   AST* new_ast_node =
     init_ast(AST_FLOAT, ast, token);
-  new_ast_node->float_v = init_ast_float(token);
+  new_ast_node->value.float_v = init_ast_float(token);
 
   return new_ast_node;
 }
@@ -206,7 +206,7 @@ AST* parser_get_new_string_ast(AST* ast, Token* token)
 {
   AST* new_ast_node =
     init_ast(AST_STRING, ast, token);
-  new_ast_node->string_v = init_ast_string(token);
+  new_ast_node->value.string_v = init_ast_string(token);
 
   return new_ast_node;
 }

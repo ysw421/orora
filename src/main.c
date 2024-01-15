@@ -25,7 +25,7 @@ void print_function(AST_function* checked_function)
         break;
       case AST_VARIABLE:
         printf("    ->");
-        print_variable(checked_function->args[i]->variable_v);
+        print_variable(checked_function->args[i]->value.variable_v);
         printf("\n");
         break;
     }
@@ -40,7 +40,7 @@ void print_function(AST_function* checked_function)
 
 void print_value(AST* ast)
 {
-  AST_value* checked = ast->value_v;
+  AST_value* checked = ast->value.value_v;
   printf("value: ->size: %ld\n", checked->size);
   struct ast_value_stack_t* stack = checked->stack;
   
@@ -91,36 +91,46 @@ void print_value(AST* ast)
 void print_variable(AST_variable* node)
 {
   printf("variable: %s\n", node->name);
-  if (!node->value)
-    return;
-  switch (node->value->type)
+  if (node->value)
   {
-    case AST_VALUE:
-      printf("    ->in variable");
-      print_value(node->value);
-      break;
-    case AST_VARIABLE:
-      AST* p = node->value;
-      do
-      {
-        switch (p->type)
+    switch (node->value->type)
+    {
+      case AST_VALUE:
+        printf("    ->in variable");
+        print_value(node->value);
+        break;
+      case AST_VARIABLE:
+        AST* p = node->value;
+        do
         {
-          case AST_VALUE:
-            printf("    ->in variable");
-            print_value(p);
-            printf("\n");
+          switch (p->type)
+          {
+            case AST_VALUE:
+              printf("    ->in variable");
+              print_value(p);
+              printf("\n");
+              break;
+            case AST_VARIABLE:
+              printf("\t->variable: %s\n",
+                      p->value.variable_v->name);
+              break;
+          }
+          if (p->type != AST_VARIABLE)
             break;
-          case AST_VARIABLE:
-            printf("\t->variable: %s\n",
-                    p->variable_v->name);
-            break;
-        }
-        if (p->type != AST_VARIABLE)
-          break;
-        p = p->variable_v->value;
-      } while (p);
-      break;
-    default: break;
+          p = p->value.variable_v->value;
+        } while (p);
+        break;
+      default: break;
+    }
+  }
+  if (node->satisfy_size)
+  {
+    printf("    ->satisfy\n");
+    for (int i = 0; i < node->satisfy_size; i ++)
+    {
+      printf("    ->condition: ");
+      print_value(node->satisfy[i]);
+    }
   }
 }
 
@@ -180,16 +190,16 @@ int main(int argc, char** argv)
     
     printf("======================\n");
 
-    for (int i = 0; i < ast_tree->compound_v->size; i ++)
+    for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
     {
-      visitor_visit(global_env, ast_tree->compound_v->items[i]);
+      visitor_visit(global_env, ast_tree->value.compound_v->items[i]);
     }
     printf("\n======================\n");
 
     // For Develop....
-    for (int i = 0; i < ast_tree->compound_v->size; i ++)
+    for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
     {
-      AST* checked_ast_tree = ast_tree->compound_v->items[i];
+      AST* checked_ast_tree = ast_tree->value.compound_v->items[i];
 
       switch (checked_ast_tree->type)
       {
@@ -197,10 +207,10 @@ int main(int argc, char** argv)
           print_value(checked_ast_tree);
           break;
         case AST_FUNCTION:
-          print_function(checked_ast_tree->function_v);
+          print_function(checked_ast_tree->value.function_v);
           break;
         case AST_VARIABLE:
-          print_variable(checked_ast_tree->variable_v);
+          print_variable(checked_ast_tree->value.variable_v);
           break;
       }
     }

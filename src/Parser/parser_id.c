@@ -37,7 +37,7 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
 
   AST* new_ast_node =
     init_ast(AST_FUNCTION, ast, last_token);
-  new_ast_node->function_v = fa;
+  new_ast_node->value.function_v = fa;
 
   if (token == (void*) 0)
     return new_ast_node;
@@ -79,9 +79,9 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
 
         if (value_node)
         {
-          new_ast_node->function_v->codes_size = 1;
-          new_ast_node->function_v->codes = malloc(sizeof(struct AST*));
-          new_ast_node->function_v->codes[0] = value_node;
+          new_ast_node->value.function_v->codes_size = 1;
+          new_ast_node->value.function_v->codes = malloc(sizeof(struct AST*));
+          new_ast_node->value.function_v->codes[0] = value_node;
         }
         else
         {
@@ -120,12 +120,12 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
   token = parser->prev_token;
   if (value_node)
   {
-    if (value_node->value_v->size == 1
-        && value_node->value_v->stack->type == AST_VALUE_VARIABLE)
+    if (value_node->value.value_v->size == 1
+        && value_node->value.value_v->stack->type == AST_VALUE_VARIABLE)
     {
       AST* new_ast_node =
         init_ast(AST_VARIABLE, ast, last_token);
-      new_ast_node->variable_v =
+      new_ast_node->value.variable_v =
         init_ast_variable(last_token->value, last_token->length);
 
       if (parser->token && parser->token->type == TOKEN_DEFINE
@@ -134,7 +134,7 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
         Token* stoken = parser->prev_token;
         parser = parser_advance(parser, TOKEN_DEFINE);
 
-        new_ast_node->variable_v->value =
+        new_ast_node->value.variable_v->value =
           parser_value_define(parser, new_ast_node, stoken);
         
         token = parser->token;
@@ -143,9 +143,9 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
       {
         AST* new_ast_node2 =
           init_ast(AST_VARIABLE, ast, token);
-        new_ast_node2->variable_v =
+        new_ast_node2->value.variable_v =
           init_ast_variable(token->value, token->length);
-        new_ast_node->variable_v->value = new_ast_node2;
+        new_ast_node->value.variable_v->value = new_ast_node2;
 
         token = parser->token;
       }
@@ -156,9 +156,9 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
     {
       AST* new_ast_node =
         init_ast(AST_VARIABLE, ast, last_token);
-      new_ast_node->variable_v =
+      new_ast_node->value.variable_v =
         init_ast_variable(last_token->value, last_token->length);
-      new_ast_node->variable_v->value = value_node;
+      new_ast_node->value.variable_v->value = value_node;
 
       return new_ast_node;
     }
@@ -187,7 +187,7 @@ AST* parser_get_function(Parser* parser, AST* ast)
 //     return parser_set_value(parser, ast, parser->prev_token);
 
   AST* new_ast = init_ast(AST_FUNCTION, ast, token);
-  new_ast->function_v =
+  new_ast->value.function_v =
     init_ast_function(token->value, token->length);
   parser = parser_advance(parser, TOKEN_ID);
   parser = parser_advance(parser, TOKEN_LPAR);
@@ -204,38 +204,38 @@ AST* parser_get_function(Parser* parser, AST* ast)
       AST* new_arg_ast = parser_get_compound(parser, new_env);
       token = parser->token;
 
-      if (new_arg_ast->compound_v->size == 0)
+      if (new_arg_ast->value.compound_v->size == 0)
       {
         int required =
           snprintf(NULL, 0, "에러, 함수 %s의 ',' 사이 argument가 비어있음",
-            new_ast->function_v->name);
+            new_ast->value.function_v->name);
         char* error_message = malloc((required + 1) * sizeof(char));
         snprintf(error_message, required + 1,
             "에러, 함수 %s의 ',' 사이 argument가 비어있음",
-            new_ast->function_v->name);
+            new_ast->value.function_v->name);
         error(error_message, parser);
       }
 
-      if (new_arg_ast->compound_v->size > 1)
+      if (new_arg_ast->value.compound_v->size > 1)
       {
         int required =
           snprintf(NULL, 0, "에러, 함수 %s의 각 argument는 ','로 구분되어야 함",
-            new_ast->function_v->name);
+            new_ast->value.function_v->name);
         char* error_message = malloc((required + 1) * sizeof(char));
         snprintf(error_message, required + 1,
             "에러, 함수 %s의 각 argument는 ','로 구분되어야 함",
-            new_ast->function_v->name);
+            new_ast->value.function_v->name);
 
         error_prev_token(error_message, parser);
       }
       if (token->type == TOKEN_COMMA)
         parser = parser_advance(parser, TOKEN_COMMA);
 
-      int args_num = ++ new_ast->function_v->args_size;
-      new_ast->function_v->args = realloc(new_ast->function_v->args,
+      int args_num = ++ new_ast->value.function_v->args_size;
+      new_ast->value.function_v->args = realloc(new_ast->value.function_v->args,
           args_num * sizeof(struct ast_t*));
-      new_ast->function_v->args[args_num - 1] =
-        new_arg_ast->compound_v->items[0];
+      new_ast->value.function_v->args[args_num - 1] =
+        new_arg_ast->value.compound_v->items[0];
     }
   }
   parser = parser_advance(parser, TOKEN_RPAR);
@@ -247,7 +247,7 @@ AST* parser_set_value(Parser* parser, AST* ast, Token* last_token)
 {
   AST* new_ast_node =
     init_ast(AST_VARIABLE, ast, last_token);
-  new_ast_node->variable_v =
+  new_ast_node->value.variable_v =
     init_ast_variable(last_token->value, last_token->length);
 
   return new_ast_node;
@@ -257,7 +257,7 @@ AST* parser_set_function(Parser* parser, AST* ast, Token* last_token)
 {
   AST* new_ast_node =
     init_ast(AST_FUNCTION, ast, last_token);
-  new_ast_node->function_v =
+  new_ast_node->value.function_v =
     init_ast_function(last_token->value, last_token->length);
 
   return new_ast_node;
