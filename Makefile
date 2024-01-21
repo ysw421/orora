@@ -3,6 +3,8 @@ sources = $(wildcard src/*.c src/*/*.c src/*/*/*.c )
 objects = $(sources:.c=.o)
 flags = -g -Wall -lm -ldl -fPIC -rdynamic
 
+# ./configure --prefix = /usr/local/orora
+
 
 $(exec): $(objects)
 	gcc $(objects) $(flags) -o $(exec)
