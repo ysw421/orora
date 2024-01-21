@@ -83,6 +83,7 @@ AST_variable* init_ast_variable(char* name, size_t length)
   ast_variable->name_length = length;
   ast_variable->satisfy_size = 0;
   ast_variable->satisfy = malloc(sizeof(AST));
+  ast_variable->ast_type = AST_VARIABLE_NULL;
 
   return ast_variable;
 }
@@ -160,7 +161,8 @@ orora_value_type* push_value_type_list
    char* name,
    int token_id,
    AST* (*parser_get_new_ast)(AST*, Token*),
-   AST_value_stack* (*parser_get_new_ast_value_stack)(Token*)
+   AST_value_stack* (*parser_get_new_ast_value_stack)(Token*),
+   bool (*is_check)(Token*)
   )
 {
   static orora_value_type* pointer = NULL;
@@ -172,6 +174,7 @@ orora_value_type* push_value_type_list
   point->token_id = token_id;
   point->parser_get_new_ast = parser_get_new_ast;
   point->parser_get_new_ast_value_stack = parser_get_new_ast_value_stack;
+  point->is_check_type = is_check;
 
   point->next = pointer;
 

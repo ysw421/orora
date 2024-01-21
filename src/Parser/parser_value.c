@@ -80,7 +80,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
       orora_value_type* p = value_type_list;
       do
       {
-        if (token->type == p->token_id)
+        if (p->is_check_type(token))
         {
           is_single_value = true;
           break;
@@ -138,6 +138,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
           new = init_ast_value_stack(AST_VALUE_VARIABLE, token);
           new->value.variable_v =
             init_ast_variable(token->value, token->length);
+          new->value.variable_v->ast_type = AST_VARIABLE_VALUE;
           push_value(postfix_expression, new);
 
           is_last_value = true;
@@ -236,6 +237,27 @@ AST_value_stack* parser_get_new_string_ast_value_stack(Token* token)
   new->value.string_v = init_ast_string(token);
 
   return new;
+}
+
+bool is_string_ast(Token* token)
+{
+  if (token->type == TOKEN_STRING)
+    return true;
+  return false;
+}
+
+bool is_float_ast(Token* token)
+{
+  if (token->type == TOKEN_FLOAT)
+    return true;
+  return false;
+}
+
+bool is_int_ast(Token* token)
+{
+  if (token->type == TOKEN_INT)
+    return true;
+  return false;
 }
 
 AST_value_stack* pop_value(AST_value* value)

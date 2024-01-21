@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "../main.h"
 
-AST* parser_set_value(Parser* parser, AST* ast, Token* last_token);
+AST* parser_set_variable_value(Parser* parser, AST* ast, Token* last_token);
 AST* parser_set_function(Parser* parser, AST* ast, Token* last_token);
 
 AST* parser_parse_variable(Parser* parser, AST* ast, Token* last_token)
@@ -10,7 +10,7 @@ AST* parser_parse_variable(Parser* parser, AST* ast, Token* last_token)
   Token* token = parser->token;
 
   if (token == (void*) 0)
-    return parser_set_value(parser, ast, last_token);
+    return parser_set_variable_value(parser, ast, last_token);
 
   // Variable
   switch (token->type)
@@ -27,7 +27,7 @@ AST* parser_parse_variable(Parser* parser, AST* ast, Token* last_token)
   }
   // End variable
 
-  return parser_set_value(parser, ast, last_token);
+  return parser_set_variable_value(parser, ast, last_token);
 }
 
 AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
@@ -149,6 +149,7 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
 
         token = parser->token;
       }
+      new_ast_node->value.variable_v->ast_type = AST_VARIABLE_DEFINE;
 
       return new_ast_node;
     }
@@ -159,6 +160,7 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
       new_ast_node->value.variable_v =
         init_ast_variable(last_token->value, last_token->length);
       new_ast_node->value.variable_v->value = value_node;
+      new_ast_node->value.variable_v->ast_type = AST_VARIABLE_DEFINE;
 
       return new_ast_node;
     }
@@ -243,12 +245,13 @@ AST* parser_get_function(Parser* parser, AST* ast)
   return new_ast;
 }
 
-AST* parser_set_value(Parser* parser, AST* ast, Token* last_token)
+AST* parser_set_variable_value(Parser* parser, AST* ast, Token* last_token)
 {
   AST* new_ast_node =
     init_ast(AST_VARIABLE, ast, last_token);
   new_ast_node->value.variable_v =
     init_ast_variable(last_token->value, last_token->length);
+  new_ast_node->value.variable_v->ast_type = AST_VARIABLE_VALUE;
 
   return new_ast_node;
 }

@@ -141,17 +141,17 @@ void init_orora()
   push_value_type_list
     (
      &value_type_list, "string", TOKEN_STRING, parser_get_new_string_ast,
-     parser_get_new_string_ast_value_stack
+     parser_get_new_string_ast_value_stack, is_string_ast
     );
   push_value_type_list
     (
      &value_type_list, "int", TOKEN_INT, parser_get_new_int_ast,
-     parser_get_new_int_ast_value_stack
+     parser_get_new_int_ast_value_stack, is_int_ast
     );
   push_value_type_list
     (
      &value_type_list, "float", TOKEN_FLOAT, parser_get_new_float_ast,
-     parser_get_new_float_ast_value_stack
+     parser_get_new_float_ast_value_stack, is_float_ast
     );
 }
 

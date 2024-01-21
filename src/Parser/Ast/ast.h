@@ -2,6 +2,7 @@
 #define AST_H
 
 #include <stddef.h>
+#include <stdbool.h>
 #include "../../Lexer/token.h"
 #include "../parser_T.h"
 
@@ -13,6 +14,14 @@ typedef struct ast_compound_t
 
 typedef struct ast_variable_t
 {
+  enum
+  {
+    AST_VARIABLE_DEFINE,
+    AST_VARIABLE_SATISFY,
+    AST_VARIABLE_VALUE,
+    AST_VARIABLE_NULL = 99
+  } ast_type;
+
   char* name;
   size_t name_length;
   struct ast_t* value;
@@ -96,10 +105,10 @@ typedef struct ast_t
 {
   enum
   {
-    // ====Why I use suffix====
-    // 'AST_STRING' vs 'STRING'
+    // ====Why I use suffix==========
+    // 'AST_STRING' vs 'TOKEN_STRING'
     //  -> AST          -> Token
-    // =========================
+    // ==============================
     AST_COMPOUND,       // 00: struct ast_t**
     AST_VARIABLE,       // 01:
     AST_FUNCTION,       // 02:
@@ -166,13 +175,15 @@ typedef struct orora_value_type_t
   int token_id;
   AST* (*parser_get_new_ast)(AST*, Token*);
   AST_value_stack* (*parser_get_new_ast_value_stack)(Token*);
+  bool (*is_check_type)(Token*);
 } orora_value_type;
 
 orora_value_type* push_value_type_list
   (
    orora_value_type** head, char* name, int token_id,
    AST* (*parser_get_new_ast)(AST*, Token*),
-   AST_value_stack* (*parser_get_new_ast_value_stack)(Token*)
+   AST_value_stack* (*parser_get_new_ast_value_stack)(Token*),
+   bool (*is_check_type)(Token*)
   );
 
 #endif

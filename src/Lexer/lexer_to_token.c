@@ -18,6 +18,7 @@ int get_special_string_type(int length, char* string)
   {
     case 10:
       if (!strcmp(string, "\\leftarrow")) return TOKEN_DEFINE;
+      if (!strcmp(string, "\\subjectto")) return TOKEN_SATISFY;
       break;
     case 8:
       if (!strcmp(string, "\\satisty")) return TOKEN_SATISFY;

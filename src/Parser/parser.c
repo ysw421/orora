@@ -3,6 +3,8 @@
 #include "../main.h"
 #include "string.h"
 
+AST* parser_get_satisfy(Parser* parser, AST* ast);
+
 GET_COMPOUND_ENV* init_get_compound_env()
 {
   GET_COMPOUND_ENV* new_env = malloc(sizeof(GET_COMPOUND_ENV));
@@ -73,11 +75,28 @@ Parser* after_get_parser(Parser* parser)
 Parser* init_parser(Lexer* lexer)
 {
   Parser* parser = (Parser*) malloc(sizeof(struct parser_t));
+  parser->tokens = malloc(sizeof(Token*));
+  int parser_size = 0;
+  while (true)
+  {
+    Token* new_token = lexer_get_token(lexer);
+    if (new_token)
+    {
+      parser_size ++;
+      parser->tokens = realloc(parser->tokens, parser_size * sizeof(Token*));
+      parser->tokens[parser_size - 1] = new_token;
+      continue;
+    }
+    break;
+  }
+  parser->size = parser_size;
+  parser->pointer = 0;
+
   parser->lexer = lexer;
   parser->prev_token = (void*) 0;
 //   parser->prev_token = parser->token;
-  parser->token = lexer_get_token(lexer);
-  parser->next_token = lexer_get_token(lexer);
+  parser->token = parser->tokens[0];
+  parser->next_token = parser->tokens[1];
   parser->row_size = 0;
   parser->row_tokens = malloc(sizeof(Token*));
   parser->row_tokens[0] = malloc(sizeof(Token));
@@ -105,7 +124,11 @@ Parser* parser_advance(Parser* parser, int type)
 //   free(parser->prev_token);
   parser->prev_token = parser->token;
   parser->token = parser->next_token;
-  parser->next_token = lexer_get_token(parser->lexer);
+  parser->pointer ++;
+  if (parser->pointer + 2 <= parser->size)
+    parser->next_token = parser->tokens[parser->pointer + 1];
+  else
+    parser->next_token = (void*) 0;
 
   if (!parser->token)
     return parser;
@@ -202,70 +225,20 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         break;
 
       case TOKEN_SATISFY:
-        parser = parser_advance(parser, TOKEN_SATISFY);
-        GET_VALUE_ENV* value_env = init_get_value_env();
-        int satisfy_col = parser->prev_token->col;
-
-        AST* new_ast_node =
-            init_ast(AST_VARIABLE, ast, parser->token);
-
-        AST_value* main_value =
-          parser_get_value(&parser, ast, token, value_env)->value.value_v;
-        token = parser->token;
-        if (main_value->size == 1
-            && main_value->stack->type == AST_VALUE_VARIABLE
-            && satisfy_col == parser->prev_token->col_first
-            && satisfy_col == token->col_first
-            && parser->token && token->type == TOKEN_COLON)
+        AST* new_satisfy_ast = parser_get_satisfy(parser, ast);
+        if (new_satisfy_ast)
         {
-          parser = parser_advance(parser, TOKEN_COLON);
-          token = parser->token;
-
-          if (!token || satisfy_col != token->col_first)
-          {
-            printf("satisfy 사용법: 'satisfy (variable name):(condition1), (condition2)\n");
-            exit(1);
-          }
-
-          AST_variable* main_variable = main_value->stack->value.variable_v;
-          do
-          {
-            AST* condition =
-              parser_get_value(&parser, ast, token, value_env);
-            token = parser->token;
-            if (!condition)
-              break;
-            main_variable->satisfy_size ++;
-            main_variable->satisfy =
-              realloc(main_variable->satisfy,
-                  main_variable->satisfy_size * sizeof(struct ast_t*));
-            main_variable->satisfy[main_variable->satisfy_size - 1]
-              = condition;
-            if (!token || satisfy_col != token->col_first
-                || token->type != TOKEN_COMMA)
-            {
-              break;
-            }
-            else
-            {
-              parser = parser_advance(parser, TOKEN_COMMA);
-              token = parser->token;
-            }
-          } while (token);
-          token = parser->token;
-
-          new_ast_node->value.variable_v = main_variable;
-          ast_compound_add(ast->value.compound_v, new_ast_node);
+          ast_compound_add(ast->value.compound_v, new_satisfy_ast);
           token = parser->token;
           
           continue;
         }
         else
         {
+          free(new_satisfy_ast);
           printf("satisfy 사용법: 'satisfy (variable name):(condition1), (condition2)\n");
           exit(1);
         }
-        free(new_ast_node);
         break;
 
       case TOKEN_DEFINE:
@@ -309,4 +282,68 @@ AST* parser_parse(Parser* parser)
   // Root AST...
 
   return ast;
+}
+
+AST* parser_get_satisfy(Parser* parser, AST* ast)
+{
+  Token* token = parser->token;
+  parser = parser_advance(parser, TOKEN_SATISFY);
+  GET_VALUE_ENV* value_env = init_get_value_env();
+  int satisfy_col = parser->prev_token->col;
+
+  AST* new_ast_node =
+      init_ast(AST_VARIABLE, ast, parser->token);
+
+  AST_value* main_value =
+    parser_get_value(&parser, ast, token, value_env)->value.value_v;
+  token = parser->token;
+  if (main_value->size == 1
+      && main_value->stack->type == AST_VALUE_VARIABLE
+      && satisfy_col == parser->prev_token->col_first
+      && satisfy_col == token->col_first
+      && parser->token && token->type == TOKEN_COLON)
+  {
+    parser = parser_advance(parser, TOKEN_COLON);
+    token = parser->token;
+
+    if (!token || satisfy_col != token->col_first)
+    {
+      return (void*) 0;
+    }
+
+    AST_variable* main_variable = main_value->stack->value.variable_v;
+    do
+    {
+      AST* condition =
+        parser_get_value(&parser, ast, token, value_env);
+      token = parser->token;
+      if (!condition)
+        break;
+      main_variable->satisfy_size ++;
+      main_variable->satisfy =
+        realloc(main_variable->satisfy,
+            main_variable->satisfy_size * sizeof(struct ast_t*));
+      main_variable->satisfy[main_variable->satisfy_size - 1]
+        = condition;
+      if (!token || satisfy_col != token->col_first
+          || token->type != TOKEN_COMMA)
+      {
+        break;
+      }
+      else
+      {
+        parser = parser_advance(parser, TOKEN_COMMA);
+        token = parser->token;
+      }
+    } while (token);
+    token = parser->token;
+
+    new_ast_node->value.variable_v = main_variable;
+    new_ast_node->value.variable_v->ast_type = AST_VARIABLE_SATISFY;
+
+    return new_ast_node;
+  }
+
+  free(new_ast_node);
+  return (void*) 0;
 }
