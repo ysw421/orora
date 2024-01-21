@@ -1,3 +1,10 @@
+a := 99
+b:=21.33
+c\leftarrow "cat"
+print("variable a: ", a, "\n")
+print("variable b: ", b, "\n")
+print("variable c: ", c, "\n")
+print("hello ", 3212, " ", 32.12)
 5x+2
 %satisfy u: 5x+2, 32
 f(q:=3,a,b:=4+22):=5x

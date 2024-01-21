@@ -20,17 +20,20 @@ void init_orora()
   push_value_type_list
     (
      &value_type_list, "string", TOKEN_STRING, parser_get_new_string_ast,
-     parser_get_new_string_ast_value_stack, is_string_ast
+     parser_get_new_string_ast_value_stack, is_string_ast, AST_STRING,
+     ENV_VARIABLE_STRING, visitor_set_env_variable_string, AST_VALUE_STRING
     );
   push_value_type_list
     (
      &value_type_list, "int", TOKEN_INT, parser_get_new_int_ast,
-     parser_get_new_int_ast_value_stack, is_int_ast
+     parser_get_new_int_ast_value_stack, is_int_ast, AST_INT,
+     ENV_VARIABLE_INT, visitor_set_env_variable_int, AST_VALUE_INT
     );
   push_value_type_list
     (
      &value_type_list, "float", TOKEN_FLOAT, parser_get_new_float_ast,
-     parser_get_new_float_ast_value_stack, is_float_ast
+     parser_get_new_float_ast_value_stack, is_float_ast, AST_FLOAT,
+     ENV_VARIABLE_FLOAT, visitor_set_env_variable_float, AST_VALUE_FLOAT
     );
 }
 
@@ -41,7 +44,7 @@ int main(int argc, char** argv)
 #ifndef GLOBAL_ENV_DEFINE
 #define GLOBAL_ENV_DEFINE
   Env* global_env = init_env();
-  Envs* root_envs = init_envs(global_env, (void*) 0);
+  Envs* root_envs = init_envs(global_env, init_env());
 #endif
 
   if (argc == 2)
@@ -75,7 +78,7 @@ int main(int argc, char** argv)
 
     for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
     {
-      visitor_visit(global_env, ast_tree->value.compound_v->items[i]);
+      visitor_visit(root_envs, ast_tree->value.compound_v->items[i]);
     }
     printf("\n======================\n");
 

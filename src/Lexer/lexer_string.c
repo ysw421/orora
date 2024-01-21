@@ -43,7 +43,7 @@ Token* lexer_get_string(Lexer* lexer, char c)
     {
       is_next_backslash = false;
       char* s = (char*) malloc(2 * sizeof(char));
-      s[0] = '\0';
+      s[1] = '\0';
       bool is_special_literal = true;
       switch (lexer->c)
       {

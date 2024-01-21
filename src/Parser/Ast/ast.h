@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include "../../Lexer/token.h"
 #include "../parser_T.h"
+#include "../../env.h"
 
 typedef struct ast_compound_t
 {
@@ -176,6 +177,10 @@ typedef struct orora_value_type_t
   AST* (*parser_get_new_ast)(AST*, Token*);
   AST_value_stack* (*parser_get_new_ast_value_stack)(Token*);
   bool (*is_check_type)(Token*);
+  int ast_type_id;
+  int env_variable_type_id;
+  Env_variable* (*visitor_set_env_variable)(Env_variable*, AST_value_stack*);
+  int ast_value_type_id;
 } orora_value_type;
 
 orora_value_type* push_value_type_list
@@ -183,7 +188,11 @@ orora_value_type* push_value_type_list
    orora_value_type** head, char* name, int token_id,
    AST* (*parser_get_new_ast)(AST*, Token*),
    AST_value_stack* (*parser_get_new_ast_value_stack)(Token*),
-   bool (*is_check_type)(Token*)
+   bool (*is_check_type)(Token*),
+   int ast_type_id,
+   int env_variable_type_id,
+   Env_variable* (*visitor_set_env_variable)(Env_variable*, AST_value_stack*),
+   int ast_value_type_id
   );
 
 #endif

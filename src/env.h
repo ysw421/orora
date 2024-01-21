@@ -6,7 +6,7 @@
 typedef struct env_variable_t
 {
   char* name;
-  char* length;
+  size_t length;
 
   enum
   {
@@ -17,19 +17,21 @@ typedef struct env_variable_t
 
   union
   {
-    int int_v;
-    char* string_v;
-    double float_v;
+    struct ast_int_t* int_v;
+    struct ast_float_t* float_v;
+    struct ast_string_t* string_v;
   } value;
 
   size_t satisfy_size;
   struct ast_value_t** satisfy;
+
+  struct env_variable_t* next;
 } Env_variable;
 
 typedef struct env_t
 {
   size_t variable_size;
-  struct env_variable_t** variables;
+  struct env_variable_t* variables;
 
 // include packages, variables,
 //         and functions...
@@ -47,6 +49,7 @@ typedef struct envs_t
   struct env_t* local;
 } Envs;
 
+Env_variable* init_env_variable(char* name, size_t length);
 Env* init_env();
 Envs* init_envs(Env* global, Env* local);
 
