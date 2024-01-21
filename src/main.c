@@ -7,9 +7,104 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef DEVELOP_MODE
 void print_variable(AST_variable* node);
 void print_value(AST* ast);
+void print_function(AST_function* checked_function);
+#endif
 
+orora_value_type* value_type_list;
+
+void init_orora()
+{
+  push_value_type_list
+    (
+     &value_type_list, "string", TOKEN_STRING, parser_get_new_string_ast,
+     parser_get_new_string_ast_value_stack, is_string_ast
+    );
+  push_value_type_list
+    (
+     &value_type_list, "int", TOKEN_INT, parser_get_new_int_ast,
+     parser_get_new_int_ast_value_stack, is_int_ast
+    );
+  push_value_type_list
+    (
+     &value_type_list, "float", TOKEN_FLOAT, parser_get_new_float_ast,
+     parser_get_new_float_ast_value_stack, is_float_ast
+    );
+}
+
+int main(int argc, char** argv)
+{
+  init_orora();
+
+#ifndef GLOBAL_ENV_DEFINE
+#define GLOBAL_ENV_DEFINE
+  Env* global_env = init_env();
+  Envs* root_envs = init_envs(global_env, (void*) 0);
+#endif
+
+  if (argc == 2)
+  {
+    File* file = openfile(argv[1]);
+
+#ifdef DEVELOP_MODE
+//     for (int i = 0; i < file->length; i ++)
+//     {
+//       printf("%c\n", file->contents[i]);
+//       if (file->contents[i] == '\0')
+//         printf("=================\n");
+//     }
+#endif
+
+    Lexer* root = init_lexer(file->contents, &file->length);
+
+#ifdef DEVELOP_MODE
+//     Token* token = (void*) 0;
+//     while ((token = lexer_get_token(root)) != (void*) 0)
+//       printf(
+//           "value: %s\t\t type: %d\n",
+//           token->value, token->type);
+//     printf("%s\n", lexer_get_token(root)->value);
+#endif
+
+    Parser* parser = init_parser(root);
+    AST* ast_tree = parser_parse(parser);
+    
+    printf("======================\n");
+
+    for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
+    {
+      visitor_visit(global_env, ast_tree->value.compound_v->items[i]);
+    }
+    printf("\n======================\n");
+
+#ifdef DEVELOP_MODE
+    // For Develop....
+    for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
+    {
+      AST* checked_ast_tree = ast_tree->value.compound_v->items[i];
+
+      switch (checked_ast_tree->type)
+      {
+        case AST_VALUE:
+          print_value(checked_ast_tree);
+          break;
+        case AST_FUNCTION:
+          print_function(checked_ast_tree->value.function_v);
+          break;
+        case AST_VARIABLE:
+          print_variable(checked_ast_tree->value.variable_v);
+          break;
+      }
+    }
+#endif
+  }
+  return 0;
+}
+
+
+#ifdef DEVELOP_MODE
 void print_function(AST_function* checked_function)
 {
   printf("function: %s\n", checked_function->name);
@@ -133,87 +228,4 @@ void print_variable(AST_variable* node)
     }
   }
 }
-
-orora_value_type* value_type_list;
-
-void init_orora()
-{
-  push_value_type_list
-    (
-     &value_type_list, "string", TOKEN_STRING, parser_get_new_string_ast,
-     parser_get_new_string_ast_value_stack, is_string_ast
-    );
-  push_value_type_list
-    (
-     &value_type_list, "int", TOKEN_INT, parser_get_new_int_ast,
-     parser_get_new_int_ast_value_stack, is_int_ast
-    );
-  push_value_type_list
-    (
-     &value_type_list, "float", TOKEN_FLOAT, parser_get_new_float_ast,
-     parser_get_new_float_ast_value_stack, is_float_ast
-    );
-}
-
-int main(int argc, char** argv)
-{
-  init_orora();
-
-#ifndef GLOBAL_ENV_DEFINE
-#define GLOBAL_ENV_DEFINE
-  Env* global_env = init_env();
-  Envs* root_envs = init_envs(global_env, (void*) 0);
 #endif
-
-  if (argc == 2)
-  {
-    File* file = openfile(argv[1]);
-
-//     for (int i = 0; i < file->length; i ++)
-//     {
-//       printf("%c\n", file->contents[i]);
-//       if (file->contents[i] == '\0')
-//         printf("=================\n");
-//     }
-
-    Lexer* root = init_lexer(file->contents, &file->length);
-
-//     Token* token = (void*) 0;
-//     while ((token = lexer_get_token(root)) != (void*) 0)
-//       printf(
-//           "value: %s\t\t type: %d\n",
-//           token->value, token->type);
-//     printf("%s\n", lexer_get_token(root)->value);
-
-    Parser* parser = init_parser(root);
-    AST* ast_tree = parser_parse(parser);
-    
-    printf("======================\n");
-
-    for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
-    {
-      visitor_visit(global_env, ast_tree->value.compound_v->items[i]);
-    }
-    printf("\n======================\n");
-
-    // For Develop....
-    for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
-    {
-      AST* checked_ast_tree = ast_tree->value.compound_v->items[i];
-
-      switch (checked_ast_tree->type)
-      {
-        case AST_VALUE:
-          print_value(checked_ast_tree);
-          break;
-        case AST_FUNCTION:
-          print_function(checked_ast_tree->value.function_v);
-          break;
-        case AST_VARIABLE:
-          print_variable(checked_ast_tree->value.variable_v);
-          break;
-      }
-    }
-  }
-  return 0;
-}
