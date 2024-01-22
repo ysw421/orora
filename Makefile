@@ -21,9 +21,10 @@ $(exec): $(objects)
 clean:
 	-rm *.out
 #	-rm *.o
+	-rm src/*/*/*.o
 	-rm src/*/*.o
-#	-rm rm *.a
 	-rm src/*.o
+#	-rm rm *.a
 
 lint:
 	clang-tidy scr/*.c src/*/*.h src/*/*.c
