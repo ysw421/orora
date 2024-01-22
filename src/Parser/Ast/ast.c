@@ -164,7 +164,7 @@ orora_value_type* push_value_type_list
    char* name,
    int token_id,
    AST* (*parser_get_new_ast)(AST*, Token*),
-   AST_value_stack* (*parser_get_new_ast_value_stack)(Token*),
+   AST_value_stack* (*parser_get_new_ast_value_stack)(Token*, bool),
    bool (*is_check)(Token*),
    int ast_type_id,
    int env_variable_type_id,

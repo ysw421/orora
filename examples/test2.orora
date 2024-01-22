@@ -1,4 +1,1 @@
-a:=b:=c:=32
-print("variable a: ", a, "\n")
-print("variable b: ", b, "\n")
-print("variable c: ", c, "\n")
+4

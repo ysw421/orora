@@ -96,7 +96,7 @@ Parser* init_parser(Lexer* lexer)
   parser->prev_token = (void*) 0;
 //   parser->prev_token = parser->token;
   parser->token = parser->tokens[0];
-  parser->next_token = parser->tokens[1];
+  parser->next_token = parser->size == 1 ? (void*) 0 : parser->tokens[1];
   parser->row_size = 0;
   parser->row_tokens = malloc(sizeof(Token*));
   parser->row_tokens[0] = malloc(sizeof(Token));

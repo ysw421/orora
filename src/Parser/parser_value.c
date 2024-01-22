@@ -2,7 +2,7 @@
 #include "../main.h"
 #include <stdlib.h>
 
-AST_value_stack* get_single_value(Parser* parser, AST* ast);
+AST_value_stack* get_single_value(Parser* parser, AST* ast, bool is_minus);
 GET_VALUE_ENV* init_get_value_env();
 int parser_precedence(int type_id);
 AST_value_stack* pop_value(AST_value* value);
@@ -19,6 +19,10 @@ AST* parser_get_value(Parser** parser_, AST* ast,
   AST_value* stack = init_ast_value();
   AST_value* postfix_expression = init_ast_value();   // result
   bool is_last_value = false;       // 3x -> 3 * x
+  bool is_last_minus_value = true;    // check to see if you can use the
+                                      // minus symbol to represent a value
+                                      // for next.
+  bool is_last_minus_value2 = false;  // get minus symbol...
   Token* token = parser->token;
 
   AST_value_stack* save_value;
@@ -35,78 +39,42 @@ AST* parser_get_value(Parser** parser_, AST* ast,
     if (is_first_turn)
       is_first_turn = false;
 
-    if (token->type == TOKEN_LPAR)
+    bool is_single_value = false;
+    orora_value_type* p = value_type_list;
+    do
     {
-      count_of_dearkelly ++;
-      value_env->is_in_parentheses = true;
-      push_value(stack,
-          init_ast_value_stack(AST_VALUE_LPAR, token));
-
-      is_last_value = false;
-    }
-    else if (token->type == TOKEN_RPAR)
-    {
-      if (!count_of_dearkelly)
+      if (p->is_check_type(token))
+      {
+        is_single_value = true;
         break;
-
-      count_of_dearkelly --;
-      if (!count_of_dearkelly && !is_in_parentheses_save)
-        value_env->is_in_parentheses = false;
-      while (stack->stack->type != AST_VALUE_LPAR)
-      {
-        push_value(postfix_expression, pop_value(stack));
       }
-      pop_value(stack);
+      p = p->next;
+    } while (p);
 
-      is_last_value = true;
-    }
-    else if (is_operator(token->type))
+    if (is_single_value)
     {
-      while (stack->size
-          && parser_precedence(stack->stack->type)
-              >= parser_precedence(get_ast_value_type(token->type)))
+      if (is_last_value)
       {
-        push_value(postfix_expression, pop_value(stack));
+        while (stack->size
+            && parser_precedence(stack->stack->type)
+                >= parser_precedence(AST_VALUE_PRODUCT))
+        {
+          save_value = pop_value(stack);
+          push_value(postfix_expression, save_value);
+        }
+        push_value(stack, init_ast_value_stack(AST_VALUE_PRODUCT, token));
       }
-      push_value(stack,
-          init_ast_value_stack(get_ast_value_type(token->type), token));
-
-      is_last_value = false;
+      save_value = get_single_value(parser, ast, is_last_minus_value2);
+      push_value(postfix_expression, save_value);
+      
+      is_last_value = true;
+      is_last_minus_value = false;
+      is_last_minus_value2 = false;
     }
-
     else
     {
-      bool is_single_value = false;
-      orora_value_type* p = value_type_list;
-      do
-      {
-        if (p->is_check_type(token))
-        {
-          is_single_value = true;
-          break;
-        }
-        p = p->next;
-      } while (p);
-
-      if (is_single_value)
-      {
-        if (is_last_value)
-        {
-          while (stack->size
-              && parser_precedence(stack->stack->type)
-                  >= parser_precedence(AST_VALUE_PRODUCT))
-          {
-            save_value = pop_value(stack);
-            push_value(postfix_expression, save_value);
-          }
-          push_value(stack, init_ast_value_stack(AST_VALUE_PRODUCT, token));
-        }
-        save_value = get_single_value(parser, ast);
-        push_value(postfix_expression, save_value);
-        
-        is_last_value = true;
-      }
-      else if (token->type == TOKEN_ID)
+      is_last_minus_value2 = false;
+      if (token->type == TOKEN_ID)
       {
         if (is_last_value)
         {
@@ -129,8 +97,9 @@ AST* parser_get_value(Parser** parser_, AST* ast,
           new = init_ast_value_stack(AST_VALUE_FUNCTION, token);
           new->value.function_v = function_ast->value.function_v;
           push_value(postfix_expression, new);
-
+  
           is_last_value = true;
+          is_last_minus_value = false;
           continue;
         }
         else
@@ -142,7 +111,55 @@ AST* parser_get_value(Parser** parser_, AST* ast,
           push_value(postfix_expression, new);
 
           is_last_value = true;
+          is_last_minus_value = false;
         }
+      }
+      else if (token->type == TOKEN_LPAR)
+      {
+        count_of_dearkelly ++;
+        value_env->is_in_parentheses = true;
+        push_value(stack,
+            init_ast_value_stack(AST_VALUE_LPAR, token));
+
+        is_last_value = false;
+        is_last_minus_value = true;
+      }
+      else if (token->type == TOKEN_RPAR)
+      {
+        if (!count_of_dearkelly)
+          break;
+
+        count_of_dearkelly --;
+        if (!count_of_dearkelly && !is_in_parentheses_save)
+          value_env->is_in_parentheses = false;
+        while (stack->stack->type != AST_VALUE_LPAR)
+        {
+          push_value(postfix_expression, pop_value(stack));
+        }
+        pop_value(stack);
+
+        is_last_value = true;
+        is_last_minus_value = false;
+      }
+      else if (is_operator(token->type))
+      {
+        if (token->type == TOKEN_MINUS && is_last_minus_value)
+        {
+          is_last_minus_value2 = true;
+        }
+        else
+        {
+          while (stack->size
+              && parser_precedence(stack->stack->type)
+                  >= parser_precedence(get_ast_value_type(token->type)))
+          {
+            push_value(postfix_expression, pop_value(stack));
+          }
+          push_value(stack,
+              init_ast_value_stack(get_ast_value_type(token->type), token));
+        }
+        is_last_minus_value = false;
+        is_last_value = false;
       }
       else
         break;
@@ -170,7 +187,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
   return new_ast_node;
 }
 
-AST_value_stack* get_single_value(Parser* parser, AST* ast)
+AST_value_stack* get_single_value(Parser* parser, AST* ast, bool is_minus)
 {
   Token* token = parser->token;
 
@@ -178,7 +195,7 @@ AST_value_stack* get_single_value(Parser* parser, AST* ast)
   do
   {
     if (token->type == p->token_id)
-      return p->parser_get_new_ast_value_stack(token);
+      return p->parser_get_new_ast_value_stack(token, is_minus);
     p = p->next;
   } while (p);
 
@@ -212,26 +229,39 @@ AST* parser_get_new_string_ast(AST* ast, Token* token)
   return new_ast_node;
 }
 
-AST_value_stack* parser_get_new_int_ast_value_stack(Token* token)
+AST_value_stack* parser_get_new_int_ast_value_stack
+  (Token* token, bool is_minus)
 {
   AST_value_stack* new =
     init_ast_value_stack(AST_VALUE_INT, token);
-  new->value.int_v = init_ast_int(token);
+  AST_int* new_value = init_ast_int(token);
+  if (is_minus)
+    new_value->value = 0 - new_value->value;
+  new->value.int_v = new_value;
 
   return new;
 }
 
-AST_value_stack* parser_get_new_float_ast_value_stack(Token* token)
+AST_value_stack* parser_get_new_float_ast_value_stack
+  (Token* token, bool is_minus)
 {
   AST_value_stack* new =
     init_ast_value_stack(AST_VALUE_FLOAT, token);
-  new->value.float_v = init_ast_float(token);
+  AST_float* new_value = init_ast_float(token);
+  if (is_minus)
+    new_value->value = 0 - new_value->value;
+  new->value.float_v = new_value;
 
   return new;
 }
 
-AST_value_stack* parser_get_new_string_ast_value_stack(Token* token)
+AST_value_stack* parser_get_new_string_ast_value_stack
+  (Token* token, bool is_minus)
 {
+  if (is_minus)
+  {
+    printf("에러, string에는 -연산이 불가함");
+  }
   AST_value_stack* new =
     init_ast_value_stack(AST_VALUE_STRING, token);
   new->value.string_v = init_ast_string(token);
