@@ -119,22 +119,26 @@ void visitor_visit(Envs* envs, AST* ast)
               }
               break;
             case AST_VARIABLE:
-              if (ast_variable->value->value.variable_v->ast_type
-                  == AST_VARIABLE_VALUE)
+              switch (ast_variable->value->value.variable_v->ast_type)
               {
-                Env_variable* env_variable =
-                  init_env_variable(ast_variable->name,
-                        ast_variable->name_length);
-                Env_variable* value_variable =
-                  visitor_get_variable(envs,
-                      ast_variable->value->value.variable_v);
-                env_variable->type = value_variable->type;
-                env_variable->value = value_variable->value;
+                case AST_VARIABLE_VALUE:
+                  Env_variable* env_variable =
+                    init_env_variable(ast_variable->name,
+                          ast_variable->name_length);
+                  Env_variable* value_variable =
+                    visitor_get_variable(envs,
+                        ast_variable->value->value.variable_v);
+                  env_variable->type = value_variable->type;
+                  env_variable->value = value_variable->value;
 
-                Env* local_env = envs->local;
-                env_variable->next = local_env->variables;
-                local_env->variable_size ++;
-                local_env->variables = env_variable;
+                  Env* local_env = envs->local;
+                  env_variable->next = local_env->variables;
+                  local_env->variable_size ++;
+                  local_env->variables = env_variable;
+                  break;
+
+                case AST_VARIABLE_DEFINE:
+                  break;
               }
               break;
           }
@@ -191,10 +195,15 @@ Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable)
   {
     if (!strcmp(check_variable->name, ast_variable->name))
     {
+      check_variable->next = envs->local->variables;
+      envs->local->variables = check_variable;
       return check_variable;
     }
     check_variable = check_variable->next;
   }
+
+  // ToDo:
+  // get variable from global
 
   printf("에러, 정의되지 않은 변수: %s\n", ast_variable->name);
   exit(1);
