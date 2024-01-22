@@ -9,6 +9,7 @@
 
 orora_value_type* get_single_value_type(int ast_type);
 Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable);
+Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable);
 
 void visitor_visit(Envs* envs, AST* ast)
 {
@@ -82,66 +83,68 @@ void visitor_visit(Envs* envs, AST* ast)
           break;
 
         case AST_VARIABLE_DEFINE:
-          switch (ast_variable->value->type)
-          {
-            case AST_VALUE:
-              if (ast_variable->value->value.value_v->size == 1)
-              {
-                orora_value_type* variable_type =
-                  get_single_value_type(ast_variable->value->value.
-                      value_v->stack->type);
-                if (variable_type)
-                {
-                  Env_variable* env_variable =
-                    init_env_variable(ast_variable->name,
-                        ast_variable->name_length);
-                  env_variable->type = variable_type->env_variable_type_id;
-                  env_variable =
-                    variable_type->visitor_set_env_variable(
-                        env_variable,
-                        ast_variable->value->value.value_v->stack
-                      );
-
-                  Env* local_env = envs->local;
-                  env_variable->next = local_env->variables;
-                  local_env->variable_size ++;
-                  local_env->variables = env_variable;
-                }
-                else
-                {
-                  // 에러...
-                }
-              }
-              else
-              {
-                // ToDo:
-                // get value...
-              }
-              break;
-            case AST_VARIABLE:
-              switch (ast_variable->value->value.variable_v->ast_type)
-              {
-                case AST_VARIABLE_VALUE:
-                  Env_variable* env_variable =
-                    init_env_variable(ast_variable->name,
-                          ast_variable->name_length);
-                  Env_variable* value_variable =
-                    visitor_get_variable(envs,
-                        ast_variable->value->value.variable_v);
-                  env_variable->type = value_variable->type;
-                  env_variable->value = value_variable->value;
-
-                  Env* local_env = envs->local;
-                  env_variable->next = local_env->variables;
-                  local_env->variable_size ++;
-                  local_env->variables = env_variable;
-                  break;
-
-                case AST_VARIABLE_DEFINE:
-                  break;
-              }
-              break;
-          }
+          visitor_variable_define(envs, ast_variable);
+//           switch (ast_variable->value->type)
+//           {
+//             case AST_VALUE:
+//               if (ast_variable->value->value.value_v->size == 1)
+//               {
+//                 orora_value_type* variable_type =
+//                   get_single_value_type(ast_variable->value->value.
+//                       value_v->stack->type);
+//                 if (variable_type)
+//                 {
+//                   Env_variable* env_variable =
+//                     init_env_variable(ast_variable->name,
+//                         ast_variable->name_length);
+//                   env_variable->type = variable_type->env_variable_type_id;
+//                   env_variable =
+//                     variable_type->visitor_set_env_variable(
+//                         env_variable,
+//                         ast_variable->value->value.value_v->stack
+//                       );
+// 
+//                   Env* local_env = envs->local;
+//                   env_variable->next = local_env->variables;
+//                   local_env->variable_size ++;
+//                   local_env->variables = env_variable;
+//                 }
+//                 else
+//                 {
+//                   // 에러...
+//                 }
+//               }
+//               else
+//               {
+//                 // ToDo:
+//                 // get value...
+//               }
+//               break;
+//             case AST_VARIABLE:
+//               switch (ast_variable->value->value.variable_v->ast_type)
+//               {
+//                 case AST_VARIABLE_VALUE:
+//                   Env_variable* env_variable =
+//                     init_env_variable(ast_variable->name,
+//                           ast_variable->name_length);
+//                   Env_variable* value_variable =
+//                     visitor_get_variable(envs,
+//                         ast_variable->value->value.variable_v);
+//                   env_variable->type = value_variable->type;
+//                   env_variable->value = value_variable->value;
+// 
+//                   Env* local_env = envs->local;
+//                   env_variable->next = local_env->variables;
+//                   local_env->variable_size ++;
+//                   local_env->variables = env_variable;
+//                   break;
+// 
+//                 case AST_VARIABLE_DEFINE:
+//                   // ToDo...
+//                   break;
+//               }
+//               break;
+//           }
           break;
 
         case AST_VARIABLE_SATISFY:
@@ -191,14 +194,23 @@ Env_variable* visitor_set_env_variable_string(Env_variable* env_variable,
 Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable)
 {
   Env_variable* check_variable = envs->local->variables;
+  Env_variable* snode = (void*) 0;
   while (check_variable->next)
   {
     if (!strcmp(check_variable->name, ast_variable->name))
     {
-      check_variable->next = envs->local->variables;
-      envs->local->variables = check_variable;
+      if (snode)
+      {
+        snode->next = check_variable->next;
+        check_variable->next = envs->local->variables;
+        envs->local->variables = check_variable;
+      }
       return check_variable;
     }
+    if (snode)
+      snode = snode->next;
+    else
+      snode = envs->local->variables;
     check_variable = check_variable->next;
   }
 
@@ -221,6 +233,92 @@ orora_value_type* get_single_value_type(int ast_type)
   } while (p);
 
   return (void*) 0;
+}
+
+Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
+{
+  switch (ast_variable->value->type)
+  {
+    case AST_VALUE:
+      if (ast_variable->value->value.value_v->size == 1)
+      {
+        orora_value_type* variable_type =
+          get_single_value_type(ast_variable->value->value.
+              value_v->stack->type);
+        if (variable_type)
+        {
+          Env_variable* env_variable =
+            init_env_variable(ast_variable->name,
+                ast_variable->name_length);
+          env_variable->type = variable_type->env_variable_type_id;
+          env_variable =
+            variable_type->visitor_set_env_variable(
+                env_variable,
+                ast_variable->value->value.value_v->stack
+              );
+
+          Env* local_env = envs->local;
+          env_variable->next = local_env->variables;
+          local_env->variable_size ++;
+          local_env->variables = env_variable;
+
+          return env_variable;
+        }
+        else
+        {
+          printf("에러, 변수에는 값을 저장해야함\n");
+          exit(1);
+          // 에러...
+        }
+      }
+      else
+      {
+        // ToDo:
+        // get value...
+      }
+      break;
+    case AST_VARIABLE:
+      Env_variable* env_variable;
+      Env* local_env = envs->local;
+      Env_variable* value_variable;
+      switch (ast_variable->value->value.variable_v->ast_type)
+      {
+        case AST_VARIABLE_VALUE:
+          env_variable =
+            init_env_variable(ast_variable->name,
+                  ast_variable->name_length);
+          value_variable =
+            visitor_get_variable(envs,
+                ast_variable->value->value.variable_v);
+          env_variable->type = value_variable->type;
+          env_variable->value = value_variable->value;
+
+          env_variable->next = local_env->variables;
+          local_env->variable_size ++;
+          local_env->variables = env_variable;
+
+          return env_variable;
+          break;
+
+        case AST_VARIABLE_DEFINE:
+          env_variable =
+            init_env_variable(ast_variable->name,
+                  ast_variable->name_length);
+          value_variable =
+            visitor_variable_define(envs,
+                ast_variable->value->value.variable_v);
+          env_variable->type = value_variable->type;
+          env_variable->value = value_variable->value;
+
+          env_variable->next = local_env->variables;
+          local_env->variable_size ++;
+          local_env->variables = env_variable;
+
+          return env_variable;
+          break;
+      }
+      break;
+  }
 }
 
 void visitor_get_value()

@@ -1,3 +1,4 @@
 *.out
+src/*/*/*.o
 src/*/*.o
 src/*.o
