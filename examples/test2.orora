@@ -1,2 +1,4 @@
-32
-a:=3
+a:=32
+b:=a
+print("variable a: ", a, "\n")
+print("variable b: ", b, "\n")

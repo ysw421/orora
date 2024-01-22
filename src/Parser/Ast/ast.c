@@ -55,11 +55,14 @@ AST_value_stack* init_ast_value_stack(int type, Token* token)
 
   ast->type = type;
 
-  ast->col = token->col;
-  ast->col_first = token->col_first;
-  ast->row = token->row;
-  ast->row_char = token->row_char;
-  ast->row_char_first = token->row_char_first;
+  if (token)
+  {
+    ast->col = token->col;
+    ast->col_first = token->col_first;
+    ast->row = token->row;
+    ast->row_char = token->row_char;
+    ast->row_char_first = token->row_char_first;
+  }
 
   return ast;
 }
@@ -166,7 +169,7 @@ orora_value_type* push_value_type_list
    int ast_type_id,
    int env_variable_type_id,
    Env_variable* (*visitor_set_env_variable)(Env_variable* env_variable,
-      AST* ast),
+      AST_value_stack* ast),
    int ast_value_type_id
   )
 {

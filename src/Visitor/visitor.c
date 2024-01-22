@@ -82,29 +82,61 @@ void visitor_visit(Envs* envs, AST* ast)
           break;
 
         case AST_VARIABLE_DEFINE:
-          if (ast_variable->value->type == AST_VALUE
-              && ast_variable->value->value.value_v->size == 1)
+          switch (ast_variable->value->type)
           {
-            orora_value_type* variable_type =
-              get_single_value_type(ast_variable->value->value.
-                  value_v->stack->type);
-            if (variable_type)
-            {
-              Env_variable* env_variable =
-                init_env_variable(ast_variable->name, ast_variable->name_length);
-              env_variable->type = variable_type->env_variable_type_id;
-              env_variable =
-                variable_type->visitor_set_env_variable(
-                    env_variable,
-                    ast_variable->value->value.value_v->stack
-                  );
-              Env* local_env = envs->local;
-              env_variable->next = local_env->variables;
-              local_env->variable_size ++;
-              local_env->variables = env_variable;
-            }
-            else
-            {}
+            case AST_VALUE:
+              if (ast_variable->value->value.value_v->size == 1)
+              {
+                orora_value_type* variable_type =
+                  get_single_value_type(ast_variable->value->value.
+                      value_v->stack->type);
+                if (variable_type)
+                {
+                  Env_variable* env_variable =
+                    init_env_variable(ast_variable->name,
+                        ast_variable->name_length);
+                  env_variable->type = variable_type->env_variable_type_id;
+                  env_variable =
+                    variable_type->visitor_set_env_variable(
+                        env_variable,
+                        ast_variable->value->value.value_v->stack
+                      );
+
+                  Env* local_env = envs->local;
+                  env_variable->next = local_env->variables;
+                  local_env->variable_size ++;
+                  local_env->variables = env_variable;
+                }
+                else
+                {
+                  // 에러...
+                }
+              }
+              else
+              {
+                // ToDo:
+                // get value...
+              }
+              break;
+            case AST_VARIABLE:
+              if (ast_variable->value->value.variable_v->ast_type
+                  == AST_VARIABLE_VALUE)
+              {
+                Env_variable* env_variable =
+                  init_env_variable(ast_variable->name,
+                        ast_variable->name_length);
+                Env_variable* value_variable =
+                  visitor_get_variable(envs,
+                      ast_variable->value->value.variable_v);
+                env_variable->type = value_variable->type;
+                env_variable->value = value_variable->value;
+
+                Env* local_env = envs->local;
+                env_variable->next = local_env->variables;
+                local_env->variable_size ++;
+                local_env->variables = env_variable;
+              }
+              break;
           }
           break;
 
@@ -155,7 +187,7 @@ Env_variable* visitor_set_env_variable_string(Env_variable* env_variable,
 Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable)
 {
   Env_variable* check_variable = envs->local->variables;
-  while (check_variable)
+  while (check_variable->next)
   {
     if (!strcmp(check_variable->name, ast_variable->name))
     {
@@ -164,7 +196,7 @@ Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable)
     check_variable = check_variable->next;
   }
 
-  printf("에러, 정의되지 않은 변수");
+  printf("에러, 정의되지 않은 변수: %s\n", ast_variable->name);
   exit(1);
   return (void*) 0;
 }

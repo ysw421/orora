@@ -146,6 +146,7 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
         new_ast_node2->value.variable_v =
           init_ast_variable(token->value, token->length);
         new_ast_node->value.variable_v->value = new_ast_node2;
+        new_ast_node2->value.variable_v->ast_type = AST_VARIABLE_VALUE;
 
         token = parser->token;
       }

@@ -19,7 +19,7 @@ Parser* after_get_parser(Parser* parser)
   Token* token = parser->token;
   Token* next_token = parser->next_token;
 
-  if (token->type == TOKEN_LEFT && next_token->type == TOKEN_LPAR)
+  if (token->type == TOKEN_LEFT && next_token && next_token->type == TOKEN_LPAR)
   {
     if (token->col_first != next_token->col_first)
     {
@@ -44,7 +44,7 @@ Parser* after_get_parser(Parser* parser)
     parser->next_token = lexer_get_token(parser->lexer);
   }
 
-  if (token->type == TOKEN_RIGHT && next_token->type == TOKEN_RPAR)
+  if (token->type == TOKEN_RIGHT && next_token && next_token->type == TOKEN_RPAR)
   {
     if (token->col_first != next_token->col_first)
     {
