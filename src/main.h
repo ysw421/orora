@@ -14,6 +14,9 @@ void error_prev_token(char* error_message, Parser* parser);
 // For develop...
 #ifndef DEVELOP_MODE
 #define DEVELOP_MODE
+void print_variable(AST_variable* node);
+void print_value(AST* ast);
+void print_function(AST_function* checked_function);
 #endif
 
 #endif

@@ -52,7 +52,9 @@ AST* parser_get_value(Parser** parser_, AST* ast,
 
     if (is_single_value)
     {
-      if (is_last_value)
+      if (is_last_single_value)
+        break;
+      else if (is_last_value)
       {
         while (stack->size
             && parser_precedence(stack->stack->type)

@@ -18,6 +18,11 @@ $(exec): $(objects)
 %.o: %.c $*/$*/$.h
 	gcc -c $(flags) $< -o $@
 
+window:
+	-rm orora.exe
+	x86_64-w64-mingw32-gcc -g -Wall -fstack-protector -o orora.exe $(objects)
+#	i686-w64-mingw32-gcc -Wall -fstack-protector -o orora.exe $(objects)
+
 clean:
 	-rm *.out
 #	-rm *.o

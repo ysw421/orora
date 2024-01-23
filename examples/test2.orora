@@ -1,8 +1,11 @@
+a:="aa"*"bb"
+print("string: ", a, "\n")
+32
 a := -3+21+(-23)
 
 x:=2+2.1
-%y:=(2+3)x+3
+y:=((2+3)x+3/2)/3
 
 print("variable a: ", a, "\n")
 print("variable x: ", x, "\n")
-%print("variable y: ", y, "\n")
+print("variable y: ", y, "\n")

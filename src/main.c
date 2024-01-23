@@ -7,12 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef DEVELOP_MODE
-void print_variable(AST_variable* node);
-void print_value(AST* ast);
-void print_function(AST_function* checked_function);
-#endif
-
 orora_value_type* value_type_list;
 
 void init_orora()
@@ -21,22 +15,25 @@ void init_orora()
     (
      &value_type_list, "string", TOKEN_STRING, parser_get_new_string_ast,
      parser_get_new_string_ast_value_stack, is_string_ast, AST_STRING,
-     ENV_VARIABLE_STRING, visitor_set_env_variable_string, AST_VALUE_STRING,
-     visitor_variable_define_value_string
+     ENV_VARIABLE_STRING, AST_VALUE_STRING,
+     visitor_set_value_Env_variable_from_AST_value_stack_string,
+     visitor_set_value_AST_value_stack_from_Env_variable_string
     );
   push_value_type_list
     (
      &value_type_list, "int", TOKEN_INT, parser_get_new_int_ast,
      parser_get_new_int_ast_value_stack, is_int_ast, AST_INT,
-     ENV_VARIABLE_INT, visitor_set_env_variable_int, AST_VALUE_INT,
-     visitor_variable_define_value_int
+     ENV_VARIABLE_INT, AST_VALUE_INT,
+     visitor_set_value_Env_variable_from_AST_value_stack_int,
+     visitor_set_value_AST_value_stack_from_Env_variable_int
      );
   push_value_type_list
     (
      &value_type_list, "float", TOKEN_FLOAT, parser_get_new_float_ast,
      parser_get_new_float_ast_value_stack, is_float_ast, AST_FLOAT,
-     ENV_VARIABLE_FLOAT, visitor_set_env_variable_float, AST_VALUE_FLOAT,
-     visitor_variable_define_value_float
+     ENV_VARIABLE_FLOAT, AST_VALUE_FLOAT,
+     visitor_set_value_Env_variable_from_AST_value_stack_float,
+     visitor_set_value_AST_value_stack_from_Env_variable_float
     );
 }
 

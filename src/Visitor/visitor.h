@@ -7,18 +7,19 @@
 void visitor_visit(Envs* envs, AST* ast);
 
 // ToDo: merge...
-Env_variable* visitor_set_env_variable_int(Env_variable* env_variable,
-    AST_value_stack* ast);
-Env_variable* visitor_set_env_variable_float(Env_variable* env_variable,
-    AST_value_stack* ast);
-Env_variable* visitor_set_env_variable_string(Env_variable* env_variable,
-    AST_value_stack* ast);
-Env_variable* visitor_variable_define_value_int(Env_variable* env_variable,
-    AST_value_stack* new_value);
-Env_variable* visitor_variable_define_value_float(Env_variable* env_variable,
-    AST_value_stack* new_value);
-Env_variable* visitor_variable_define_value_string(Env_variable* env_variable,
-    AST_value_stack* new_value);
+Env_variable* visitor_set_value_Env_variable_from_AST_value_stack_int
+(Env_variable* env_variable, AST_value_stack* new_value);
+Env_variable* visitor_set_value_Env_variable_from_AST_value_stack_float
+(Env_variable* env_variable, AST_value_stack* new_value);
+Env_variable* visitor_set_value_Env_variable_from_AST_value_stack_string
+(Env_variable* env_variable, AST_value_stack* new_value);
+
+AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_int
+(AST_value_stack* new_value_stack, Env_variable* env_variable);
+AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_float
+(AST_value_stack* new_value_stack, Env_variable* env_variable);
+AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_string
+(AST_value_stack* new_value_stack, Env_variable* env_variable);
 
 
 #endif

@@ -179,10 +179,11 @@ typedef struct orora_value_type_t
   bool (*is_check_type)(Token*);
   int ast_type_id;
   int env_variable_type_id;
-  Env_variable* (*visitor_set_env_variable)(Env_variable*, AST_value_stack*);
   int ast_value_type_id;
-  Env_variable* (*visitor_variable_define_value)(Env_variable*,
-    AST_value_stack*);
+  Env_variable* (*visitor_set_value_Env_variable_from_AST_value_stack)
+    (Env_variable*, AST_value_stack*);
+  AST_value_stack* (*visitor_set_value_AST_value_stack_from_Env_variable)
+    (AST_value_stack* new_value_stack, Env_variable* env_variable);
 } orora_value_type;
 
 orora_value_type* push_value_type_list
@@ -193,10 +194,11 @@ orora_value_type* push_value_type_list
    bool (*is_check_type)(Token*),
    int ast_type_id,
    int env_variable_type_id,
-   Env_variable* (*visitor_set_env_variable)(Env_variable*, AST_value_stack*),
    int ast_value_type_id,
-   Env_variable* (*visitor_variable_define_value)(Env_variable*,
-    AST_value_stack*)
+   Env_variable* (*visitor_set_value_Env_variable_from_AST_value_stack)
+   (Env_variable*, AST_value_stack*),
+   AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable
+   (AST_value_stack* new_value_stack, Env_variable* env_variable)
   );
 
 #endif
