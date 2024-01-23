@@ -176,42 +176,7 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
       exit(1);
     }
 
-    // check value
-    Token* stoken = parser->token;
-    GET_VALUE_ENV* new_get_value_env = init_get_value_env();
-    if (compound_env->is_in_parentheses)
-      new_get_value_env->is_in_parentheses = true;
-    AST* value_node =
-      parser_get_value(&parser, ast, token, new_get_value_env);
-    token = parser->token;
-    if (value_node)
-    {
-      if (value_node->value.value_v->size == 1
-          && value_node->value.value_v->stack->type == AST_VALUE_VARIABLE)
-      {
-        ast_compound_add(ast->value.compound_v,
-            parser_parse_variable(parser, ast, parser->prev_token));
-        token = parser->token;
-      }
-      else if (value_node->value.value_v->size == 1
-          && value_node->value.value_v->stack->type == AST_VALUE_FUNCTION)
-      {
-        ast_compound_add(ast->value.compound_v,
-            parser_parse_function(parser, ast, stoken,
-                value_node->value.value_v->stack->value.function_v));
-        token = parser->token;
-      }
-      else
-      {
-        free(stoken);
-        ast_compound_add(ast->value.compound_v, value_node);
-        token = parser->token;
-      }
-      continue;
-    }
-    free(value_node);
-    // -----------
-
+    bool is_break = true;
     switch (token->type)
     {
       case TOKEN_COMMA:
@@ -247,30 +212,47 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         break;
 
       default:
-        // For develop
-        switch (token->type)
-        {
-          default:
-            printf("@@@ %s\n", token->value);
-            int required =
-              snprintf(NULL, 0, "에러, %s가 무엇이죠??",
-                  token->value);
-            char* error_message = malloc((required + 1) * sizeof(char));
-            snprintf(error_message, required + 1,
-                "에러, %s가 무엇이죠??",
-                token->value);
-            printf("@@@%s\n", parser->token->value);
-            error_prev_token(error_message, parser);
-            break;
-        }
-        // End for develop
-
-        // Free Condition
-//         parser = parser_advance(parser, token->type);
-//         token = parser->token;
-        // End free condition
+        is_break = false;
         break;
     }
+    if (is_break)
+      break;
+
+    // check value
+    Token* stoken = parser->token;
+    GET_VALUE_ENV* new_get_value_env = init_get_value_env();
+    if (compound_env->is_in_parentheses)
+      new_get_value_env->is_in_parentheses = true;
+    AST* value_node =
+      parser_get_value(&parser, ast, token, new_get_value_env);
+    token = parser->token;
+    if (value_node)
+    {
+      if (value_node->value.value_v->size == 1
+          && value_node->value.value_v->stack->type == AST_VALUE_VARIABLE)
+      {
+        ast_compound_add(ast->value.compound_v,
+            parser_parse_variable(parser, ast, parser->prev_token));
+        token = parser->token;
+      }
+      else if (value_node->value.value_v->size == 1
+          && value_node->value.value_v->stack->type == AST_VALUE_FUNCTION)
+      {
+        ast_compound_add(ast->value.compound_v,
+            parser_parse_function(parser, ast, stoken,
+                value_node->value.value_v->stack->value.function_v));
+        token = parser->token;
+      }
+      else
+      {
+        free(stoken);
+        ast_compound_add(ast->value.compound_v, value_node);
+        token = parser->token;
+      }
+      continue;
+    }
+    free(value_node);
+    // -----------
   }
 
   return parser_get_compound_end(ast, compound_env);

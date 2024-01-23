@@ -6,6 +6,7 @@ AST_value_stack* get_single_value(Parser* parser, AST* ast, bool is_minus);
 GET_VALUE_ENV* init_get_value_env();
 int get_ast_value_type(int token_id);
 bool is_operator(int token_id);
+bool is_operator_use_one_value(int token_id);
 
 
 AST* parser_get_value(Parser** parser_, AST* ast,
@@ -15,7 +16,8 @@ AST* parser_get_value(Parser** parser_, AST* ast,
   Parser* parser = *parser_;
   AST_value* stack = init_ast_value();
   AST_value* postfix_expression = init_ast_value();   // result
-  bool is_last_value = false;       // 3x -> 3 * x
+  bool is_last_value = false;
+  bool is_last_single_value = false;  // 3x -> 3 * x
   bool is_last_minus_value = true;    // check to see if you can use the
                                       // minus symbol to represent a value
                                       // for next.
@@ -68,13 +70,19 @@ AST* parser_get_value(Parser** parser_, AST* ast,
       is_last_value = true;
       is_last_minus_value = false;
       is_last_minus_value2 = false;
+      is_last_single_value = true;
     }
     else
     {
-      is_last_minus_value2 = false;
+      if (is_last_minus_value2)
+      {
+        printf("에러, operator 뒤에는 값이 와야함\n");
+        exit(1);
+      }
+
       if (token->type == TOKEN_ID)
       {
-        if (is_last_value)
+        if (is_last_single_value)
         {
           while (stack->size
               && parser_precedence(stack->stack->type)
@@ -86,10 +94,17 @@ AST* parser_get_value(Parser** parser_, AST* ast,
           parser_push_value(stack,
               init_ast_value_stack(AST_VALUE_PRODUCT, token));
         }
+        else if (is_last_value)
+        {
+          printf("에러, 값 전에 operator가 와야함\n");
+          exit(1);
+        }
         
         AST* function_ast = parser_get_function(parser, ast);
         token = parser->token;
 
+        is_last_value = true;
+        is_last_minus_value = false;
         AST_value_stack* new;
         if (function_ast)
         {
@@ -97,8 +112,6 @@ AST* parser_get_value(Parser** parser_, AST* ast,
           new->value.function_v = function_ast->value.function_v;
           parser_push_value(postfix_expression, new);
   
-          is_last_value = true;
-          is_last_minus_value = false;
           continue;
         }
         else
@@ -108,9 +121,6 @@ AST* parser_get_value(Parser** parser_, AST* ast,
             init_ast_variable(token->value, token->length);
           new->value.variable_v->ast_type = AST_VARIABLE_VALUE;
           parser_push_value(postfix_expression, new);
-
-          is_last_value = true;
-          is_last_minus_value = false;
         }
       }
       else if (token->type == TOKEN_LPAR)
@@ -122,6 +132,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
 
         is_last_value = false;
         is_last_minus_value = true;
+        is_last_single_value = false;
       }
       else if (token->type == TOKEN_RPAR)
       {
@@ -139,6 +150,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
 
         is_last_value = true;
         is_last_minus_value = false;
+        is_last_single_value = true;
       }
       else if (is_operator(token->type))
       {
@@ -148,6 +160,11 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         }
         else
         {
+          if (!is_last_value && !is_operator_use_one_value(token->type))
+          {
+            printf("에러, operator는 값 다음에 와야 함\n");
+            exit(1);
+          }
           while (stack->size
               && parser_precedence(stack->stack->type)
                   >= parser_precedence(get_ast_value_type(token->type)))
@@ -159,14 +176,27 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         }
         is_last_minus_value = false;
         is_last_value = false;
+        is_last_single_value = false;
       }
       else
         break;
+      
     }
 
     parser = parser_advance(parser, token->type);
     token = parser->token;
   }
+  if (!is_last_value)
+  {
+    printf("에러, operator 다음에는 값이 와야함\n");
+    exit(1);
+  }
+  else if(count_of_dearkelly)
+  {
+    printf("에러, (가 끝나지 아니함\n");
+    exit(1);
+  }
+
   while (stack->size)
     parser_push_value(postfix_expression, parser_pop_value(stack));
   free(stack);
@@ -362,6 +392,17 @@ bool is_operator(int token_id)
     case TOKEN_MINUS:
     case TOKEN_STAR:
     case TOKEN_SLASH:
+      return true;
+  }
+
+  return false;
+}
+
+bool is_operator_use_one_value(int token_id)
+{
+  switch (token_id)
+  {
+    case TOKEN_MINUS:
       return true;
   }
 

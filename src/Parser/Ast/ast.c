@@ -168,9 +168,11 @@ orora_value_type* push_value_type_list
    bool (*is_check)(Token*),
    int ast_type_id,
    int env_variable_type_id,
-   Env_variable* (*visitor_set_env_variable)(Env_variable* env_variable,
-      AST_value_stack* ast),
-   int ast_value_type_id
+   Env_variable* (*visitor_set_env_variable)(Env_variable*,
+      AST_value_stack*),
+   int ast_value_type_id,
+   Env_variable* (*visitor_variable_define_value)(Env_variable*,
+    AST_value_stack*)
   )
 {
   static orora_value_type* pointer = NULL;
@@ -187,6 +189,7 @@ orora_value_type* push_value_type_list
   point->env_variable_type_id = env_variable_type_id;
   point->visitor_set_env_variable = visitor_set_env_variable;
   point->ast_value_type_id = ast_value_type_id;
+  point->visitor_variable_define_value = visitor_variable_define_value;
 
   point->next = pointer;
 

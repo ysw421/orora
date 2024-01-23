@@ -12,6 +12,18 @@ orora_value_type* get_single_value_type(int ast_type);
 Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable);
 Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable);
 AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value);
+AST_value_stack* visitor_operator_plus(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2);
+AST_value_stack* visitor_operator_minus(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2);
+AST_value_stack* visitor_operator_product(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2);
+AST_value_stack* visitor_operator_div(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2);
 
 void visitor_visit(Envs* envs, AST* ast)
 {
@@ -209,7 +221,6 @@ Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
         {
           printf("에러, 변수에는 값을 저장해야함\n");
           exit(1);
-          // 에러...
         }
       }
       else
@@ -221,13 +232,21 @@ Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
         AST_value_stack* new_value =
           visitor_get_value(envs, ast_variable->value->value.value_v);
 
-        // ToDo.... save in type list
-        switch (new_value->type)
+        orora_value_type* p = value_type_list;
+        do
         {
-          case AST_VALUE_INT:
-            env_variable->type = ENV_VARIABLE_INT;
-            env_variable->value.int_v = new_value->value.int_v;
+          if (p->ast_value_type_id == new_value->type)
             break;
+          p = p->next;
+        } while (p);
+
+        if (p)
+          env_variable =
+            p->visitor_variable_define_value(env_variable, new_value);
+        else
+        {
+          printf("에러, 변수에 저장하는 것은 값이어야함\n");
+          exit(1);
         }
 
         Env* local_env = envs->local;
@@ -236,8 +255,6 @@ Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
         local_env->variables = env_variable;
 
         return env_variable;
-        // ToDo:
-        // get value...
       }
       break;
     case AST_VARIABLE:
@@ -315,6 +332,10 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
         {
           case ENV_VARIABLE_INT:
             new_value_stack->type = AST_VALUE_INT;
+            // ToDo
+            // 1월 26일 할 일...
+            // 아래 코드를 사용하는 것이 list에 가장 최근 및 전전이 있음.
+            // 이 코드를 따로 빼서 사용할 것
             new_value_stack->value.int_v = env_variable->value.int_v;
             break;
         }
@@ -337,47 +358,19 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
       switch (text->type)
       {
         case AST_VALUE_PLUS:
-          if (operand1->type == AST_VALUE_INT
-              && operand2->type == AST_VALUE_INT)
-          {
-            result->type = AST_VALUE_INT;
-            result->value.int_v = malloc(sizeof(struct ast_int_t));
-            result->value.int_v->value =
-              operand1->value.int_v->value + operand2->value.int_v->value;
-          }
+          result = visitor_operator_plus(result, operand1, operand2);
           break;
 
         case AST_VALUE_MINUS:
-          if (operand1->type == AST_VALUE_INT
-              && operand2->type == AST_VALUE_INT)
-          {
-            result->type = AST_VALUE_INT;
-            result->value.int_v = malloc(sizeof(struct ast_int_t));
-            result->value.int_v->value =
-              operand1->value.int_v->value - operand2->value.int_v->value;
-          }
+          result = visitor_operator_minus(result, operand1, operand2);
           break;
 
         case AST_VALUE_PRODUCT:
-          if (operand1->type == AST_VALUE_INT
-              && operand2->type == AST_VALUE_INT)
-          {
-            result->type = AST_VALUE_INT;
-            result->value.int_v = malloc(sizeof(struct ast_int_t));
-            result->value.int_v->value =
-              operand1->value.int_v->value * operand2->value.int_v->value;
-          }
+          result = visitor_operator_product(result, operand1, operand2);
           break;
 
         case AST_VALUE_DIV:
-          if (operand1->type == AST_VALUE_INT
-              && operand2->type == AST_VALUE_INT)
-          {
-            result->type = AST_VALUE_FLOAT;
-            result->value.float_v = malloc(sizeof(struct ast_float_t));
-            result->value.float_v->value =
-              operand1->value.int_v->value / operand2->value.int_v->value;
-          }
+          result = visitor_operator_div(result, operand1, operand2);
           break;
       }
 
@@ -393,3 +386,135 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
 
   return parser_pop_value(stack);
 }
+
+
+AST_value_stack* visitor_operator_plus(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  if (operand1->type == AST_VALUE_STRING
+      || operand2->type == AST_VALUE_STRING)
+  {
+    printf("에러, string은 + 연산이 불가함\n");
+    exit(1);
+  }
+  else if (operand1->type == AST_VALUE_INT
+      && operand2->type == AST_VALUE_INT)
+  {
+    result->type = AST_VALUE_INT;
+    result->value.int_v = malloc(sizeof(struct ast_int_t));
+    result->value.int_v->value =
+      operand1->value.int_v->value + operand2->value.int_v->value;
+  }
+  else if ((operand1->type == AST_VALUE_FLOAT
+      && operand2->type == AST_VALUE_INT)
+      || (operand1->type == AST_VALUE_INT
+      && operand2->type == AST_VALUE_FLOAT)
+      || (operand1->type == AST_VALUE_FLOAT
+      && operand2->type == AST_VALUE_FLOAT))
+  {
+    result->type = AST_VALUE_FLOAT;
+    result->value.float_v = malloc(sizeof(struct ast_float_t));
+    if (operand1->type == AST_VALUE_FLOAT)
+      result->value.float_v->value =
+        operand1->value.float_v->value + operand2->value.int_v->value;
+    else if (operand2->type == AST_VALUE_FLOAT)
+      result->value.float_v->value =
+        operand1->value.int_v->value + operand2->value.float_v->value;
+    else
+      result->value.float_v->value =
+        operand1->value.float_v->value + operand2->value.float_v->value;
+  }
+  else
+  {
+    printf("에러, 정의되지 않은 연산\n");
+    exit(1);
+  }
+
+  return result;
+}
+
+AST_value_stack* visitor_operator_minus(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  if (operand1->type == AST_VALUE_INT
+      && operand2->type == AST_VALUE_INT)
+  {
+    result->type = AST_VALUE_INT;
+    result->value.int_v = malloc(sizeof(struct ast_int_t));
+    result->value.int_v->value =
+      operand1->value.int_v->value - operand2->value.int_v->value;
+  }
+
+  return result;
+}
+
+AST_value_stack* visitor_operator_product(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  if (operand1->type == AST_VALUE_INT
+      && operand2->type == AST_VALUE_INT)
+  {
+    result->type = AST_VALUE_INT;
+    result->value.int_v = malloc(sizeof(struct ast_int_t));
+    result->value.int_v->value =
+      operand1->value.int_v->value * operand2->value.int_v->value;
+  }
+
+  return result;
+}
+
+AST_value_stack* visitor_operator_div(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  if (operand1->type == AST_VALUE_INT
+      && operand2->type == AST_VALUE_INT)
+  {
+    result->type = AST_VALUE_FLOAT;
+    result->value.float_v = malloc(sizeof(struct ast_float_t));
+    result->value.float_v->value =
+      operand1->value.int_v->value / operand2->value.int_v->value;
+  }
+
+  return result;
+}
+
+Env_variable* visitor_variable_define_value_int(Env_variable* env_variable,
+    AST_value_stack* new_value)
+{
+  if (!env_variable)
+    return (void*) 0;
+
+  env_variable->type = ENV_VARIABLE_INT;
+  env_variable->value.int_v = new_value->value.int_v;
+
+  return env_variable;
+}
+
+Env_variable* visitor_variable_define_value_float(Env_variable* env_variable,
+    AST_value_stack* new_value)
+{
+  if (!env_variable)
+    return (void*) 0;
+
+  env_variable->type = ENV_VARIABLE_FLOAT;
+  env_variable->value.float_v = new_value->value.float_v;
+
+  return env_variable;
+}
+
+Env_variable* visitor_variable_define_value_string(Env_variable* env_variable,
+    AST_value_stack* new_value)
+{
+  if (!env_variable)
+    return (void*) 0;
+
+  env_variable->type = ENV_VARIABLE_STRING;
+  env_variable->value.string_v = new_value->value.string_v;
+
+  return env_variable;
+}
+

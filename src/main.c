@@ -21,19 +21,22 @@ void init_orora()
     (
      &value_type_list, "string", TOKEN_STRING, parser_get_new_string_ast,
      parser_get_new_string_ast_value_stack, is_string_ast, AST_STRING,
-     ENV_VARIABLE_STRING, visitor_set_env_variable_string, AST_VALUE_STRING
+     ENV_VARIABLE_STRING, visitor_set_env_variable_string, AST_VALUE_STRING,
+     visitor_variable_define_value_string
     );
   push_value_type_list
     (
      &value_type_list, "int", TOKEN_INT, parser_get_new_int_ast,
      parser_get_new_int_ast_value_stack, is_int_ast, AST_INT,
-     ENV_VARIABLE_INT, visitor_set_env_variable_int, AST_VALUE_INT
-    );
+     ENV_VARIABLE_INT, visitor_set_env_variable_int, AST_VALUE_INT,
+     visitor_variable_define_value_int
+     );
   push_value_type_list
     (
      &value_type_list, "float", TOKEN_FLOAT, parser_get_new_float_ast,
      parser_get_new_float_ast_value_stack, is_float_ast, AST_FLOAT,
-     ENV_VARIABLE_FLOAT, visitor_set_env_variable_float, AST_VALUE_FLOAT
+     ENV_VARIABLE_FLOAT, visitor_set_env_variable_float, AST_VALUE_FLOAT,
+     visitor_variable_define_value_float
     );
 }
 

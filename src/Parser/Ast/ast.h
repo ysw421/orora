@@ -181,6 +181,8 @@ typedef struct orora_value_type_t
   int env_variable_type_id;
   Env_variable* (*visitor_set_env_variable)(Env_variable*, AST_value_stack*);
   int ast_value_type_id;
+  Env_variable* (*visitor_variable_define_value)(Env_variable*,
+    AST_value_stack*);
 } orora_value_type;
 
 orora_value_type* push_value_type_list
@@ -192,7 +194,9 @@ orora_value_type* push_value_type_list
    int ast_type_id,
    int env_variable_type_id,
    Env_variable* (*visitor_set_env_variable)(Env_variable*, AST_value_stack*),
-   int ast_value_type_id
+   int ast_value_type_id,
+   Env_variable* (*visitor_variable_define_value)(Env_variable*,
+    AST_value_stack*)
   );
 
 #endif
