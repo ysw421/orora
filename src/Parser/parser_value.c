@@ -4,11 +4,8 @@
 
 AST_value_stack* get_single_value(Parser* parser, AST* ast, bool is_minus);
 GET_VALUE_ENV* init_get_value_env();
-int parser_precedence(int type_id);
-AST_value_stack* pop_value(AST_value* value);
-AST_value* push_value(AST_value* value, AST_value_stack* node);
-bool is_operator(int token_id);
 int get_ast_value_type(int token_id);
+bool is_operator(int token_id);
 
 
 AST* parser_get_value(Parser** parser_, AST* ast,
@@ -59,13 +56,14 @@ AST* parser_get_value(Parser** parser_, AST* ast,
             && parser_precedence(stack->stack->type)
                 >= parser_precedence(AST_VALUE_PRODUCT))
         {
-          save_value = pop_value(stack);
-          push_value(postfix_expression, save_value);
+          save_value = parser_pop_value(stack);
+          parser_push_value(postfix_expression, save_value);
         }
-        push_value(stack, init_ast_value_stack(AST_VALUE_PRODUCT, token));
+        parser_push_value(stack,
+            init_ast_value_stack(AST_VALUE_PRODUCT, token));
       }
       save_value = get_single_value(parser, ast, is_last_minus_value2);
-      push_value(postfix_expression, save_value);
+      parser_push_value(postfix_expression, save_value);
       
       is_last_value = true;
       is_last_minus_value = false;
@@ -82,10 +80,11 @@ AST* parser_get_value(Parser** parser_, AST* ast,
               && parser_precedence(stack->stack->type)
                   >= parser_precedence(AST_VALUE_PRODUCT))
           {
-            save_value = pop_value(stack);
-            push_value(postfix_expression, save_value);
+            save_value = parser_pop_value(stack);
+            parser_push_value(postfix_expression, save_value);
           }
-          push_value(stack, init_ast_value_stack(AST_VALUE_PRODUCT, token));
+          parser_push_value(stack,
+              init_ast_value_stack(AST_VALUE_PRODUCT, token));
         }
         
         AST* function_ast = parser_get_function(parser, ast);
@@ -96,7 +95,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         {
           new = init_ast_value_stack(AST_VALUE_FUNCTION, token);
           new->value.function_v = function_ast->value.function_v;
-          push_value(postfix_expression, new);
+          parser_push_value(postfix_expression, new);
   
           is_last_value = true;
           is_last_minus_value = false;
@@ -108,7 +107,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
           new->value.variable_v =
             init_ast_variable(token->value, token->length);
           new->value.variable_v->ast_type = AST_VARIABLE_VALUE;
-          push_value(postfix_expression, new);
+          parser_push_value(postfix_expression, new);
 
           is_last_value = true;
           is_last_minus_value = false;
@@ -118,7 +117,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
       {
         count_of_dearkelly ++;
         value_env->is_in_parentheses = true;
-        push_value(stack,
+        parser_push_value(stack,
             init_ast_value_stack(AST_VALUE_LPAR, token));
 
         is_last_value = false;
@@ -134,9 +133,9 @@ AST* parser_get_value(Parser** parser_, AST* ast,
           value_env->is_in_parentheses = false;
         while (stack->stack->type != AST_VALUE_LPAR)
         {
-          push_value(postfix_expression, pop_value(stack));
+          parser_push_value(postfix_expression, parser_pop_value(stack));
         }
-        pop_value(stack);
+        parser_pop_value(stack);
 
         is_last_value = true;
         is_last_minus_value = false;
@@ -153,9 +152,9 @@ AST* parser_get_value(Parser** parser_, AST* ast,
               && parser_precedence(stack->stack->type)
                   >= parser_precedence(get_ast_value_type(token->type)))
           {
-            push_value(postfix_expression, pop_value(stack));
+            parser_push_value(postfix_expression, parser_pop_value(stack));
           }
-          push_value(stack,
+          parser_push_value(stack,
               init_ast_value_stack(get_ast_value_type(token->type), token));
         }
         is_last_minus_value = false;
@@ -169,7 +168,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
     token = parser->token;
   }
   while (stack->size)
-    push_value(postfix_expression, pop_value(stack));
+    parser_push_value(postfix_expression, parser_pop_value(stack));
   free(stack);
 
   if (postfix_expression->size == 0)
@@ -260,7 +259,8 @@ AST_value_stack* parser_get_new_string_ast_value_stack
 {
   if (is_minus)
   {
-    printf("에러, string에는 -연산이 불가함");
+    printf("에러, string에는 -연산이 불가함\n");
+    exit(1);
   }
   AST_value_stack* new =
     init_ast_value_stack(AST_VALUE_STRING, token);
@@ -290,7 +290,7 @@ bool is_int_ast(Token* token)
   return false;
 }
 
-AST_value_stack* pop_value(AST_value* value)
+AST_value_stack* parser_pop_value(AST_value* value)
 {
   if (value->size == 0)
   {
@@ -312,7 +312,7 @@ AST_value_stack* pop_value(AST_value* value)
   return snode;
 }
 
-AST_value* push_value(AST_value* value, AST_value_stack* node)
+AST_value* parser_push_value(AST_value* value, AST_value_stack* node)
 {
   value->size ++;
   AST_value_stack* snode = value->stack;

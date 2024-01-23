@@ -1,6 +1,7 @@
 #include <string.h>
 #include "visitor.h"
 #include "../main.h"
+#include "../Parser/parser_value.h"
 
 #ifdef DEVELOP_MODE
 #include <stdlib.h>
@@ -10,6 +11,7 @@
 orora_value_type* get_single_value_type(int ast_type);
 Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable);
 Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable);
+AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value);
 
 void visitor_visit(Envs* envs, AST* ast)
 {
@@ -212,6 +214,28 @@ Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
       }
       else
       {
+        Env_variable* env_variable =
+          init_env_variable(ast_variable->name,
+              ast_variable->name_length);
+
+        AST_value_stack* new_value =
+          visitor_get_value(envs, ast_variable->value->value.value_v);
+
+        // ToDo.... save in type list
+        switch (new_value->type)
+        {
+          case AST_VALUE_INT:
+            env_variable->type = ENV_VARIABLE_INT;
+            env_variable->value.int_v = new_value->value.int_v;
+            break;
+        }
+
+        Env* local_env = envs->local;
+        env_variable->next = local_env->variables;
+        local_env->variable_size ++;
+        local_env->variables = env_variable;
+
+        return env_variable;
         // ToDo:
         // get value...
       }
@@ -260,5 +284,112 @@ Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
   }
 }
 
-void visitor_get_value()
-{}
+AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
+{
+  AST_value* stack = init_ast_value();
+  AST_value_stack* text;
+  int max_cnt = ast_value->size;
+  AST_value_stack** text_array =
+    malloc(max_cnt * sizeof(AST_value_stack*));
+  AST_value_stack* p = ast_value->stack;
+  for (int i = max_cnt - 1; i >= 0; i --)
+  {
+    text_array[i] = p;
+    p = p->next;
+  }
+
+  int i = 0;
+  while (i < max_cnt)
+  {
+    text = text_array[i];
+    i ++;
+    if (parser_precedence(text->type) == -1)
+      if (text->type == AST_VALUE_VARIABLE)
+      {
+        Env_variable* env_variable =
+          visitor_get_variable(envs, text->value.variable_v);
+
+        // ToDo... use list...
+        AST_value_stack* new_value_stack = malloc(sizeof(AST_value_stack));
+        switch (env_variable->type)
+        {
+          case ENV_VARIABLE_INT:
+            new_value_stack->type = AST_VALUE_INT;
+            new_value_stack->value.int_v = env_variable->value.int_v;
+            break;
+        }
+        parser_push_value(stack, new_value_stack);
+      }
+      else
+        parser_push_value(stack, text);
+    else
+    {
+      AST_value_stack* operand1;
+      AST_value_stack* operand2;
+      operand2 = parser_pop_value(stack);
+
+      if (true)   // ToDo... if operator is !
+      {
+        operand1 = parser_pop_value(stack);
+      }
+
+      AST_value_stack* result = malloc(sizeof(AST_value_stack));
+      switch (text->type)
+      {
+        case AST_VALUE_PLUS:
+          if (operand1->type == AST_VALUE_INT
+              && operand2->type == AST_VALUE_INT)
+          {
+            result->type = AST_VALUE_INT;
+            result->value.int_v = malloc(sizeof(struct ast_int_t));
+            result->value.int_v->value =
+              operand1->value.int_v->value + operand2->value.int_v->value;
+          }
+          break;
+
+        case AST_VALUE_MINUS:
+          if (operand1->type == AST_VALUE_INT
+              && operand2->type == AST_VALUE_INT)
+          {
+            result->type = AST_VALUE_INT;
+            result->value.int_v = malloc(sizeof(struct ast_int_t));
+            result->value.int_v->value =
+              operand1->value.int_v->value - operand2->value.int_v->value;
+          }
+          break;
+
+        case AST_VALUE_PRODUCT:
+          if (operand1->type == AST_VALUE_INT
+              && operand2->type == AST_VALUE_INT)
+          {
+            result->type = AST_VALUE_INT;
+            result->value.int_v = malloc(sizeof(struct ast_int_t));
+            result->value.int_v->value =
+              operand1->value.int_v->value * operand2->value.int_v->value;
+          }
+          break;
+
+        case AST_VALUE_DIV:
+          if (operand1->type == AST_VALUE_INT
+              && operand2->type == AST_VALUE_INT)
+          {
+            result->type = AST_VALUE_FLOAT;
+            result->value.float_v = malloc(sizeof(struct ast_float_t));
+            result->value.float_v->value =
+              operand1->value.int_v->value / operand2->value.int_v->value;
+          }
+          break;
+      }
+
+      parser_push_value(stack, result);
+    }
+  }
+
+  if (stack->size != 1)
+  {
+    printf("에러, 연산 불가함\n");
+    exit(1);
+  }
+
+  return parser_pop_value(stack);
+}

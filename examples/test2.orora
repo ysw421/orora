@@ -1,1 +1,8 @@
-4
+a := -3+21*(-23)
+
+x:=2
+y:=5x+3
+
+print("variable a: ", a, "\n")
+print("variable x: ", x, "\n")
+print("variable y: ", y, "\n")
