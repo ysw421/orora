@@ -26,6 +26,11 @@ AST_value_stack* visitor_operator_div(AST_value_stack* result,
     AST_value_stack* operand2);
 AST_value_stack* get_variable_from_Env_variable(Envs* envs, AST_value_stack* ast);
 Env_variable* visitor_variable_satisfy(Envs* envs, AST_variable* ast_variable);
+void visitor_nondefine_variable_error(AST_variable* ast_variable);
+bool is_true(AST_value_stack* value);
+AST_value_stack* get_deep_copyed_ast_value_stack
+(AST_value_stack* ast_value_stack);
+bool visitor_check_satisfy(Envs* envs, Env_variable* env_variable);
 
 void visitor_visit(Envs* envs, AST* ast)
 {
@@ -92,6 +97,11 @@ void visitor_visit(Envs* envs, AST* ast)
                 ast_function_arg->value.variable_v;
               Env_variable* variable =
                 visitor_get_variable(envs, ast_function_arg_variable);
+              if (!variable)
+              {
+                visitor_nondefine_variable_error(ast_function_arg_variable);
+              }
+
               switch (variable->type)
               {
                 case ENV_VARIABLE_STRING:
@@ -113,17 +123,27 @@ void visitor_visit(Envs* envs, AST* ast)
 
     case AST_VARIABLE:
       AST_variable* ast_variable = ast->value.variable_v;
+      Env_variable* env_variable;
       switch (ast_variable->ast_type)
       {
         case AST_VARIABLE_VALUE:
+          env_variable = visitor_get_variable(envs, ast_variable);
+          if (!env_variable)
+          {
+            visitor_nondefine_variable_error(ast_variable);
+          }
           break;
 
         case AST_VARIABLE_DEFINE:
-          visitor_variable_define(envs, ast_variable);
+          env_variable = visitor_variable_define(envs, ast_variable);
+
+          visitor_check_satisfy(envs, env_variable);
           break;
 
         case AST_VARIABLE_SATISFY:
-          visitor_variable_satisfy(envs, ast_variable);
+          env_variable = visitor_variable_satisfy(envs, ast_variable);
+          
+//           visitor_check_satisfy(envs, env_variable);
           break;
 
         default:
@@ -135,6 +155,49 @@ void visitor_visit(Envs* envs, AST* ast)
       }
       break;
   }
+}
+
+bool visitor_check_satisfy(Envs* envs, Env_variable* env_variable)
+{
+  Env_value_list* value_list = env_variable->satisfy;
+  for (int i = 0; i < env_variable->satisfy_size; i ++)
+  {
+    AST_value_stack* value =
+      visitor_get_value(envs, value_list->value);
+
+    if (!is_true(value))
+    {
+      printf("에러, satisfy 조건에 만족하지 아니함\n");
+      exit(1);
+    }
+
+    value_list = value_list->next;
+  }
+
+  return true;
+}
+
+bool is_true(AST_value_stack* value)
+{
+  switch (value->type)
+  {
+    case AST_VALUE_INT:
+      if (value->value.int_v->value == 0)
+        return false;
+      break;
+    case AST_VALUE_FLOAT:
+      if (value->value.float_v->value == 0)
+        return false;
+      break;
+  }
+
+  return true;
+}
+
+void visitor_nondefine_variable_error(AST_variable* ast_variable)
+{
+  printf("에러, 정의되지 않은 변수: %s\n", ast_variable->name);
+  exit(1);
 }
 
 Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable)
@@ -160,11 +223,27 @@ Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable)
     check_variable = check_variable->next;
   }
 
-  // ToDo:
-  //    get variable from global
+  check_variable = envs->global->variables;
+  snode = (void*) 0;
+  while (check_variable->next)
+  {
+    if (!strcmp(check_variable->name, ast_variable->name))
+    {
+      if (snode)
+      {
+        snode->next = check_variable->next;
+        check_variable->next = envs->global->variables;
+        envs->global->variables = check_variable;
+      }
+      return check_variable;
+    }
+    if (snode)
+      snode = snode->next;
+    else
+      snode = envs->global->variables;
+    check_variable = check_variable->next;
+  }
 
-  printf("에러, 정의되지 않은 변수: %s\n", ast_variable->name);
-  exit(1);
   return (void*) 0;
 }
 
@@ -183,6 +262,7 @@ orora_value_type* get_single_value_type(int ast_type)
 
 Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
 {
+  bool is_defined_variable;
   switch (ast_variable->value->type)
   {
     case AST_VALUE:
@@ -194,18 +274,31 @@ Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
         if (variable_type)
         {
           Env_variable* env_variable =
-            init_env_variable(ast_variable->name,
-                ast_variable->name_length);
-          env_variable =
-            variable_type->visitor_set_value_Env_variable_from_AST_value_stack(
-                  env_variable,
-                  ast_variable->value->value.value_v->stack
-                );
+            visitor_get_variable(envs, ast_variable);
+          
+          if (env_variable)
+          {
+            env_variable =
+              variable_type->visitor_set_value_Env_variable_from_AST_value_stack(
+                    env_variable,
+                    ast_variable->value->value.value_v->stack
+                  );
+          }
+          else
+          {
+            env_variable = init_env_variable(ast_variable->name,
+                                              ast_variable->name_length);
+            env_variable =
+              variable_type->visitor_set_value_Env_variable_from_AST_value_stack(
+                    env_variable,
+                    ast_variable->value->value.value_v->stack
+                  );
 
-          Env* local_env = envs->local;
-          env_variable->next = local_env->variables;
-          local_env->variable_size ++;
-          local_env->variables = env_variable;
+            Env* local_env = envs->local;
+            env_variable->next = local_env->variables;
+            local_env->variable_size ++;
+            local_env->variables = env_variable;
+          }
 
           return env_variable;
         }
@@ -218,8 +311,18 @@ Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
       else
       {
         Env_variable* env_variable =
-          init_env_variable(ast_variable->name,
-              ast_variable->name_length);
+          visitor_get_variable(envs, ast_variable);
+        if (env_variable)
+        {
+          is_defined_variable = true;
+        }
+        else
+        {
+          is_defined_variable = false;
+          env_variable =
+            init_env_variable(ast_variable->name,
+                ast_variable->name_length);
+        }
 
         AST_value_stack* new_value =
           visitor_get_value(envs, ast_variable->value->value.value_v);
@@ -242,10 +345,13 @@ Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
           exit(1);
         }
 
-        Env* local_env = envs->local;
-        env_variable->next = local_env->variables;
-        local_env->variable_size ++;
-        local_env->variables = env_variable;
+        if (!is_defined_variable)
+        {
+          Env* local_env = envs->local;
+          env_variable->next = local_env->variables;
+          local_env->variable_size ++;
+          local_env->variables = env_variable;
+        }
 
         return env_variable;
       }
@@ -257,35 +363,67 @@ Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
       switch (ast_variable->value->value.variable_v->ast_type)
       {
         case AST_VARIABLE_VALUE:
-          env_variable =
-            init_env_variable(ast_variable->name,
-                  ast_variable->name_length);
+          env_variable = visitor_get_variable(envs, ast_variable);
+          if (env_variable)
+          {
+            is_defined_variable = true;
+          }
+          else
+          {
+            is_defined_variable = false;
+            env_variable =
+              init_env_variable(ast_variable->name,
+                    ast_variable->name_length);
+          }
+
           value_variable =
             visitor_get_variable(envs,
                 ast_variable->value->value.variable_v);
+          if (!value_variable)
+          {
+            visitor_nondefine_variable_error(
+                ast_variable->value->value.variable_v);
+          }
+
           env_variable->type = value_variable->type;
           env_variable->value = value_variable->value;
 
-          env_variable->next = local_env->variables;
-          local_env->variable_size ++;
-          local_env->variables = env_variable;
+          if (!is_defined_variable)
+          {
+            env_variable->next = local_env->variables;
+            local_env->variable_size ++;
+            local_env->variables = env_variable;
+          }
 
           return env_variable;
           break;
 
         case AST_VARIABLE_DEFINE:
-          env_variable =
-            init_env_variable(ast_variable->name,
-                  ast_variable->name_length);
+          env_variable = visitor_get_variable(envs, ast_variable);
+          if (env_variable)
+          {
+            is_defined_variable = true;
+          }
+          else
+          {
+            is_defined_variable = false;
+            env_variable =
+              init_env_variable(ast_variable->name,
+                    ast_variable->name_length);
+          }
+
           value_variable =
             visitor_variable_define(envs,
                 ast_variable->value->value.variable_v);
           env_variable->type = value_variable->type;
           env_variable->value = value_variable->value;
 
-          env_variable->next = local_env->variables;
-          local_env->variable_size ++;
-          local_env->variables = env_variable;
+          if (!is_defined_variable)
+          {
+            env_variable->next = local_env->variables;
+            local_env->variable_size ++;
+            local_env->variables = env_variable;
+          }
 
           return env_variable;
           break;
@@ -299,17 +437,38 @@ Env_variable* visitor_variable_satisfy(Envs* envs, AST_variable* ast_variable)
 {
   Env_variable* get_variable =
     visitor_get_variable(envs, ast_variable);
+  if (!get_variable)
+  {
+    visitor_nondefine_variable_error(ast_variable);
+  }
+
   size_t s_satisfy_size = get_variable->satisfy_size;
   get_variable->satisfy_size += ast_variable->satisfy_size;
-  get_variable->satisfy =
-    realloc(get_variable->satisfy,
-        get_variable->satisfy_size * sizeof(struct ast_variable_t*));
   for (size_t i = 0; i < ast_variable->satisfy_size; i ++)
   {
-    get_variable->satisfy[s_satisfy_size + i] =
-      ast_variable->satisfy[i]->value.value_v;
+    Env_value_list* value_list =
+      init_env_value_list(ast_variable->satisfy[i]->value.value_v);
+    value_list->next = get_variable->satisfy;
+    get_variable->satisfy = value_list;
   }
-  return (void*) 0;
+  return get_variable;
+}
+
+AST_value_stack* get_deep_copyed_ast_value_stack
+(AST_value_stack* ast_value_stack)
+{
+  AST_value_stack* new_value_stack = malloc(sizeof(AST_value));
+  new_value_stack->type = ast_value_stack->type;
+  new_value_stack->value = ast_value_stack->value;
+  new_value_stack->next = ast_value_stack->next;
+
+//   new_value_stack->col = ast_value_stack->col;
+//   new_value_stack->col_first = ast_value_stack->col_first;
+//   new_value_stack->row = ast_value_stack->row;
+//   new_value_stack->row_char = ast_value_stack->row_char;
+//   new_value_stack->row_char_first = ast_value_stack->row_char_first;
+
+  return new_value_stack;
 }
 
 AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
@@ -322,6 +481,7 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
   AST_value_stack* p = ast_value->stack;
   for (int i = max_cnt - 1; i >= 0; i --)
   {
+//     text_array[i] = get_deep_copyed_ast_value_stack(p);
     text_array[i] = p;
     p = p->next;
   }
@@ -337,6 +497,10 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
       {
         Env_variable* env_variable =
           visitor_get_variable(envs, text->value.variable_v);
+        if (!env_variable)
+        {
+          visitor_nondefine_variable_error(text->value.variable_v);
+        }
 
         AST_value_stack* new_value_stack = malloc(sizeof(AST_value_stack));
         orora_value_type* p = value_type_list;
@@ -359,7 +523,9 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
         parser_push_value(stack, new_value_stack);
       }
       else
+      {
         parser_push_value(stack, text);
+      }
     }
     else
     {
@@ -367,7 +533,8 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
       AST_value_stack* operand2;
       operand2 = parser_pop_value(stack);
 
-      if (true)   // ToDo... if operator is !
+      if (!is_operator_use_one_value(get_token_type(text->type))
+          || text->type == AST_VALUE_MINUS)
       {
         operand1 = parser_pop_value(stack);
       }
@@ -409,6 +576,10 @@ AST_value_stack* get_variable_from_Env_variable(Envs* envs, AST_value_stack* ast
 {
   Env_variable* env_variable =
     visitor_get_variable(envs, ast->value.variable_v);
+  if (!env_variable)
+  {
+    visitor_nondefine_variable_error(ast->value.variable_v);
+  }
 
   AST_value_stack* new_value_stack = malloc(sizeof(AST_value_stack));
   orora_value_type* p = value_type_list;

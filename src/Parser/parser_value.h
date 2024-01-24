@@ -28,6 +28,9 @@ bool is_int_ast(Token* token);
 int parser_precedence(int ast_stack_id);
 AST_value* parser_push_value(AST_value* value, AST_value_stack* node);
 AST_value_stack* parser_pop_value(AST_value* value);
+int get_ast_value_type(int token_id);
+int get_token_type(int ast_value_id);
+bool is_operator_use_one_value(int token_id);
 
 
 #endif

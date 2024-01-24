@@ -1,0 +1,10 @@
+a:=32
+satisfy a: a+2
+%a:=2
+%b:=7
+%q:=b+a-9
+%satisfy b: b+a-9
+%b:=7
+%print("vairable a: ", a, "\n")
+a:=-2
+%print("vairable a: ", a, "\n")

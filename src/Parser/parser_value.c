@@ -4,9 +4,7 @@
 
 AST_value_stack* get_single_value(Parser* parser, AST* ast, bool is_minus);
 GET_VALUE_ENV* init_get_value_env();
-int get_ast_value_type(int token_id);
 bool is_operator(int token_id);
-bool is_operator_use_one_value(int token_id);
 
 
 AST* parser_get_value(Parser** parser_, AST* ast,
@@ -430,6 +428,23 @@ int get_ast_value_type(int token_id)
       return AST_VALUE_PRODUCT;
     case TOKEN_SLASH:
       return AST_VALUE_DIV;
+  }
+
+  return -1;
+}
+
+int get_token_type(int ast_value_id)
+{
+  switch (ast_value_id)
+  {
+    case AST_VALUE_PLUS:
+      return TOKEN_PLUS;
+    case AST_VALUE_MINUS:
+      return TOKEN_MINUS;
+    case AST_VALUE_PRODUCT:
+      return TOKEN_STAR;
+    case AST_VALUE_DIV:
+      return TOKEN_SLASH;
   }
 
   return -1;

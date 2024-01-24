@@ -2,6 +2,13 @@
 #define ENV_H
 
 #include <stddef.h>
+// #include "./Parser/Ast/ast.h"
+
+typedef struct env_value_list_t
+{
+  struct ast_value_t* value;
+  struct env_value_list_t* next;
+} Env_value_list;
 
 typedef struct env_variable_t
 {
@@ -23,7 +30,7 @@ typedef struct env_variable_t
   } value;
 
   size_t satisfy_size;
-  struct ast_value_t** satisfy;
+  struct env_value_list_t* satisfy;
 
   struct env_variable_t* next;
 } Env_variable;
@@ -50,6 +57,7 @@ typedef struct envs_t
 } Envs;
 
 Env_variable* init_env_variable(char* name, size_t length);
+Env_value_list* init_env_value_list(struct ast_value_t* ast_value);
 Env* init_env();
 Envs* init_envs(Env* global, Env* local);
 

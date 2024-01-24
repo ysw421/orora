@@ -15,6 +15,15 @@ Env_variable* init_env_variable(char* name, size_t length)
   return env_variable;
 }
 
+Env_value_list* init_env_value_list(struct ast_value_t* ast_value)
+{
+  Env_value_list* value_list = malloc(sizeof(Env_value_list));
+  value_list->value = ast_value;
+  value_list->next = (void*) 0;
+
+  return value_list;
+}
+
 Env* init_env()
 {
   Env* env = (Env*) malloc(sizeof(struct env_t));
