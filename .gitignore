@@ -1,4 +1,5 @@
 *.out
+*.exe
 src/*/*/*.o
 src/*/*.o
 src/*.o

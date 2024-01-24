@@ -22,6 +22,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
                                       // minus symbol to represent a value
                                       // for next.
   bool is_last_minus_value2 = false;  // get minus symbol...
+  bool is_last_operator = false;
   Token* token = parser->token;
 
   AST_value_stack* save_value;
@@ -73,6 +74,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
       is_last_minus_value = false;
       is_last_minus_value2 = false;
       is_last_single_value = true;
+      is_last_operator = false;
     }
     else
     {
@@ -107,6 +109,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
 
         is_last_value = true;
         is_last_minus_value = false;
+        is_last_operator = false;
         AST_value_stack* new;
         if (function_ast)
         {
@@ -135,6 +138,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         is_last_value = false;
         is_last_minus_value = true;
         is_last_single_value = false;
+        is_last_operator = false;
       }
       else if (token->type == TOKEN_RPAR)
       {
@@ -153,10 +157,12 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         is_last_value = true;
         is_last_minus_value = false;
         is_last_single_value = true;
+        is_last_operator = false;
       }
       else if (is_operator(token->type))
       {
-        if (token->type == TOKEN_MINUS && is_last_minus_value)
+        if (token->type == TOKEN_MINUS
+            && (is_last_minus_value || is_last_operator))
         {
           is_last_minus_value2 = true;
         }
@@ -179,6 +185,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         is_last_minus_value = false;
         is_last_value = false;
         is_last_single_value = false;
+        is_last_operator = true;
       }
       else
         break;
@@ -188,7 +195,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
     parser = parser_advance(parser, token->type);
     token = parser->token;
   }
-  if (!is_last_value)
+  if (!is_first_turn && !is_last_value)
   {
     printf("에러, operator 다음에는 값이 와야함\n");
     exit(1);

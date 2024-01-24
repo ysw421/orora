@@ -25,6 +25,7 @@ AST_value_stack* visitor_operator_div(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
 AST_value_stack* get_variable_from_Env_variable(Envs* envs, AST_value_stack* ast);
+Env_variable* visitor_variable_satisfy(Envs* envs, AST_variable* ast_variable);
 
 void visitor_visit(Envs* envs, AST* ast)
 {
@@ -122,6 +123,7 @@ void visitor_visit(Envs* envs, AST* ast)
           break;
 
         case AST_VARIABLE_SATISFY:
+          visitor_variable_satisfy(envs, ast_variable);
           break;
 
         default:
@@ -290,6 +292,24 @@ Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
       }
       break;
   }
+  return (void*) 0;
+}
+
+Env_variable* visitor_variable_satisfy(Envs* envs, AST_variable* ast_variable)
+{
+  Env_variable* get_variable =
+    visitor_get_variable(envs, ast_variable);
+  size_t s_satisfy_size = get_variable->satisfy_size;
+  get_variable->satisfy_size += ast_variable->satisfy_size;
+  get_variable->satisfy =
+    realloc(get_variable->satisfy,
+        get_variable->satisfy_size * sizeof(struct ast_variable_t*));
+  for (size_t i = 0; i < ast_variable->satisfy_size; i ++)
+  {
+    get_variable->satisfy[s_satisfy_size + i] =
+      ast_variable->satisfy[i]->value.value_v;
+  }
+  return (void*) 0;
 }
 
 AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)

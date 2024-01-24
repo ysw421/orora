@@ -25,6 +25,7 @@ window:
 
 clean:
 	-rm *.out
+	-rm orora.exe
 #	-rm *.o
 	-rm src/*/*/*.o
 	-rm src/*/*.o
