@@ -2,7 +2,27 @@
 #define ENV_H
 
 #include <stddef.h>
-// #include "./Parser/Ast/ast.h"
+#include "./Parser/Ast/ast.h"
+
+typedef struct env_function_t
+{
+  char* name;
+  size_t length;
+
+  struct ast_t** args;
+  size_t args_size;
+
+  struct ast_t** codes;
+  size_t codes_size;
+
+  enum
+  {
+    ENV_FUNCTION_TYPE_SINGLE,  // f(x)=3x+2
+    ENV_FUNCTION_TYPE_NULL = 99
+  } type;
+
+  struct env_function_t* next;
+} Env_function;
 
 typedef struct env_value_list_t
 {
@@ -40,6 +60,9 @@ typedef struct env_t
   size_t variable_size;
   struct env_variable_t* variables;
 
+  size_t function_size;
+  struct env_function_t* functions;
+
 // include packages, variables,
 //         and functions...
 // It used in Global or Functions
@@ -56,6 +79,7 @@ typedef struct envs_t
   struct env_t* local;
 } Envs;
 
+Env_function* init_env_function(AST_function* ast_function);
 Env_variable* init_env_variable(char* name, size_t length);
 Env_value_list* init_env_value_list(struct ast_value_t* ast_value);
 Env* init_env();

@@ -40,7 +40,10 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
   new_ast_node->value.function_v = fa;
 
   if (token == (void*) 0)
+  {
+    new_ast_node->value.function_v->ast_type = AST_FUNCTION_VALUE;
     return new_ast_node;
+  }
 
   switch (token->type)
   {
@@ -79,23 +82,28 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
 
         if (value_node)
         {
+          new_ast_node->type = AST_FUNCTION_TYPE_SINGLE;
+
           new_ast_node->value.function_v->codes_size = 1;
           new_ast_node->value.function_v->codes = malloc(sizeof(struct AST*));
           new_ast_node->value.function_v->codes[0] = value_node;
         }
         else
         {
+//           new_ast_node->type = AST_FUNCTION_TYPE_;
           // ToDo: type2 function....
           // like....
           // f(x) := \begin{code}print(x)\begin{end}
           printf("에러, ':=' 뒤에는 값이 와야함.");
           exit(1);
         }
+        new_ast_node->value.function_v->ast_type = AST_FUNCTION_DEFINE;
         return new_ast_node;
       }
       break;
   }
 
+  new_ast_node->value.function_v->ast_type = AST_FUNCTION_VALUE;
   return new_ast_node;
 }
 

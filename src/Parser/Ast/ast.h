@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include "../../Lexer/token.h"
 #include "../parser_T.h"
-#include "../../env.h"
+// #include "../../env.h"
 
 typedef struct ast_compound_t
 {
@@ -36,6 +36,20 @@ typedef struct ast_function_t
   size_t name_length;
   struct ast_t** args;
   size_t args_size;
+
+  enum
+  {
+    AST_FUNCTION_DEFINE,
+    AST_FUNCTION_VALUE,
+    AST_FUNCTION_NULL = 99
+  } ast_type;
+
+  enum
+  {
+    AST_FUNCTION_TYPE_SINGLE,  // e.g. f(x)=3x+2
+    AST_FUNCTION_TYPE_NULL = 99
+  } type;
+
   struct ast_t** codes;   // I wonder
                           //    I should use a Lexer struct
                           //    or AST struct... or Token...
@@ -180,10 +194,10 @@ typedef struct orora_value_type_t
   int ast_type_id;
   int env_variable_type_id;
   int ast_value_type_id;
-  Env_variable* (*visitor_set_value_Env_variable_from_AST_value_stack)
-    (Env_variable*, AST_value_stack*);
+  struct env_variable_t* (*visitor_set_value_Env_variable_from_AST_value_stack)
+    (struct env_variable_t*, AST_value_stack*);
   AST_value_stack* (*visitor_set_value_AST_value_stack_from_Env_variable)
-    (AST_value_stack* new_value_stack, Env_variable* env_variable);
+    (AST_value_stack* new_value_stack, struct env_variable_t* env_variable);
 } orora_value_type;
 
 orora_value_type* push_value_type_list
@@ -195,10 +209,10 @@ orora_value_type* push_value_type_list
    int ast_type_id,
    int env_variable_type_id,
    int ast_value_type_id,
-   Env_variable* (*visitor_set_value_Env_variable_from_AST_value_stack)
-   (Env_variable*, AST_value_stack*),
+   struct env_variable_t* (*visitor_set_value_Env_variable_from_AST_value_stack)
+   (struct env_variable_t*, AST_value_stack*),
    AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable
-   (AST_value_stack* new_value_stack, Env_variable* env_variable)
+   (AST_value_stack* new_value_stack, struct env_variable_t* env_variable)
   );
 
 #endif

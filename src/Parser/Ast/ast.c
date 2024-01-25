@@ -100,6 +100,8 @@ AST_function* init_ast_function(char* name, size_t length)
   ast_function->args_size = 0;
   ast_function->codes_size = 0;
   ast_function->args = malloc(sizeof(AST));
+  ast_function->type = AST_FUNCTION_TYPE_NULL;
+  ast_function->ast_type = AST_FUNCTION_NULL;
 
   return ast_function;
 }
@@ -169,10 +171,10 @@ orora_value_type* push_value_type_list
    int ast_type_id,
    int env_variable_type_id,
    int ast_value_type_id,
-   Env_variable* (*visitor_set_value_Env_variable_from_AST_value_stack)
-   (Env_variable*, AST_value_stack*),
+   struct env_variable_t* (*visitor_set_value_Env_variable_from_AST_value_stack)
+   (struct env_variable_t*, AST_value_stack*),
    AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable
-   (AST_value_stack* new_value_stack, Env_variable* env_variable)
+   (AST_value_stack* new_value_stack, struct env_variable_t* env_variable)
   )
 {
   static orora_value_type* pointer = NULL;

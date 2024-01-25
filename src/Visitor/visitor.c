@@ -28,99 +28,101 @@ AST_value_stack* get_variable_from_Env_variable(Envs* envs, AST_value_stack* ast
 Env_variable* visitor_variable_satisfy(Envs* envs, AST_variable* ast_variable);
 void visitor_nondefine_variable_error(AST_variable* ast_variable);
 bool is_true(AST_value_stack* value);
-AST_value_stack* get_deep_copyed_ast_value_stack
+AST_value_stack* get_deep_copy_ast_value_stack
 (AST_value_stack* ast_value_stack);
 bool visitor_check_satisfy(Envs* envs, Env_variable* env_variable);
+
+#ifdef DEVELOP_MODE
+void visitor_print_function(Envs* envs, AST* ast)
+{
+  AST_function* ast_function = ast->value.function_v;
+
+  if (!strcmp(ast_function->name, "print"))
+  {
+    for (int i = 0; i < ast_function->args_size; i ++)
+    {
+      AST* ast_function_arg = ast_function->args[i];
+      switch (ast_function_arg->type)
+      {
+        case AST_VALUE:
+          AST_value* ast_function_arg_value =
+            ast_function_arg->value.value_v;
+          if (ast_function_arg_value->size == 1)
+          {
+            switch (ast_function_arg_value->stack->type)
+            {
+              case AST_VALUE_STRING:
+                printf("%s",
+                    ast_function_arg_value->stack->value.
+                    string_v->real_value);
+                break;
+              case AST_VALUE_INT:
+                printf("%d",
+                    ast_function_arg_value->stack->value.
+                    int_v->value);
+                break;
+              case AST_VALUE_FLOAT:
+                printf("%f",
+                    ast_function_arg_value->stack->value.
+                    float_v->value);
+                break;
+            }
+          }
+          else
+          {
+            AST_value_stack* new_value =
+              visitor_get_value(envs, ast_function_arg_value);
+            switch (new_value->type)
+            {
+              case AST_VALUE_STRING:
+                printf("%s",
+                    new_value->value.string_v->real_value);
+                break;
+              case AST_VALUE_INT:
+                printf("%d",
+                    new_value->value.int_v->value);
+                break;
+              case AST_VALUE_FLOAT:
+                printf("%f",
+                    new_value->value.float_v->value);
+                break;
+            }
+          }
+          break;
+
+        case AST_VARIABLE:
+          AST_variable* ast_function_arg_variable =
+            ast_function_arg->value.variable_v;
+          Env_variable* variable =
+            visitor_get_variable(envs, ast_function_arg_variable);
+          if (!variable)
+          {
+            visitor_nondefine_variable_error(ast_function_arg_variable);
+          }
+
+          switch (variable->type)
+          {
+            case ENV_VARIABLE_STRING:
+              printf("%s", variable->value.string_v->real_value);
+              break;
+            case ENV_VARIABLE_INT:
+              printf("%d", variable->value.int_v->value);
+              break;
+            case ENV_VARIABLE_FLOAT:
+              printf("%f", variable->value.float_v->value);
+              break;
+          }
+          break;
+      }
+    }
+  }
+}
+#endif
 
 void visitor_visit(Envs* envs, AST* ast)
 {
   switch (ast->type)
   {
-    case AST_FUNCTION:
-      AST_function* ast_function = ast->value.function_v;
-
-#ifdef DEVELOP_MODE
-      if (!strcmp(ast_function->name, "print"))
-      {
-        for (int i = 0; i < ast_function->args_size; i ++)
-        {
-          AST* ast_function_arg = ast_function->args[i];
-          switch (ast_function_arg->type)
-          {
-            case AST_VALUE:
-              AST_value* ast_function_arg_value =
-                ast_function_arg->value.value_v;
-              if (ast_function_arg_value->size == 1)
-              {
-                switch (ast_function_arg_value->stack->type)
-                {
-                  case AST_VALUE_STRING:
-                    printf("%s",
-                        ast_function_arg_value->stack->value.
-                        string_v->real_value);
-                    break;
-                  case AST_VALUE_INT:
-                    printf("%d",
-                        ast_function_arg_value->stack->value.
-                        int_v->value);
-                    break;
-                  case AST_VALUE_FLOAT:
-                    printf("%f",
-                        ast_function_arg_value->stack->value.
-                        float_v->value);
-                    break;
-                }
-              }
-              else
-              {
-                AST_value_stack* new_value =
-                  visitor_get_value(envs, ast_function_arg_value);
-                switch (new_value->type)
-                {
-                  case AST_VALUE_STRING:
-                    printf("%s",
-                        new_value->value.string_v->real_value);
-                    break;
-                  case AST_VALUE_INT:
-                    printf("%d",
-                        new_value->value.int_v->value);
-                    break;
-                  case AST_VALUE_FLOAT:
-                    printf("%f",
-                        new_value->value.float_v->value);
-                    break;
-                }
-              }
-              break;
-            case AST_VARIABLE:
-              AST_variable* ast_function_arg_variable =
-                ast_function_arg->value.variable_v;
-              Env_variable* variable =
-                visitor_get_variable(envs, ast_function_arg_variable);
-              if (!variable)
-              {
-                visitor_nondefine_variable_error(ast_function_arg_variable);
-              }
-
-              switch (variable->type)
-              {
-                case ENV_VARIABLE_STRING:
-                  printf("%s", variable->value.string_v->real_value);
-                  break;
-                case ENV_VARIABLE_INT:
-                  printf("%d", variable->value.int_v->value);
-                  break;
-                case ENV_VARIABLE_FLOAT:
-                  printf("%f", variable->value.float_v->value);
-                  break;
-              }
-              break;
-          }
-        }
-      }
-#endif
-      break;
-
     case AST_VARIABLE:
       AST_variable* ast_variable = ast->value.variable_v;
       Env_variable* env_variable;
@@ -143,12 +145,36 @@ void visitor_visit(Envs* envs, AST* ast)
         case AST_VARIABLE_SATISFY:
           env_variable = visitor_variable_satisfy(envs, ast_variable);
           
-//           visitor_check_satisfy(envs, env_variable);
+          visitor_check_satisfy(envs, env_variable);
           break;
 
         default:
 #ifdef DEVELOP_MODE
           printf("내가 ast variable 설정 잘못함...");
+          exit(1);
+#endif
+          break;
+      }
+      break;
+
+    case AST_FUNCTION:
+#ifdef DEVELOP_MODE
+      visitor_print_function(envs, ast);
+#endif
+
+      AST_function* ast_function = ast->value.function_v;
+      Env_function* env_function;
+      switch (ast_function->ast_type)
+      {
+        case AST_FUNCTION_VALUE:
+          break;
+
+        case AST_FUNCTION_DEFINE:
+          break;
+
+        default:
+#ifdef DEVELOP_MODE
+          printf("내가 ast function 설정 잘못함...");
           exit(1);
 #endif
           break;
@@ -454,7 +480,7 @@ Env_variable* visitor_variable_satisfy(Envs* envs, AST_variable* ast_variable)
   return get_variable;
 }
 
-AST_value_stack* get_deep_copyed_ast_value_stack
+AST_value_stack* get_deep_copy_ast_value_stack
 (AST_value_stack* ast_value_stack)
 {
   AST_value_stack* new_value_stack = malloc(sizeof(AST_value));
@@ -462,11 +488,11 @@ AST_value_stack* get_deep_copyed_ast_value_stack
   new_value_stack->value = ast_value_stack->value;
   new_value_stack->next = ast_value_stack->next;
 
-//   new_value_stack->col = ast_value_stack->col;
-//   new_value_stack->col_first = ast_value_stack->col_first;
-//   new_value_stack->row = ast_value_stack->row;
-//   new_value_stack->row_char = ast_value_stack->row_char;
-//   new_value_stack->row_char_first = ast_value_stack->row_char_first;
+  new_value_stack->col = ast_value_stack->col;
+  new_value_stack->col_first = ast_value_stack->col_first;
+  new_value_stack->row = ast_value_stack->row;
+  new_value_stack->row_char = ast_value_stack->row_char;
+  new_value_stack->row_char_first = ast_value_stack->row_char_first;
 
   return new_value_stack;
 }
@@ -481,7 +507,7 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
   AST_value_stack* p = ast_value->stack;
   for (int i = max_cnt - 1; i >= 0; i --)
   {
-//     text_array[i] = get_deep_copyed_ast_value_stack(p);
+//     text_array[i] = get_deep_copy_ast_value_stack(p);
     text_array[i] = p;
     p = p->next;
   }

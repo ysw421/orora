@@ -112,6 +112,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         if (function_ast)
         {
           new = init_ast_value_stack(AST_VALUE_FUNCTION, token);
+          function_ast->value.function_v->ast_type = AST_FUNCTION_VALUE;
           new->value.function_v = function_ast->value.function_v;
           parser_push_value(postfix_expression, new);
   
