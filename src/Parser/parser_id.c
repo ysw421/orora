@@ -82,7 +82,7 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
 
         if (value_node)
         {
-          new_ast_node->type = AST_FUNCTION_TYPE_SINGLE;
+          new_ast_node->value.function_v->type = AST_FUNCTION_TYPE_SINGLE;
 
           new_ast_node->value.function_v->codes_size = 1;
           new_ast_node->value.function_v->codes = malloc(sizeof(struct AST*));

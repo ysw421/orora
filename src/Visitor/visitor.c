@@ -9,9 +9,15 @@
 #endif
 
 orora_value_type* get_single_value_type(int ast_type);
+
 Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable);
+Env_function* visitor_get_function(Envs* envs, AST_function* ast_function);
+
 Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable);
+Env_function* visitor_function_define(Envs* envs, AST_function* ast_function);
+
 AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value);
+
 AST_value_stack* visitor_operator_plus(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
@@ -24,13 +30,18 @@ AST_value_stack* visitor_operator_product(AST_value_stack* result,
 AST_value_stack* visitor_operator_div(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
+
 AST_value_stack* get_variable_from_Env_variable(Envs* envs, AST_value_stack* ast);
 Env_variable* visitor_variable_satisfy(Envs* envs, AST_variable* ast_variable);
+
 void visitor_nondefine_variable_error(AST_variable* ast_variable);
+void visitor_nondefine_function_error(AST_function* ast_function);
+
 bool is_true(AST_value_stack* value);
 AST_value_stack* get_deep_copy_ast_value_stack
 (AST_value_stack* ast_value_stack);
 bool visitor_check_satisfy(Envs* envs, Env_variable* env_variable);
+Envs* visitor_merge_envs(Envs* envs);
 
 #ifdef DEVELOP_MODE
 void visitor_print_function(Envs* envs, AST* ast)
@@ -170,6 +181,7 @@ void visitor_visit(Envs* envs, AST* ast)
           break;
 
         case AST_FUNCTION_DEFINE:
+          visitor_function_define(envs, ast_function);
           break;
 
         default:
@@ -224,6 +236,59 @@ void visitor_nondefine_variable_error(AST_variable* ast_variable)
 {
   printf("에러, 정의되지 않은 변수: %s\n", ast_variable->name);
   exit(1);
+}
+
+void visitor_nondefine_function_error(AST_function* ast_function)
+{
+  printf("에러, 정의되지 않은 함수: %s\n", ast_function->name);
+  exit(1);
+}
+
+Env_function* visitor_get_function(Envs* envs, AST_function* ast_function)
+{
+  Env_function* check_function = envs->local->functions;
+  Env_function* snode = (void*) 0;
+  while (check_function->next)
+  {
+    if (!strcmp(check_function->name, ast_function->name))
+    {
+      if (snode)
+      {
+        snode->next = check_function->next;
+        check_function->next = envs->local->functions;
+        envs->local->functions = check_function;
+      }
+      return check_function;
+    }
+    if (snode)
+      snode = snode->next;
+    else
+      snode = envs->local->functions;
+    check_function = check_function->next;
+  }
+
+  check_function = envs->global->functions;
+  snode = (void*) 0;
+  while (check_function->next)
+  {
+    if (!strcmp(check_function->name, ast_function->name))
+    {
+      if (snode)
+      {
+        snode->next = check_function->next;
+        check_function->next = envs->global->functions;
+        envs->global->functions = check_function;
+      }
+      return check_function;
+    }
+    if (snode)
+      snode = snode->next;
+    else
+      snode = envs->global->functions;
+    check_function = check_function->next;
+  }
+
+  return (void*) 0;
 }
 
 Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable)
@@ -284,6 +349,28 @@ orora_value_type* get_single_value_type(int ast_type)
   } while (p);
 
   return (void*) 0;
+}
+
+Env_function* visitor_function_define(Envs* envs, AST_function* ast_function)
+{
+  Env_function* env_function =
+    visitor_get_function(envs, ast_function);
+
+  if (env_function)
+  {
+    get_env_function_from_ast_function(env_function, ast_function);
+  }
+  else
+  {
+    env_function = init_env_function(ast_function);
+
+    Env* local_env = envs->local;
+    env_function->next = local_env->functions;
+    local_env->function_size ++;
+    local_env->functions = env_function;
+  }
+
+  return env_function;
 }
 
 Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
@@ -519,38 +606,58 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
     i ++;
     if (parser_precedence(text->type) == -1)
     {
-      if (text->type == AST_VALUE_VARIABLE)
+      switch (text->type)
       {
-        Env_variable* env_variable =
-          visitor_get_variable(envs, text->value.variable_v);
-        if (!env_variable)
-        {
-          visitor_nondefine_variable_error(text->value.variable_v);
-        }
+        case AST_VALUE_VARIABLE:
+          Env_variable* env_variable =
+            visitor_get_variable(envs, text->value.variable_v);
+          if (!env_variable)
+          {
+            visitor_nondefine_variable_error(text->value.variable_v);
+          }
 
-        AST_value_stack* new_value_stack = malloc(sizeof(AST_value_stack));
-        orora_value_type* p = value_type_list;
-        do
-        {
-          if (p->env_variable_type_id == env_variable->type)
-            break;
-          p = p->next;
-        } while (p);
+          AST_value_stack* new_value_stack = malloc(sizeof(AST_value_stack));
+          orora_value_type* p = value_type_list;
+          do
+          {
+            if (p->env_variable_type_id == env_variable->type)
+              break;
+            p = p->next;
+          } while (p);
+  
+          if (p)
+            new_value_stack =
+              p->visitor_set_value_AST_value_stack_from_Env_variable
+                (new_value_stack, env_variable);
+          else
+          {
+            printf("에러, 변수에 저장하는 것은 값이어야함\n");
+            exit(1);
+          }
+          parser_push_value(stack, new_value_stack);
+          break;
 
-        if (p)
-          new_value_stack =
-            p->visitor_set_value_AST_value_stack_from_Env_variable
-              (new_value_stack, env_variable);
-        else
-        {
-          printf("에러, 변수에 저장하는 것은 값이어야함\n");
-          exit(1);
-        }
-        parser_push_value(stack, new_value_stack);
-      }
-      else
-      {
-        parser_push_value(stack, text);
+        case AST_VALUE_FUNCTION:
+          AST_function* ast_function = text->value.function_v;
+          Env_function* env_function =
+            visitor_get_function(envs, text->value.function_v);
+          if (!env_function)
+          {
+            visitor_nondefine_function_error(text->value.function_v);
+          }
+          if (env_function->args_size != ast_function->args_size)
+          {
+            printf("에러, 함수의 매개변수 개수가 다름\n");
+            exit(1);
+          }
+
+          Envs* new_envs = visitor_merge_envs(envs);
+          printf("!!!\n");
+          break;
+
+        default:
+          parser_push_value(stack, text);
+          break;
       }
     }
     else
@@ -596,6 +703,39 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
   }
 
   return parser_pop_value(stack);
+}
+
+Envs* visitor_merge_envs(Envs* envs)
+{
+  Env* global = envs->global;
+  Env* local = envs->local;
+
+  Env* new_global_env = init_env();
+
+  new_global_env->variable_size =
+    global->variable_size + local->variable_size;
+  new_global_env->variables = malloc(sizeof(struct env_variable_t));
+  // Warning! possibility error...
+  new_global_env->variables = local->variables;
+  
+  Env_variable* p_v = new_global_env->variables;
+  while (p_v->next)
+    p_v = p_v->next;
+  p_v->next = global->variables;
+
+  new_global_env->function_size =
+    global->function_size + local->function_size;
+  new_global_env->functions = malloc(sizeof(struct env_function_t));
+  new_global_env->functions = local->functions;
+
+  Env_function* p_f = new_global_env->functions;
+  while (p_f->next)
+    p_f = p_f->next;
+  p_f->next = global->functions;
+  
+  Envs* new_envs = init_envs(new_global_env, init_env());
+
+  return new_envs;
 }
 
 AST_value_stack* get_variable_from_Env_variable(Envs* envs, AST_value_stack* ast)

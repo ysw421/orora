@@ -2,11 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-Env_function* init_env_function(AST_function* ast_function)
+Env_function* get_env_function_from_ast_function
+(Env_function* env_function, AST_function* ast_function)
 {
-  Env_function* env_function =
-    (Env_function*) malloc(sizeof(struct env_function_t));
-
   env_function->name = ast_function->name;
   env_function->length = ast_function->name_length;
 
@@ -17,6 +15,16 @@ Env_function* init_env_function(AST_function* ast_function)
   env_function->codes_size = ast_function->codes_size;
 
   env_function->type = ast_function->type;
+
+  return env_function;
+}
+
+Env_function* init_env_function(AST_function* ast_function)
+{
+  Env_function* env_function =
+    (Env_function*) malloc(sizeof(struct env_function_t));
+
+  get_env_function_from_ast_function(env_function, ast_function);
   env_function->next = (void*) 0;
 
   return env_function;
@@ -48,7 +56,10 @@ Env* init_env()
 {
   Env* env = (Env*) malloc(sizeof(struct env_t));
   env->variable_size = 0;
-  env->variables = malloc(sizeof(struct env_variable_t*));
+  env->variables = malloc(sizeof(struct env_variable_t));
+
+  env->function_size = 0;
+  env->functions = malloc(sizeof(struct env_function_t));
 
   return env;
 }

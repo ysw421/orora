@@ -79,6 +79,8 @@ typedef struct envs_t
   struct env_t* local;
 } Envs;
 
+Env_function* get_env_function_from_ast_function
+(Env_function* env_function, AST_function* ast_function);
 Env_function* init_env_function(AST_function* ast_function);
 Env_variable* init_env_variable(char* name, size_t length);
 Env_value_list* init_env_value_list(struct ast_value_t* ast_value);
