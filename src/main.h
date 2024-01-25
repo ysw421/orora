@@ -3,7 +3,7 @@
 
 #include "Parser/Ast/ast.h"
 
-#define EXTENTION ".orora"
+#define EXTENTION ".or"
 
 // type tree...
 extern orora_value_type* value_type_list;
