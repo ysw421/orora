@@ -321,6 +321,12 @@ AST_value_stack* visitor_get_value_from_function
   Envs* new_envs = visitor_merge_envs(envs);
 
   // Get value from arguments...
+  if (ast_function->args_size > env_function->args_size)
+  {
+    printf("에러, 함수의 매개변수 개수가 다름\n");
+    exit(1);
+  }
+
   for (int i = 0; i < env_function->args_size; i ++)
   {
     AST* ast = ast_function->args[i];
