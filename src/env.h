@@ -7,10 +7,10 @@
 typedef struct env_function_t
 {
   char* name;
-  size_t length;
+  int length;
 
   struct ast_t** args;
-  size_t args_size;
+  int args_size;
 
   struct ast_t** codes;
   size_t codes_size;
@@ -33,7 +33,7 @@ typedef struct env_value_list_t
 typedef struct env_variable_t
 {
   char* name;
-  size_t length;
+  int length;
 
   enum
   {

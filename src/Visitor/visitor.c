@@ -13,6 +13,9 @@ orora_value_type* get_single_value_type(int ast_type);
 Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable);
 Env_function* visitor_get_function(Envs* envs, AST_function* ast_function);
 
+Env_variable* visitor_variable
+(Envs* envs, Env_variable* env_variable, AST_variable* ast_variable);
+
 Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable);
 Env_function* visitor_function_define(Envs* envs, AST_function* ast_function);
 
@@ -31,7 +34,8 @@ AST_value_stack* visitor_operator_div(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
 
-AST_value_stack* get_variable_from_Env_variable(Envs* envs, AST_value_stack* ast);
+AST_value_stack* get_variable_from_Env_variable
+(Envs* envs, AST_value_stack* ast);
 Env_variable* visitor_variable_satisfy(Envs* envs, AST_variable* ast_variable);
 
 void visitor_nondefine_variable_error(AST_variable* ast_variable);
@@ -42,6 +46,11 @@ AST_value_stack* get_deep_copy_ast_value_stack
 (AST_value_stack* ast_value_stack);
 bool visitor_check_satisfy(Envs* envs, Env_variable* env_variable);
 Envs* visitor_merge_envs(Envs* envs);
+
+AST_value_stack* visitor_get_value_from_function
+(Envs* envs, AST_function* ast_function, Env_function* env_function);
+AST_value_stack* visitor_get_value_from_variable
+(Envs* envs, Env_variable* env_variable);
 
 #ifdef DEVELOP_MODE
 void visitor_print_function(Envs* envs, AST* ast)
@@ -137,35 +146,7 @@ void visitor_visit(Envs* envs, AST* ast)
     case AST_VARIABLE:
       AST_variable* ast_variable = ast->value.variable_v;
       Env_variable* env_variable;
-      switch (ast_variable->ast_type)
-      {
-        case AST_VARIABLE_VALUE:
-          env_variable = visitor_get_variable(envs, ast_variable);
-          if (!env_variable)
-          {
-            visitor_nondefine_variable_error(ast_variable);
-          }
-          break;
-
-        case AST_VARIABLE_DEFINE:
-          env_variable = visitor_variable_define(envs, ast_variable);
-
-          visitor_check_satisfy(envs, env_variable);
-          break;
-
-        case AST_VARIABLE_SATISFY:
-          env_variable = visitor_variable_satisfy(envs, ast_variable);
-          
-          visitor_check_satisfy(envs, env_variable);
-          break;
-
-        default:
-#ifdef DEVELOP_MODE
-          printf("내가 ast variable 설정 잘못함...");
-          exit(1);
-#endif
-          break;
-      }
+      visitor_variable(envs, env_variable, ast_variable);
       break;
 
     case AST_FUNCTION:
@@ -193,6 +174,42 @@ void visitor_visit(Envs* envs, AST* ast)
       }
       break;
   }
+}
+
+Env_variable* visitor_variable
+(Envs* envs, Env_variable* env_variable, AST_variable* ast_variable)
+{
+  switch (ast_variable->ast_type)
+  {
+    case AST_VARIABLE_VALUE:
+      env_variable = visitor_get_variable(envs, ast_variable);
+      if (!env_variable)
+      {
+        visitor_nondefine_variable_error(ast_variable);
+      }
+      break;
+
+    case AST_VARIABLE_DEFINE:
+      env_variable = visitor_variable_define(envs, ast_variable);
+
+      visitor_check_satisfy(envs, env_variable);
+      break;
+
+    case AST_VARIABLE_SATISFY:
+      env_variable = visitor_variable_satisfy(envs, ast_variable);
+          
+      visitor_check_satisfy(envs, env_variable);
+      break;
+
+    default:
+#ifdef DEVELOP_MODE
+      printf("내가 ast variable 설정 잘못함...");
+      exit(1);
+#endif
+      break;
+  }
+
+  return env_variable;
 }
 
 bool visitor_check_satisfy(Envs* envs, Env_variable* env_variable)
@@ -291,48 +308,216 @@ Env_function* visitor_get_function(Envs* envs, AST_function* ast_function)
   return (void*) 0;
 }
 
+AST_value_stack* visitor_get_value_from_function
+(Envs* envs, AST_function* ast_function, Env_function* env_function)
+{
+  if (!env_function)
+  {
+    visitor_nondefine_function_error(ast_function);
+  }
+  AST_value_stack* new_value_stack;
+
+  Envs* new_envs = visitor_merge_envs(envs);
+
+  for (int i = 0; i < env_function->args_size; i ++)
+  {
+    AST* ast = ast_function->args[i];
+    if (i < ast_function->args_size)
+    {
+      AST_variable* ast_variable =
+        env_function->args[i]->value.variable_v;
+      Env_variable* env_variable =
+        init_env_variable(ast_variable->name,
+                          ast_variable->name_length);
+
+      switch (ast->type)
+      {
+        case AST_VALUE:
+          if (ast->value.value_v->size == 1)
+          {
+            orora_value_type* variable_type =
+            get_single_value_type(ast->value.value_v->stack->type);
+
+            if (variable_type)
+            {
+              env_variable =
+                variable_type
+                  ->visitor_set_value_Env_variable_from_AST_value_stack(
+                      env_variable,
+                      ast->value.value_v->stack
+                    );
+            }
+            else
+            {
+              printf("에러, 변수에는 값을 저장해야함\n");
+              exit(1);
+            }
+          }
+          else
+          {
+            AST_value_stack* new_value =
+              visitor_get_value(envs, ast->value.value_v);
+
+            orora_value_type* p = value_type_list;
+            do
+            {
+              if (p->ast_value_type_id == new_value->type)
+                break;
+              p = p->next;
+            } while (p);
+
+            if (p)
+              env_variable =
+                p->visitor_set_value_Env_variable_from_AST_value_stack
+                  (env_variable, new_value);
+            else
+            {
+              printf("에러, 변수에 저장하는 것은 값이어야함\n");
+              exit(1);
+            }
+          }
+          break;
+
+        case AST_VARIABLE:
+          switch (ast->value.variable_v->ast_type)
+          {
+            case AST_VARIABLE_VALUE:
+              Env_variable* value_variable =
+                visitor_get_variable(envs,
+                    ast->value.variable_v);
+              if (!value_variable)
+              {
+                visitor_nondefine_variable_error(
+                    ast->value.variable_v);
+              }
+
+              env_variable->type = value_variable->type;
+              env_variable->value = value_variable->value;
+              break;
+              
+            case AST_VARIABLE_DEFINE:
+              value_variable =
+                visitor_variable_define(envs,
+                    ast->value.variable_v);
+              env_variable->type = value_variable->type;
+              env_variable->value = value_variable->value;
+              break;
+          }
+
+          break;
+
+        case AST_FUNCTION:
+          // ToDo
+          break;
+      }
+
+      Env* local_env = new_envs->local;
+      env_variable->next = local_env->variables;
+      local_env->variable_size ++;
+      local_env->variables = env_variable;
+    }
+    else
+    {
+      if (env_function->args[i]
+          ->value.variable_v->ast_type == AST_VARIABLE_DEFINE)
+      {
+        visitor_variable_define(new_envs,
+            env_function->args[i]->value.variable_v);
+      }
+      else
+      {
+        printf("에러, 함수의 매개변수 개수가 다름\n");
+        exit(1);
+      }
+    }
+  }
+
+  printf("!!!\n");
+  return (void*) 0;
+}
+
+AST_value_stack* visitor_get_value_from_variable
+(Envs* envs, Env_variable* env_variable)
+{
+//   if (!env_variable)
+//   {
+//     visitor_nondefine_variable_error(text->value.variable_v);
+//   }
+
+  AST_value_stack* new_value_stack = malloc(sizeof(AST_value_stack));
+  orora_value_type* p = value_type_list;
+  do
+  {
+    if (p->env_variable_type_id == env_variable->type)
+      break;
+    p = p->next;
+  } while (p);
+
+  if (p)
+    new_value_stack =
+      p->visitor_set_value_AST_value_stack_from_Env_variable
+        (new_value_stack, env_variable);
+  else
+  {
+    printf("에러, 변수에 저장하는 것은 값이어야함\n");
+    exit(1);
+  }
+
+  return new_value_stack;
+}
+
 Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable)
 {
   Env_variable* check_variable = envs->local->variables;
   Env_variable* snode = (void*) 0;
-  while (check_variable->next)
+  
+  if (check_variable)
   {
-    if (!strcmp(check_variable->name, ast_variable->name))
+    while (check_variable->next && check_variable->name)
     {
-      if (snode)
+      if (!strcmp(check_variable->name, ast_variable->name))
       {
-        snode->next = check_variable->next;
-        check_variable->next = envs->local->variables;
-        envs->local->variables = check_variable;
+        if (snode)
+        {
+          snode->next = check_variable->next;
+          check_variable->next = envs->local->variables;
+          envs->local->variables = check_variable;
+        }
+        return check_variable;
       }
-      return check_variable;
+      if (snode)
+        snode = snode->next;
+      else
+        snode = envs->local->variables;
+      check_variable = check_variable->next;
     }
-    if (snode)
-      snode = snode->next;
-    else
-      snode = envs->local->variables;
-    check_variable = check_variable->next;
   }
 
   check_variable = envs->global->variables;
-  snode = (void*) 0;
-  while (check_variable->next)
+  
+  if (check_variable)
   {
-    if (!strcmp(check_variable->name, ast_variable->name))
+    snode = (void*) 0;
+    while (check_variable->next && check_variable->name)
     {
-      if (snode)
+      if (!strcmp(check_variable->name, ast_variable->name))
       {
-        snode->next = check_variable->next;
-        check_variable->next = envs->global->variables;
-        envs->global->variables = check_variable;
+        if (snode)
+        {
+          snode->next = check_variable->next;
+          check_variable->next = envs->global->variables;
+          envs->global->variables = check_variable;
+        }
+        return check_variable;
       }
-      return check_variable;
+      if (snode)
+        snode = snode->next;
+      else
+      {
+        snode = envs->global->variables;
+      }
+      check_variable = check_variable->next;
     }
-    if (snode)
-      snode = snode->next;
-    else
-      snode = envs->global->variables;
-    check_variable = check_variable->next;
   }
 
   return (void*) 0;
@@ -542,6 +727,10 @@ Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
           break;
       }
       break;
+
+    case AST_FUNCTION:
+      // ToDo
+      break;
   }
   return (void*) 0;
 }
@@ -616,24 +805,9 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
             visitor_nondefine_variable_error(text->value.variable_v);
           }
 
-          AST_value_stack* new_value_stack = malloc(sizeof(AST_value_stack));
-          orora_value_type* p = value_type_list;
-          do
-          {
-            if (p->env_variable_type_id == env_variable->type)
-              break;
-            p = p->next;
-          } while (p);
-  
-          if (p)
-            new_value_stack =
-              p->visitor_set_value_AST_value_stack_from_Env_variable
-                (new_value_stack, env_variable);
-          else
-          {
-            printf("에러, 변수에 저장하는 것은 값이어야함\n");
-            exit(1);
-          }
+          AST_value_stack* new_value_stack =
+            visitor_get_value_from_variable(envs, env_variable);
+
           parser_push_value(stack, new_value_stack);
           break;
 
@@ -645,14 +819,8 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
           {
             visitor_nondefine_function_error(text->value.function_v);
           }
-          if (env_function->args_size != ast_function->args_size)
-          {
-            printf("에러, 함수의 매개변수 개수가 다름\n");
-            exit(1);
-          }
 
-          Envs* new_envs = visitor_merge_envs(envs);
-          printf("!!!\n");
+          visitor_get_value_from_function(envs, ast_function, env_function);
           break;
 
         default:
@@ -945,7 +1113,8 @@ AST_value_stack* visitor_operator_div(AST_value_stack* result,
     if (operand1->type == AST_VALUE_INT
         && operand2->type == AST_VALUE_INT)
       result->value.float_v->value =
-        (float)operand1->value.int_v->value / (float)operand2->value.int_v->value;
+        (float)operand1->value.int_v->value
+          / (float)operand2->value.int_v->value;
     else if (operand1->type == AST_VALUE_INT)
       result->value.float_v->value =
         (float)operand1->value.int_v->value / operand2->value.float_v->value;

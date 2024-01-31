@@ -24,18 +24,18 @@ typedef struct ast_variable_t
   } ast_type;
 
   char* name;
-  size_t name_length;
+  int name_length;
   struct ast_t* value;
-  size_t satisfy_size;
+  int satisfy_size;
   struct ast_t** satisfy;
 } AST_variable;
 
 typedef struct ast_function_t
 {
   char* name;
-  size_t name_length;
+  int name_length;
   struct ast_t** args;
-  size_t args_size;
+  int args_size;
 
   enum
   {

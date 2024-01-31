@@ -1,5 +1,6 @@
-#include "parser_id.h"
 #include <stdlib.h>
+#include <string.h>
+#include "parser_id.h"
 #include "../main.h"
 
 AST* parser_set_variable_value(Parser* parser, AST* ast, Token* last_token);
@@ -51,8 +52,30 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
       if (parser->prev_token->col == token->col_first)
       {
         parser = parser_advance(parser, TOKEN_DEFINE);
+        char** s_arg_variaable_name = malloc(sizeof(char*));
+        int check_arg_num = 0;
         for (int i = 0; i < fa->args_size; i ++)
-          if (fa->args[i]->type != AST_VARIABLE)
+        {
+          if (fa->args[i]->type == AST_VARIABLE)
+          {
+            char* variable_name =
+              fa->args[i]->value.variable_v->name;
+            for (int j = 0; j < check_arg_num; j ++)
+            {
+              if (!strcmp(s_arg_variaable_name[j], variable_name))
+              {
+                printf("에러, 함수의 argument 이름이 중복됨\n");
+                exit(1);
+              }
+            }
+
+            check_arg_num ++;
+            s_arg_variaable_name =
+              realloc(s_arg_variaable_name,
+                  check_arg_num * sizeof(char*));
+            s_arg_variaable_name[check_arg_num - 1] = variable_name;
+          }
+          else
           {
             int required =
               snprintf(NULL, 0, "에러, 함수 %s의 정의를 위해 argument는 변수여야함",
@@ -63,6 +86,7 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
                 fa->name);
             error(error_message, parser);
           }
+        }
         token = parser->token;
 
         if (!token)
