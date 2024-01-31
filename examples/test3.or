@@ -1,10 +1,9 @@
-a:=32
-satisfy a: a+2
-%a:=2
-%b:=7
-%q:=b+a-9
-%satisfy b: b+a-9
-%b:=7
-%print("vairable a: ", a, "\n")
-a:=-2
-%print("vairable a: ", a, "\n")
+f(x, y:=2):=3x+5+5y
+
+print(f(2,3)+2+2.1, "\n")
+print(f(2,3)+2, "\n")
+
+%q:=2+f(2,3)
+%x:=2+f(3,2) %해결해야할 오류...
+%q:=x+f(3,5)
+%print("@@@ ", q)

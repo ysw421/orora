@@ -111,9 +111,10 @@ AST_string* init_ast_string(Token* token)
   AST_string* ast_string =
     (AST_string*) malloc(sizeof(struct ast_string_t));
   ast_string->value = token->value;
-  char* real_value = malloc((strlen(token->value) - 2) * sizeof(char));
+  char* real_value = malloc((strlen(token->value) - 1) * sizeof(char));
   for (int i = 1; i < strlen(token->value) - 1; i ++)
     real_value[i - 1] = token->value[i];
+  real_value[strlen(token->value) - 2] = '\0';
   ast_string->real_value = real_value;
   ast_string->value_length = strlen(token->value);
 

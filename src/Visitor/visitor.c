@@ -780,11 +780,11 @@ AST_value_stack* get_deep_copy_ast_value_stack
   new_value_stack->value = ast_value_stack->value;
   new_value_stack->next = ast_value_stack->next;
 
-  new_value_stack->col = ast_value_stack->col;
-  new_value_stack->col_first = ast_value_stack->col_first;
-  new_value_stack->row = ast_value_stack->row;
-  new_value_stack->row_char = ast_value_stack->row_char;
-  new_value_stack->row_char_first = ast_value_stack->row_char_first;
+//   new_value_stack->col = ast_value_stack->col;
+//   new_value_stack->col_first = ast_value_stack->col_first;
+//   new_value_stack->row = ast_value_stack->row;
+//   new_value_stack->row_char = ast_value_stack->row_char;
+//   new_value_stack->row_char_first = ast_value_stack->row_char_first;
 
   return new_value_stack;
 }
@@ -799,8 +799,8 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
   AST_value_stack* p = ast_value->stack;
   for (int i = max_cnt - 1; i >= 0; i --)
   {
-//     text_array[i] = get_deep_copy_ast_value_stack(p);
-    text_array[i] = p;
+    text_array[i] = get_deep_copy_ast_value_stack(p);
+//     text_array[i] = p;
     p = p->next;
   }
 
@@ -893,6 +893,39 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
   return parser_pop_value(stack);
 }
 
+Env_variable* get_deep_copy_env_variable
+(Env_variable* env_variable)
+{
+  Env_variable* new_env_variable = malloc(sizeof(Env_variable));
+
+  new_env_variable->name = env_variable->name;
+  new_env_variable->length = env_variable->length;
+  new_env_variable->type = env_variable->type;
+  new_env_variable->value = env_variable->value;
+  new_env_variable->satisfy_size = env_variable->satisfy_size;
+  new_env_variable->satisfy = env_variable->satisfy;
+  new_env_variable->next = env_variable->next;
+
+  return new_env_variable;
+}
+
+Env_function* get_deep_copy_env_funtion
+(Env_function* env_function)
+{
+  Env_function* new_env_funtion = malloc(sizeof(Env_function));
+
+  new_env_funtion->name = env_function->name;
+  new_env_funtion->length = env_function->length;
+  new_env_funtion->args = env_function->args;
+  new_env_funtion->args_size = env_function->args_size;
+  new_env_funtion->codes = env_function->codes;
+  new_env_funtion->codes_size = env_function->codes_size;
+  new_env_funtion->type = env_function->type;
+  new_env_funtion->next = env_function->next;
+
+  return new_env_funtion;
+}
+
 Envs* visitor_merge_envs(Envs* envs)
 {
   Env* global = envs->global;
@@ -902,24 +935,32 @@ Envs* visitor_merge_envs(Envs* envs)
 
   new_global_env->variable_size =
     global->variable_size + local->variable_size;
-  new_global_env->variables = malloc(sizeof(struct env_variable_t));
+  new_global_env->variables = get_deep_copy_env_variable(local->variables);
   // Warning! possibility error...
-  new_global_env->variables = local->variables;
-  
+
   Env_variable* p_v = new_global_env->variables;
   while (p_v->next)
-    p_v = p_v->next;
-  p_v->next = global->variables;
+  {
+    Env_variable* new_env_variable =
+      get_deep_copy_env_variable(p_v);
+    p_v->next = new_env_variable;
+    p_v = new_env_variable->next;
+  }
+  p_v->next = get_deep_copy_env_variable(global->variables);
 
   new_global_env->function_size =
     global->function_size + local->function_size;
-  new_global_env->functions = malloc(sizeof(struct env_function_t));
-  new_global_env->functions = local->functions;
+  new_global_env->functions = get_deep_copy_env_funtion(local->functions);
 
   Env_function* p_f = new_global_env->functions;
   while (p_f->next)
-    p_f = p_f->next;
-  p_f->next = global->functions;
+  {
+    Env_function* new_env_funtion =
+      get_deep_copy_env_funtion(p_f);
+    p_f->next = new_env_funtion;
+    p_f = new_env_funtion->next;
+  }
+  p_f->next = get_deep_copy_env_funtion(global->functions);
   
   Envs* new_envs = init_envs(new_global_env, init_env());
 
