@@ -317,8 +317,10 @@ AST_value_stack* visitor_get_value_from_function
   }
   AST_value_stack* new_value_stack;
 
+  // Set New Environment: new_envs
   Envs* new_envs = visitor_merge_envs(envs);
 
+  // Get value from arguments...
   for (int i = 0; i < env_function->args_size; i ++)
   {
     AST* ast = ast_function->args[i];
@@ -356,7 +358,7 @@ AST_value_stack* visitor_get_value_from_function
           else
           {
             AST_value_stack* new_value =
-              visitor_get_value(envs, ast->value.value_v);
+              visitor_get_value(new_envs, ast->value.value_v);
 
             orora_value_type* p = value_type_list;
             do
@@ -383,7 +385,7 @@ AST_value_stack* visitor_get_value_from_function
           {
             case AST_VARIABLE_VALUE:
               Env_variable* value_variable =
-                visitor_get_variable(envs,
+                visitor_get_variable(new_envs,
                     ast->value.variable_v);
               if (!value_variable)
               {
@@ -397,7 +399,7 @@ AST_value_stack* visitor_get_value_from_function
               
             case AST_VARIABLE_DEFINE:
               value_variable =
-                visitor_variable_define(envs,
+                visitor_variable_define(new_envs,
                     ast->value.variable_v);
               env_variable->type = value_variable->type;
               env_variable->value = value_variable->value;
@@ -432,7 +434,7 @@ AST_value_stack* visitor_get_value_from_function
     }
   }
 
-  printf("!!!\n");
+  printf("!!! %s %ld\n", env_function->name, new_envs->local->variable_size);
   return (void*) 0;
 }
 
