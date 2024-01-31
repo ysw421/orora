@@ -434,6 +434,14 @@ AST_value_stack* visitor_get_value_from_function
     }
   }
 
+  // ToDo
+  switch (env_function->type)
+  {
+    case ENV_FUNCTION_TYPE_SINGLE:
+      return visitor_get_value(new_envs, env_function->codes[0]->value.value_v);
+      break;
+  }
+
   printf("!!! %s %ld\n", env_function->name, new_envs->local->variable_size);
   return (void*) 0;
 }
@@ -797,6 +805,7 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
     i ++;
     if (parser_precedence(text->type) == -1)
     {
+      AST_value_stack* new_value_stack;
       switch (text->type)
       {
         case AST_VALUE_VARIABLE:
@@ -807,7 +816,7 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
             visitor_nondefine_variable_error(text->value.variable_v);
           }
 
-          AST_value_stack* new_value_stack =
+          new_value_stack =
             visitor_get_value_from_variable(envs, env_variable);
 
           parser_push_value(stack, new_value_stack);
@@ -822,7 +831,10 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
             visitor_nondefine_function_error(text->value.function_v);
           }
 
-          visitor_get_value_from_function(envs, ast_function, env_function);
+          new_value_stack =
+            visitor_get_value_from_function(envs, ast_function, env_function);
+
+          parser_push_value(stack, new_value_stack);
           break;
 
         default:

@@ -6,7 +6,7 @@ a := -3+21+(-23)
 
 x:=2+2.1
 print("hello\n")
-y:=((2+3)x+3/2)/3+f(3)
+y:=((2+3)x+3)*2+f(3)
 
 print("variable a: ", a, "\n")
 print("variable x: ", x, "\n")
