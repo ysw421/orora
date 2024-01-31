@@ -14,7 +14,7 @@ Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable);
 Env_function* visitor_get_function(Envs* envs, AST_function* ast_function);
 
 Env_variable* visitor_variable
-(Envs* envs, Env_variable* env_variable, AST_variable* ast_variable);
+(Envs* envs, AST_variable* ast_variable);
 
 Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable);
 Env_function* visitor_function_define(Envs* envs, AST_function* ast_function);
@@ -133,6 +133,35 @@ void visitor_print_function(Envs* envs, AST* ast)
               break;
           }
           break;
+
+        case AST_FUNCTION:
+          AST_function* ast_function_arg_function =
+            ast_function_arg->value.function_v;
+          Env_function* function =
+            visitor_get_function(envs, ast_function_arg_function);
+          if (!function)
+          {
+            visitor_nondefine_function_error(ast_function);
+          }
+          AST_value_stack* new_value =
+            visitor_get_value_from_function(envs, 
+                ast_function_arg_function, function);
+          switch (new_value->type)
+          {
+            case AST_VALUE_STRING:
+              printf("%s",
+                  new_value->value.string_v->real_value);
+              break;
+            case AST_VALUE_INT:
+              printf("%d",
+                  new_value->value.int_v->value);
+              break;
+            case AST_VALUE_FLOAT:
+              printf("%f",
+                  new_value->value.float_v->value);
+              break;
+          }
+          break;
       }
     }
   }
@@ -145,8 +174,8 @@ void visitor_visit(Envs* envs, AST* ast)
   {
     case AST_VARIABLE:
       AST_variable* ast_variable = ast->value.variable_v;
-      Env_variable* env_variable;
-      visitor_variable(envs, env_variable, ast_variable);
+      Env_variable* env_variable =
+        visitor_variable(envs, ast_variable);
       break;
 
     case AST_FUNCTION:
@@ -159,6 +188,19 @@ void visitor_visit(Envs* envs, AST* ast)
       switch (ast_function->ast_type)
       {
         case AST_FUNCTION_VALUE:
+#ifdef DEVELOP_MODE
+          if (strcmp(ast_function->name, "print"))
+          {
+#endif
+          Env_function* env_function =
+            visitor_get_function(envs, ast_function);
+          if (!env_function)
+          {
+            visitor_nondefine_function_error(ast_function);
+          }
+#ifdef DEVELOP_MODE
+          }
+#endif
           break;
 
         case AST_FUNCTION_DEFINE:
@@ -177,8 +219,10 @@ void visitor_visit(Envs* envs, AST* ast)
 }
 
 Env_variable* visitor_variable
-(Envs* envs, Env_variable* env_variable, AST_variable* ast_variable)
+(Envs* envs, AST_variable* ast_variable)
 {
+  Env_variable* env_variable;
+
   switch (ast_variable->ast_type)
   {
     case AST_VARIABLE_VALUE:
@@ -800,7 +844,6 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
   for (int i = max_cnt - 1; i >= 0; i --)
   {
     text_array[i] = get_deep_copy_ast_value_stack(p);
-//     text_array[i] = p;
     p = p->next;
   }
 

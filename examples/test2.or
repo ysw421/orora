@@ -18,7 +18,7 @@ print("variable q: ", q, "\n")
 y:=((2+3)x+3)*2+f(3, 5)
 print("hello\n")
 
-%print("variable a: ", a, f(3), "\n") %해결해야할 오류2 값 얻어서 나온 것 타입
+print("variable a: ", a, "  ", f(3), "\n") %해결해야할 오류2 값 얻어서 나온 것 타입
 print("variable x: ", x, "\n")
 print("variable y: ", y, "\n")
 print("hello")
