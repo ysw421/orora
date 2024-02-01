@@ -274,7 +274,7 @@ AST_value_stack* visitor_get_value_from_function
           if (ast->value.value_v->size == 1)
           {
             orora_value_type* variable_type =
-            get_single_value_type(ast->value.value_v->stack->type);
+              get_single_value_type(ast->value.value_v->stack->type);
 
             if (variable_type)
             {
@@ -345,7 +345,37 @@ AST_value_stack* visitor_get_value_from_function
           break;
 
         case AST_FUNCTION:
-          // ToDo
+          Env_function* env_function =
+            visitor_get_function(envs, ast->value.function_v);
+          if (!env_function)
+          {
+            visitor_nondefine_function_error(
+                ast_variable->value->value.function_v
+            );
+          }
+          AST_value_stack* ast_value_stack
+            = visitor_get_value_from_function(
+                  envs,
+                  ast->value.function_v,
+                  env_function
+                );
+          orora_value_type* variable_type =
+            get_single_value_type(ast_value_stack->type);
+
+          if (variable_type)
+          {
+            env_variable =
+              variable_type
+                ->visitor_set_value_Env_variable_from_AST_value_stack(
+                    env_variable,
+                    ast_value_stack
+                  );
+          }
+          else
+          {
+            printf("에러, 변수에는 값을 저장해야함1\n");
+            exit(1);
+          }
           break;
       }
 
