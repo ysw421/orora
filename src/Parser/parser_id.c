@@ -186,6 +186,27 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
 
       return new_ast_node;
     }
+    else if (value_node->value.value_v->size == 1
+        && value_node->value.value_v->stack->type == AST_VALUE_FUNCTION)
+    {
+      AST* new_ast_node = 
+        init_ast(AST_VARIABLE, ast, last_token);
+      new_ast_node->value.variable_v =
+        init_ast_variable(last_token->value, last_token->length);
+
+      AST* new_ast_node2 =
+        init_ast(AST_FUNCTION, ast, token);
+      new_ast_node2->value.function_v =
+        value_node->value.value_v->stack->value.function_v;
+      new_ast_node->value.variable_v->value = new_ast_node2;
+      new_ast_node2->value.function_v->ast_type = AST_FUNCTION_VALUE;
+
+      token = parser->token;
+
+      new_ast_node->value.variable_v->ast_type = AST_VARIABLE_DEFINE;
+
+      return new_ast_node;
+    }
     else
     {
       AST* new_ast_node =
