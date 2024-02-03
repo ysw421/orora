@@ -14,12 +14,16 @@ GET_COMPOUND_ENV* init_get_compound_env()
   return new_env;
 }
 
-Parser* after_get_parser(Parser* parser)
+Parser* after_get_parser(Parser* parser, size_t* parser_size)
 {
-  Token* token = parser->token;
-  Token* next_token = parser->next_token;
+  Token* token = parser->tokens[*parser_size - 2];
+  Token* next_token = parser->tokens[*parser_size - 1];
 
-  if (token->type == TOKEN_LEFT && next_token && next_token->type == TOKEN_LPAR)
+  if (
+        token->type == TOKEN_LEFT 
+        && next_token 
+        && next_token->type == TOKEN_LPAR
+      )
   {
     if (token->col_first != next_token->col_first)
     {
@@ -35,16 +39,21 @@ Parser* after_get_parser(Parser* parser)
       strcat(new_value, " ");
     }
     strcat(new_value, "(");
-    parser->token->value = new_value;
-    parser->token->length = new_value_length;
-    parser->token->type = TOKEN_LPAR;
-    parser->token->col = next_token->col;
-    parser->token->row_char = next_token->row_char;
+    parser->tokens[*parser_size - 2]->value = new_value;
+    parser->tokens[*parser_size - 2]->length = new_value_length;
+    parser->tokens[*parser_size - 2]->type = TOKEN_LPAR;
+    parser->tokens[*parser_size - 2]->col = next_token->col;
+    parser->tokens[*parser_size - 2]->row_char = next_token->row_char;
 
-    parser->next_token = lexer_get_token(parser->lexer);
+    *parser_size = *parser_size - 1;
+    parser->tokens = realloc(parser->tokens, *parser_size * sizeof(Token*));
   }
 
-  if (token->type == TOKEN_RIGHT && next_token && next_token->type == TOKEN_RPAR)
+  else if (
+            token->type == TOKEN_RIGHT
+            && next_token
+            && next_token->type == TOKEN_RPAR
+          )
   {
     if (token->col_first != next_token->col_first)
     {
@@ -60,13 +69,14 @@ Parser* after_get_parser(Parser* parser)
       strcat(new_value, " ");
     }
     strcat(new_value, ")");
-    parser->token->value = new_value;
-    parser->token->length = new_value_length;
-    parser->token->type = TOKEN_RPAR;
-    parser->token->col = next_token->col;
-    parser->token->row_char = next_token->row_char;
+    parser->tokens[*parser_size - 2]->value = new_value;
+    parser->tokens[*parser_size - 2]->length = new_value_length;
+    parser->tokens[*parser_size - 2]->type = TOKEN_RPAR;
+    parser->tokens[*parser_size - 2]->col = next_token->col;
+    parser->tokens[*parser_size - 2]->row_char = next_token->row_char;
 
-    parser->next_token = lexer_get_token(parser->lexer);
+    *parser_size = *parser_size - 1;
+    parser->tokens = realloc(parser->tokens, *parser_size * sizeof(Token*));
   }
 
   return parser;
@@ -76,7 +86,7 @@ Parser* init_parser(Lexer* lexer)
 {
   Parser* parser = (Parser*) malloc(sizeof(struct parser_t));
   parser->tokens = malloc(sizeof(Token*));
-  int parser_size = 0;
+  size_t parser_size = 0;
   while (true)
   {
     Token* new_token = lexer_get_token(lexer);
@@ -85,6 +95,8 @@ Parser* init_parser(Lexer* lexer)
       parser_size ++;
       parser->tokens = realloc(parser->tokens, parser_size * sizeof(Token*));
       parser->tokens[parser_size - 1] = new_token;
+      if (parser_size >= 2)
+        parser = after_get_parser(parser, &parser_size);
       continue;
     }
     break;
@@ -94,7 +106,6 @@ Parser* init_parser(Lexer* lexer)
 
   parser->lexer = lexer;
   parser->prev_token = (void*) 0;
-//   parser->prev_token = parser->token;
   parser->token = parser->size == 0? (void*) 0 : parser->tokens[0];
   parser->next_token = parser->size == 1 ? (void*) 0 : parser->tokens[1];
   parser->row_size = 0;
@@ -106,10 +117,24 @@ Parser* init_parser(Lexer* lexer)
     printf("에러, 파일이 비어있음\n");
     exit(1);
   }
-  else if (!parser->next_token)
-    return parser;
+  return parser;
+}
 
-  return after_get_parser(parser);
+Parser* parser_set(Parser* parser, size_t pointer)
+{
+  if (!parser || pointer < 0 || pointer > parser->size - 1)
+  {
+    printf("에러, 잘못된 parser 설정\n");
+    exit(1);
+  }
+  parser->pointer = pointer;
+  parser->prev_token = (pointer > 0)
+                          ? parser->tokens[pointer - 1]
+                          : (void*) 0;
+  parser->token = parser->tokens[pointer - 1];
+  parser->next_token = (pointer < parser->size - 1)
+                          ? parser->tokens[pointer]
+                          : (void*) 0;
 }
 
 Parser* parser_advance(Parser* parser, int type)
@@ -152,10 +177,7 @@ Parser* parser_advance(Parser* parser, int type)
     parser->row_tokens = malloc(sizeof(Token*));
   }
 
-  if (!parser->next_token)
-    return parser;
-
-  return after_get_parser(parser);
+  return parser;
 }
 
 AST* parser_get_compound_end(AST* ast, GET_COMPOUND_ENV* compound_env)

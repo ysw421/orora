@@ -13,6 +13,7 @@ typedef struct get_compound_env_t
 } GET_COMPOUND_ENV;
 
 Parser* init_parser(Lexer* lexer);
+Parser* parser_set(Parser* parser, size_t pointer);
 Parser* parser_advance(Parser* parser, int type);
 AST* parser_parse(Parser* parser);
 
