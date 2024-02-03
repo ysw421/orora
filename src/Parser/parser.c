@@ -122,19 +122,21 @@ Parser* init_parser(Lexer* lexer)
 
 Parser* parser_set(Parser* parser, size_t pointer)
 {
-  if (!parser || pointer < 0 || pointer > parser->size - 1)
+  if (!parser || pointer < 0 || pointer > parser->size)
   {
     printf("에러, 잘못된 parser 설정\n");
     exit(1);
   }
   parser->pointer = pointer;
-  parser->prev_token = (pointer > 0)
-                          ? parser->tokens[pointer - 1]
-                          : (void*) 0;
-  parser->token = parser->tokens[pointer - 1];
-  parser->next_token = (pointer < parser->size - 1)
+  parser->prev_token = (pointer >= 1)
                           ? parser->tokens[pointer]
                           : (void*) 0;
+  parser->token = parser->tokens[pointer];
+  parser->next_token = (pointer < parser->size)
+                          ? parser->tokens[pointer + 1]
+                          : (void*) 0;
+
+  return parser;
 }
 
 Parser* parser_advance(Parser* parser, int type)
@@ -155,7 +157,7 @@ Parser* parser_advance(Parser* parser, int type)
   parser->prev_token = parser->token;
   parser->token = parser->next_token;
   parser->pointer ++;
-  if (parser->pointer + 2 <= parser->size)
+  if (parser->pointer < parser->size)
     parser->next_token = parser->tokens[parser->pointer + 1];
   else
     parser->next_token = (void*) 0;

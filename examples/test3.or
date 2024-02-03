@@ -1,1 +1,3 @@
-f:=\left(3\right)
+%f(x):=\begin{function}
+
+print("hello", 5+2, "hello ", 32+1-3, "hello")

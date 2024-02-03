@@ -118,11 +118,23 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
         else
         {
           token = parser->token;
-          if (token->type == TOKEN_BEGIN)
-          {}
+          size_t pointer = parser->pointer;
+          printf("@@@ %d\n", token->type == parser->tokens[pointer]->type);
+          if (
+                pointer + 3 <= parser->size
+                && token->type == TOKEN_BEGIN
+                && parser->next_token->type == TOKEN_LBRACE
+                && parser->tokens[pointer + 2]->type == TOKEN_ID
+                && (!strcmp(parser->tokens[pointer + 2]->value, "function")
+                    || !strcmp(parser->tokens[pointer + 2]->value, "fun"))
+                && parser->tokens[pointer + 3]->type == TOKEN_RBRACE
+              )
+          {
+            printf("!@#$@#!@$@#$#@$#@\n");
+          }
           else
           {
-            printf("에러, ':=' 뒤에는 값이 와야함.");
+            printf("에러, ':=' 뒤에는 값이 와야함2.");
             exit(1);
           }
           printf("@!#!@ %s\n", token->value);
