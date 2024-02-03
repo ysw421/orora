@@ -52,6 +52,8 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
       if (parser->prev_token->col == token->col_first)
       {
         parser = parser_advance(parser, TOKEN_DEFINE);
+
+        // Check arguments
         char** s_arg_variaable_name = malloc(sizeof(char*));
         int check_arg_num = 0;
         for (int i = 0; i < fa->args_size; i ++)
@@ -88,6 +90,7 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
           }
         }
         token = parser->token;
+        // -------------------
 
         if (!token)
         {
@@ -114,12 +117,19 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
         }
         else
         {
+          token = parser->token;
+          if (token->type == TOKEN_BEGIN)
+          {}
+          else
+          {
+            printf("에러, ':=' 뒤에는 값이 와야함.");
+            exit(1);
+          }
+          printf("@!#!@ %s\n", token->value);
 //           new_ast_node->type = AST_FUNCTION_TYPE_;
           // ToDo: type2 function....
           // like....
           // f(x) := \begin{code}print(x)\begin{end}
-          printf("에러, ':=' 뒤에는 값이 와야함.");
-          exit(1);
         }
         new_ast_node->value.function_v->ast_type = AST_FUNCTION_DEFINE;
         return new_ast_node;
@@ -252,7 +262,7 @@ AST* parser_get_function(Parser* parser, AST* ast)
   if (token->type != TOKEN_RPAR)    // if the argument is not empty
   {
     int num_of_lpar = 0;
-    while (!(num_of_lpar == 0 && token->type == TOKEN_RPAR))
+    while (token && !(num_of_lpar == 0 && token->type == TOKEN_RPAR))
     {
       GET_COMPOUND_ENV* new_env = init_get_compound_env();
       new_env->is_in_parentheses = true;
@@ -284,7 +294,7 @@ AST* parser_get_function(Parser* parser, AST* ast)
 
         error_prev_token(error_message, parser);
       }
-      if (token->type == TOKEN_COMMA)
+      if (token && token->type == TOKEN_COMMA)
         parser = parser_advance(parser, TOKEN_COMMA);
 
       int args_num = ++ new_ast->value.function_v->args_size;
@@ -294,7 +304,13 @@ AST* parser_get_function(Parser* parser, AST* ast)
         new_arg_ast->value.compound_v->items[0];
     }
   }
-  parser = parser_advance(parser, TOKEN_RPAR);
+  if (token)
+    parser = parser_advance(parser, TOKEN_RPAR);
+  else
+  {
+    printf("에러, 괄호가 끝나지 아니함\n");
+    exit(1);
+  }
 
   return new_ast;
 }

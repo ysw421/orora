@@ -46,7 +46,10 @@ typedef struct ast_function_t
 
   enum
   {
-    AST_FUNCTION_TYPE_SINGLE,  // e.g. f(x)=3x+2
+    AST_FUNCTION_TYPE_SINGLE,     // e.g. f(x):=3x+2
+    AST_FUNCTION_TYPE_DEFAULT,    // e.g. f(x):=\begin{function}
+                                  //              (code)
+                                  //            \end{function}
     AST_FUNCTION_TYPE_NULL = 99
   } type;
 

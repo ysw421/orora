@@ -1,3 +1,1 @@
-f(x, y:=2):=3x+5+5y
-g(x) := 2x
-print(f(g(2)))
+f(x, y:=2):=\begin{function}

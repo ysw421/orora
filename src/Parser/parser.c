@@ -191,7 +191,9 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
 
       case TOKEN_RPAR:
         if (compound_env->is_in_parentheses)
+        {
           return parser_get_compound_end(ast, compound_env);
+        }
         break;
 
       case TOKEN_SATISFY:

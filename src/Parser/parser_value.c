@@ -76,13 +76,42 @@ AST* parser_get_value(Parser** parser_, AST* ast,
     }
     else
     {
-      if (is_last_minus_value2)
+      enum
+      {
+        TOKEN_TYPE_NULL = 0,
+        TOKEN_TYPE_ID,
+        TOKEN_TYPE_LPAR,
+        TOKEN_TYPE_RPAR,
+        TOKEN_TYPE_OPERATOR,
+      };
+      int token_type = TOKEN_TYPE_NULL;
+      switch (token->type)
+      {
+        case TOKEN_ID:
+          token_type = TOKEN_TYPE_ID;
+          break;
+        case TOKEN_LPAR:
+          token_type = TOKEN_TYPE_LPAR;
+          break;
+        case TOKEN_RPAR:
+          token_type = TOKEN_TYPE_RPAR;
+          break;
+        default:
+          if (is_operator(token->type))
+            token_type = TOKEN_TYPE_OPERATOR;
+          break;
+      }
+
+      if (token_type == TOKEN_TYPE_NULL)
+        break;
+      else if (is_last_minus_value2)
       {
         printf("에러, operator 뒤에는 값이 와야함\n");
         exit(1);
       }
 
-      if (token->type == TOKEN_ID)
+      // ToDo... use switch
+      if (token_type == TOKEN_TYPE_ID)
       {
         if (is_last_single_value)
         {
@@ -127,7 +156,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
           parser_push_value(postfix_expression, new);
         }
       }
-      else if (token->type == TOKEN_LPAR)
+      else if (token_type == TOKEN_TYPE_LPAR)
       {
         count_of_dearkelly ++;
         value_env->is_in_parentheses = true;
@@ -139,7 +168,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         is_last_single_value = false;
         is_last_operator = false;
       }
-      else if (token->type == TOKEN_RPAR)
+      else if (token_type == TOKEN_TYPE_RPAR)
       {
         if (!count_of_dearkelly)
           break;
@@ -158,7 +187,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         is_last_single_value = true;
         is_last_operator = false;
       }
-      else if (is_operator(token->type))
+      else if (token_type == TOKEN_TYPE_OPERATOR)
       {
         if (token->type == TOKEN_MINUS
             && (is_last_minus_value || is_last_operator))
@@ -186,23 +215,11 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         is_last_single_value = false;
         is_last_operator = true;
       }
-      else
-        break;
       
     }
 
     parser = parser_advance(parser, token->type);
     token = parser->token;
-  }
-  if (!is_first_turn && !is_last_value)
-  {
-    printf("에러, operator 다음에는 값이 와야함\n");
-    exit(1);
-  }
-  else if(count_of_dearkelly)
-  {
-    printf("에러, (가 끝나지 아니함\n");
-    exit(1);
   }
 
   while (stack->size)
@@ -213,6 +230,18 @@ AST* parser_get_value(Parser** parser_, AST* ast,
   {
     free(postfix_expression);
     return (void*) 0;
+  }
+
+  // Warning! possibility error
+  if (!is_first_turn && !is_last_value)
+  {
+    printf("에러, operator 다음에는 값이 와야함\n");
+    exit(1);
+  }
+  else if(count_of_dearkelly)
+  {
+    printf("에러, (가 끝나지 아니함\n");
+    exit(1);
   }
 
 //   free(value_env);

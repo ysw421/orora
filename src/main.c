@@ -13,7 +13,7 @@
 
 orora_value_type* value_type_list;
 
-void init_orora()
+bool init_orora()
 {
   push_value_type_list
     (
@@ -39,11 +39,13 @@ void init_orora()
      visitor_set_value_Env_variable_from_AST_value_stack_float,
      visitor_set_value_AST_value_stack_from_Env_variable_float
     );
+  return true;
 }
 
 int main(int argc, char** argv)
 {
-  init_orora();
+  if (!init_orora())
+    return 1;
 
 #ifndef GLOBAL_ENV_DEFINE
 #define GLOBAL_ENV_DEFINE
