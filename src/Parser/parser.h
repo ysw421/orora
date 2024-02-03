@@ -20,4 +20,6 @@ AST* parser_parse(Parser* parser);
 GET_COMPOUND_ENV* init_get_compound_env();
 AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env);
 
+char* parser_is_begin(Parser* parser, int count, ...);
+
 #endif

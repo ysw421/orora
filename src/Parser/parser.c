@@ -1,5 +1,6 @@
 #include "parser_id.h"
 #include <stdlib.h>
+#include <stdarg.h>
 #include "../main.h"
 #include "string.h"
 
@@ -122,7 +123,7 @@ Parser* init_parser(Lexer* lexer)
 
 Parser* parser_set(Parser* parser, size_t pointer)
 {
-  if (!parser || pointer < 0 || pointer > parser->size)
+  if (!parser || pointer < 0 || pointer + 1 > parser->size)
   {
     printf("에러, 잘못된 parser 설정\n");
     exit(1);
@@ -157,7 +158,7 @@ Parser* parser_advance(Parser* parser, int type)
   parser->prev_token = parser->token;
   parser->token = parser->next_token;
   parser->pointer ++;
-  if (parser->pointer < parser->size)
+  if (parser->pointer + 2 <= parser->size)
     parser->next_token = parser->tokens[parser->pointer + 1];
   else
     parser->next_token = (void*) 0;
@@ -360,3 +361,39 @@ AST* parser_get_satisfy(Parser* parser, AST* ast)
   free(new_ast_node);
   return (void*) 0;
 }
+
+char* parser_is_begin(Parser* parser, int count, ...)
+{
+  size_t pointer = parser->pointer;
+  if (
+        pointer + 3 <= parser->size
+        && parser->tokens[pointer]->type == TOKEN_BEGIN
+        && parser->tokens[pointer + 1]->type == TOKEN_LBRACE
+        && parser->tokens[pointer + 2]->type == TOKEN_ID
+        && parser->tokens[pointer + 3]->type == TOKEN_RBRACE
+      )
+  {
+    va_list args;
+    va_start(args, count);
+
+    for (int i = 0; i < count; i ++)
+    {
+      char* code = va_arg(args, char*);
+      if (!strcmp(parser->tokens[pointer + 2]->value, code))
+      {
+        va_end(args);
+        parser = parser_advance(parser, TOKEN_BEGIN);
+        parser = parser_advance(parser, TOKEN_LBRACE);
+        parser = parser_advance(parser, TOKEN_ID);
+        parser = parser_advance(parser, TOKEN_RBRACE);
+
+        return code;
+      }
+    }
+    va_end(args);
+    return (void*) 0;
+  }
+  else
+    return (void*) 0;
+}
+
