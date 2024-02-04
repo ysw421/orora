@@ -283,6 +283,11 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
       }
       continue;
     }
+    else
+    {
+      printf("에러, 설정되지 않은 token이 있음: %s\n", token->value);
+      exit(1);
+    }
     free(value_node);
     // -----------
   }
