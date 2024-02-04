@@ -109,6 +109,9 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
 
         if (value_node)
         {
+          // e.g.
+          // f(x) := 5x + 3
+
           AST_function* new_ast_function = new_ast_node->value.function_v;
           new_ast_function->type = AST_FUNCTION_TYPE_SINGLE;
 
@@ -118,39 +121,44 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
         }
         else
         {
+          // e.g.
+          // f(x) := \begin{function}
+          //           print("hello\n")
+          //         \end{function}
+
           token = parser->token;
           size_t pointer = parser->pointer;
           char* code = parser_is_begin(parser, 2, "function", "fun");
           if (code)
           {
             AST_function* new_ast_function = new_ast_node->value.function_v;
-            printf("!@#$@#!@$@#$#@$#@1223 %s\n", code);
-            // For test....
 
-            printf("@@@\n");
             GET_COMPOUND_ENV* get_function_code_env
               = init_get_compound_env();
             get_function_code_env->is_usefull_end = code;
 
-            printf("222 %s\n", parser->token->value);
+            new_ast_node->type = AST_FUNCTION_TYPE_DEFAULT;
             new_ast_function->codes = 
               parser_get_compound(parser, get_function_code_env);
 
-            printf("##### %s\n", parser->prev_token->value);
-            printf("##### %s\n", parser->token->value);
-            printf("##### %s\n", parser->next_token->value);
+            bool is_end_function = false;
+            if (parser->prev_token->type == TOKEN_RBRACE)
+            {
+              pointer = parser->pointer;
+              parser = parser_set(parser, parser->pointer - 4);
+              if (parser_is_end(parser, code))
+              {
+                is_end_function = true;
+                parser = parser_set(parser, pointer);
+              }
+            }
 
-            pointer = parser->pointer;
-            parser = parser_set(parser, parser->pointer - 4);
-            if (parser_is_end(parser, code))
-              printf("i love your cat\n");
-            parser = parser_set(parser, pointer);
-            printf("##### %s\n", parser->prev_token->value);
-            printf("##### %s\n", parser->token->value);
-            printf("##### %s\n", parser->next_token->value);
+            if (!is_end_function)
+            {
+              printf("에러, 함수가 끝나지 아니함\n");
+              exit(1);
+            }
 
-//             exit(1);
-            // ToDo
           }
           else
           {
@@ -158,10 +166,6 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
             printf("에러, ':=' 뒤에는 값이 와야함2.");
             exit(1);
           }
-//           new_ast_node->type = AST_FUNCTION_TYPE_;
-          // ToDo: type2 function....
-          // like....
-          // f(x) := \begin{code}print(x)\begin{end}
         }
         new_ast_node->value.function_v->ast_type = AST_FUNCTION_DEFINE;
         return new_ast_node;
