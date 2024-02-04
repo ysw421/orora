@@ -403,7 +403,7 @@ char* parser_is_begin(Parser* parser, int count, ...)
     return (void*) 0;
 }
 
-bool parser_is_end(Parser* parse, char* code)
+bool parser_is_end(Parser* parser, char* code)
 {
   size_t pointer = parser->pointer;
   if (
