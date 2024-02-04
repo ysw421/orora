@@ -210,6 +210,16 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     bool is_break = true;
     switch (token->type)
     {
+      case TOKEN_BEGIN:
+        // ToDo
+        char* code = parser_is_begin(parser, 1, "while");
+        if (code)
+        {
+          if (!strcmp(code, "while"))
+          {}
+        }
+        break;
+
       case TOKEN_END:
         if (compound_env->is_usefull_end 
             && parser_is_end(parser, compound_env->is_usefull_end)

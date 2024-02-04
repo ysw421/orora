@@ -22,17 +22,17 @@ void print_function(AST_function* checked_function)
         break;
     }
   }
-  if (checked_function->codes)
+  if (checked_function->code)
   {
     printf("  ->code:\n");
     switch (checked_function->type)
     {
       case AST_FUNCTION_TYPE_SINGLE:
-        print_value(checked_function->codes);
+        print_value(checked_function->code);
         break;
 
       case AST_FUNCTION_TYPE_DEFAULT:
-        print_ast_tree(checked_function->codes);
+        print_ast_tree(checked_function->code);
         break;
     }
   }

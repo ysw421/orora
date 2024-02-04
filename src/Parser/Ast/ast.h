@@ -13,6 +13,12 @@ typedef struct ast_compound_t
   struct ast_t** items;
 } AST_compound;
 
+typedef struct ast_while_t
+{
+  struct ast_t* condition;
+  struct ast_t* code;
+} AST_while;
+
 typedef struct ast_variable_t
 {
   enum
@@ -53,14 +59,14 @@ typedef struct ast_function_t
     AST_FUNCTION_TYPE_NULL = 99
   } type;
 
-  struct ast_t* codes;    // I wonder
+  struct ast_t* code;     // I wonder
                           //    I should use a Lexer struct
                           //    or AST struct... or Token...
                           //
                           // When type is AST_FUNCTION_TYPE_SINGLE...
-                          //    -> codes->type is value...
+                          //    -> code->type is value...
                           // When type is AST_FUNCTION_TYPE_DEFAULT...
-                          //    -> codes->type is compound...
+                          //    -> code->type is compound...
 } AST_function;
 
 typedef struct ast_string_t

@@ -126,7 +126,7 @@ Env_function* visitor_function_value
       Envs* new_envs =
         visitor_get_envs_from_function(envs, ast_function, env_function);
 
-      AST* ast_tree = env_function->codes;
+      AST* ast_tree = env_function->code;
       for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
       {
         visitor_visit(new_envs, ast_tree->value.compound_v->items[i]);
@@ -295,7 +295,7 @@ AST_value_stack* visitor_get_value_from_function
   switch (env_function->type)
   {
     case ENV_FUNCTION_TYPE_SINGLE:
-      return visitor_get_value(new_envs, env_function->codes->value.value_v);
+      return visitor_get_value(new_envs, env_function->code->value.value_v);
       break;
 
     case ENV_FUNCTION_TYPE_DEFAULT:
@@ -807,7 +807,7 @@ Env_function* get_deep_copy_env_funtion
   new_env_funtion->length = env_function->length;
   new_env_funtion->args = env_function->args;
   new_env_funtion->args_size = env_function->args_size;
-  new_env_funtion->codes = env_function->codes;
+  new_env_funtion->code = env_function->code;
   new_env_funtion->type = env_function->type;
   new_env_funtion->next = env_function->next;
 
