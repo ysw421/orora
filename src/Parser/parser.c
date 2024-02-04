@@ -403,3 +403,26 @@ char* parser_is_begin(Parser* parser, int count, ...)
     return (void*) 0;
 }
 
+bool parser_is_end(Parser* parse, char* code)
+{
+  size_t pointer = parser->pointer;
+  if (
+        pointer + 3 <= parser->size
+        && parser->tokens[pointer]->type == TOKEN_END
+        && parser->tokens[pointer + 1]->type == TOKEN_LBRACE
+        && parser->tokens[pointer + 2]->type == TOKEN_ID
+        && !strcmp(parser->tokens[pointer + 2]->value, code)
+        && parser->tokens[pointer + 3]->type == TOKEN_RBRACE
+      )
+  {
+    parser = parser_advance(parser, TOKEN_END);
+    parser = parser_advance(parser, TOKEN_LBRACE);
+    parser = parser_advance(parser, TOKEN_ID);
+    parser = parser_advance(parser, TOKEN_RBRACE);
+
+    return true;
+  }
+
+  return false;
+}
+
