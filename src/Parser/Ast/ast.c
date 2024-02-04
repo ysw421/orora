@@ -38,12 +38,22 @@ AST_PARSER* init_ast_parser(AST* ast, Parser* parser)
   return new_ast_parser;
 }
 
+AST_while* init_ast_while()
+{
+  AST_while* ast_while =
+    (AST_while*) malloc(sizeof(struct ast_while_t));
+  ast_while->condition = (void*) 0;
+  ast_while->code = (void*) 0;
+
+  return ast_while;
+}
+
 AST_value* init_ast_value()
 {
   AST_value* ast_value =
     (AST_value*) malloc(sizeof(struct ast_value_t));
   ast_value->size = 0;
-  ast_value->stack =  malloc(sizeof(struct ast_value_stack_t));
+  ast_value->stack =  (void*) 0;
 
   return ast_value;
 }
