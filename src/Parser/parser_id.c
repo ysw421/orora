@@ -115,7 +115,7 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
           AST_function* new_ast_function = new_ast_node->value.function_v;
           new_ast_function->type = AST_FUNCTION_TYPE_SINGLE;
 
-          new_ast_function->codes = malloc(sizeof(AST));
+//           new_ast_function->codes = malloc(sizeof(AST));
 
           new_ast_function->codes = value_node;
         }
@@ -137,7 +137,7 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
               = init_get_compound_env();
             get_function_code_env->is_usefull_end = code;
 
-            new_ast_node->type = AST_FUNCTION_TYPE_DEFAULT;
+            new_ast_function->type = AST_FUNCTION_TYPE_DEFAULT;
             new_ast_function->codes = 
               parser_get_compound(parser, get_function_code_env);
 
