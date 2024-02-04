@@ -18,6 +18,9 @@ Env_function* visitor_get_function(Envs* envs, AST_function* ast_function);
 Env_variable* visitor_variable
 (Envs* envs, AST_variable* ast_variable);
 
+Env_function* visitor_function_value
+(Envs* envs, AST_function* ast_function);
+
 Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable);
 Env_function* visitor_function_define(Envs* envs, AST_function* ast_function);
 
@@ -47,6 +50,10 @@ bool is_true(AST_value_stack* value);
 AST_value_stack* get_deep_copy_ast_value_stack
 (AST_value_stack* ast_value_stack);
 bool visitor_check_satisfy(Envs* envs, Env_variable* env_variable);
+
+Envs* visitor_get_envs_from_function
+(Envs* envs, AST_function* ast_function, Env_function* env_function);
+
 Envs* visitor_merge_envs(Envs* envs);
 
 AST_value_stack* visitor_get_value_from_function
@@ -78,12 +85,7 @@ void visitor_visit(Envs* envs, AST* ast)
           if (strcmp(ast_function->name, "print"))
           {
 #endif
-          Env_function* env_function =
-            visitor_get_function(envs, ast_function);
-          if (!env_function)
-          {
-            visitor_nondefine_function_error(ast_function);
-          }
+          visitor_function_value(envs, ast_function);
 #ifdef DEVELOP_MODE
           }
 #endif
@@ -95,13 +97,51 @@ void visitor_visit(Envs* envs, AST* ast)
 
         default:
 #ifdef DEVELOP_MODE
-          printf("내가 ast function 설정 잘못함...");
+          printf("내가 ast function 설정 잘못함...\n");
           exit(1);
 #endif
           break;
       }
       break;
   }
+}
+
+Env_function* visitor_function_value
+(Envs* envs, AST_function* ast_function)
+{
+  Env_function* env_function =
+    visitor_get_function(envs, ast_function);
+  if (!env_function)
+  {
+    visitor_nondefine_function_error(ast_function);
+  }
+
+  switch (env_function->type)
+  {
+    case ENV_FUNCTION_TYPE_SINGLE:
+      // ToDo...
+      break;
+
+    case ENV_FUNCTION_TYPE_DEFAULT:
+      Envs* new_envs =
+        visitor_get_envs_from_function(envs, ast_function, env_function);
+
+      AST* ast_tree = env_function->codes;
+      for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
+      {
+        visitor_visit(new_envs, ast_tree->value.compound_v->items[i]);
+      }
+
+      free(new_envs);
+      break;
+
+    default:
+      printf("에러, 사용된 함수의 type이 문제 있음\n");
+      exit(1);
+      break;
+  }
+
+  return env_function;
 }
 
 Env_variable* visitor_variable
@@ -133,7 +173,7 @@ Env_variable* visitor_variable
 
     default:
 #ifdef DEVELOP_MODE
-      printf("내가 ast variable 설정 잘못함...");
+      printf("내가 ast variable 설정 잘못함...: %s\n", ast_variable->name);
       exit(1);
 #endif
       break;
@@ -248,157 +288,8 @@ AST_value_stack* visitor_get_value_from_function
   AST_value_stack* new_value_stack;
 
   // Set New Environment: new_envs
-  Envs* new_envs = visitor_merge_envs(envs);
-
-  // Get value from arguments...
-  if (ast_function->args_size > env_function->args_size)
-  {
-    printf("에러, 함수의 매개변수 개수가 다름\n");
-    exit(1);
-  }
-
-  for (int i = 0; i < env_function->args_size; i ++)
-  {
-    AST* ast = ast_function->args[i];
-    if (i < ast_function->args_size)
-    {
-      AST_variable* ast_variable =
-        env_function->args[i]->value.variable_v;
-      Env_variable* env_variable =
-        init_env_variable(ast_variable->name,
-                          ast_variable->name_length);
-
-      switch (ast->type)
-      {
-        case AST_VALUE:
-          if (ast->value.value_v->size == 1)
-          {
-            orora_value_type* variable_type =
-              get_single_value_type(ast->value.value_v->stack->type);
-
-            if (variable_type)
-            {
-              env_variable =
-                variable_type
-                  ->visitor_set_value_Env_variable_from_AST_value_stack(
-                      env_variable,
-                      ast->value.value_v->stack
-                    );
-            }
-            else
-            {
-              printf("에러, 변수에는 값을 저장해야함1\n");
-              exit(1);
-            }
-          }
-          else
-          {
-            AST_value_stack* new_value =
-              visitor_get_value(new_envs, ast->value.value_v);
-
-            orora_value_type* p = value_type_list;
-            do
-            {
-              if (p->ast_value_type_id == new_value->type)
-                break;
-              p = p->next;
-            } while (p);
-
-            if (p)
-              env_variable =
-                p->visitor_set_value_Env_variable_from_AST_value_stack
-                  (env_variable, new_value);
-            else
-            {
-              printf("에러, 변수에 저장하는 것은 값이어야함\n");
-              exit(1);
-            }
-          }
-          break;
-
-        case AST_VARIABLE:
-          switch (ast->value.variable_v->ast_type)
-          {
-            case AST_VARIABLE_VALUE:
-              Env_variable* value_variable =
-                visitor_get_variable(new_envs,
-                    ast->value.variable_v);
-              if (!value_variable)
-              {
-                visitor_nondefine_variable_error(
-                    ast->value.variable_v);
-              }
-
-              env_variable->type = value_variable->type;
-              env_variable->value = value_variable->value;
-              break;
-              
-            case AST_VARIABLE_DEFINE:
-              value_variable =
-                visitor_variable_define(new_envs,
-                    ast->value.variable_v);
-              env_variable->type = value_variable->type;
-              env_variable->value = value_variable->value;
-              break;
-          }
-
-          break;
-
-        case AST_FUNCTION:
-          Env_function* env_function =
-            visitor_get_function(envs, ast->value.function_v);
-          if (!env_function)
-          {
-            visitor_nondefine_function_error(
-                ast_variable->value->value.function_v
-            );
-          }
-          AST_value_stack* ast_value_stack
-            = visitor_get_value_from_function(
-                  envs,
-                  ast->value.function_v,
-                  env_function
-                );
-          orora_value_type* variable_type =
-            get_single_value_type(ast_value_stack->type);
-
-          if (variable_type)
-          {
-            env_variable =
-              variable_type
-                ->visitor_set_value_Env_variable_from_AST_value_stack(
-                    env_variable,
-                    ast_value_stack
-                  );
-          }
-          else
-          {
-            printf("에러, 변수에는 값을 저장해야함1\n");
-            exit(1);
-          }
-          break;
-      }
-
-      Env* local_env = new_envs->local;
-      env_variable->next = local_env->variables;
-      local_env->variable_size ++;
-      local_env->variables = env_variable;
-    }
-    else
-    {
-      if (env_function->args[i]
-          ->value.variable_v->ast_type == AST_VARIABLE_DEFINE)
-      {
-        visitor_variable_define(new_envs,
-            env_function->args[i]->value.variable_v);
-      }
-      else
-      {
-        printf("에러, 함수의 매개변수 개수가 다름\n");
-        exit(1);
-      }
-    }
-  }
+  Envs* new_envs =
+    visitor_get_envs_from_function(envs, ast_function, env_function);
 
   // ToDo
   switch (env_function->type)
@@ -406,9 +297,16 @@ AST_value_stack* visitor_get_value_from_function
     case ENV_FUNCTION_TYPE_SINGLE:
       return visitor_get_value(new_envs, env_function->codes->value.value_v);
       break;
+
+    case ENV_FUNCTION_TYPE_DEFAULT:
+      break;
+    
+    default:
+      printf("에러, env_function type이 잘못됨\n");
+      exit(1);
+      break;
   }
 
-  printf("!!! %s %ld\n", env_function->name, new_envs->local->variable_size);
   return (void*) 0;
 }
 
@@ -953,6 +851,164 @@ Envs* visitor_merge_envs(Envs* envs)
   p_f->next = get_deep_copy_env_funtion(global->functions);
   
   Envs* new_envs = init_envs(new_global_env, init_env());
+
+  return new_envs;
+}
+
+Envs* visitor_get_envs_from_function
+(Envs* envs, AST_function* ast_function, Env_function* env_function)
+{
+  Envs* new_envs = visitor_merge_envs(envs);
+
+  // Get value from arguments...
+  if (ast_function->args_size > env_function->args_size)
+  {
+    printf("에러, 함수의 매개변수 개수가 다름\n");
+    exit(1);
+  }
+
+  for (int i = 0; i < env_function->args_size; i ++)
+  {
+    AST* ast = ast_function->args[i];
+    if (i < ast_function->args_size)
+    {
+      AST_variable* ast_variable =
+        env_function->args[i]->value.variable_v;
+      Env_variable* env_variable =
+        init_env_variable(ast_variable->name,
+                          ast_variable->name_length);
+
+      switch (ast->type)
+      {
+        case AST_VALUE:
+          if (ast->value.value_v->size == 1)
+          {
+            orora_value_type* variable_type =
+              get_single_value_type(ast->value.value_v->stack->type);
+
+            if (variable_type)
+            {
+              env_variable =
+                variable_type
+                  ->visitor_set_value_Env_variable_from_AST_value_stack(
+                      env_variable,
+                      ast->value.value_v->stack
+                    );
+            }
+            else
+            {
+              printf("에러, 변수에는 값을 저장해야함1\n");
+              exit(1);
+            }
+          }
+          else
+          {
+            AST_value_stack* new_value =
+              visitor_get_value(new_envs, ast->value.value_v);
+
+            orora_value_type* p = value_type_list;
+            do
+            {
+              if (p->ast_value_type_id == new_value->type)
+                break;
+              p = p->next;
+            } while (p);
+
+            if (p)
+              env_variable =
+                p->visitor_set_value_Env_variable_from_AST_value_stack
+                  (env_variable, new_value);
+            else
+            {
+              printf("에러, 변수에 저장하는 것은 값이어야함\n");
+              exit(1);
+            }
+          }
+          break;
+
+        case AST_VARIABLE:
+          switch (ast->value.variable_v->ast_type)
+          {
+            case AST_VARIABLE_VALUE:
+              Env_variable* value_variable =
+                visitor_get_variable(new_envs,
+                    ast->value.variable_v);
+              if (!value_variable)
+              {
+                visitor_nondefine_variable_error(
+                    ast->value.variable_v);
+              }
+
+              env_variable->type = value_variable->type;
+              env_variable->value = value_variable->value;
+              break;
+              
+            case AST_VARIABLE_DEFINE:
+              value_variable =
+                visitor_variable_define(new_envs,
+                    ast->value.variable_v);
+              env_variable->type = value_variable->type;
+              env_variable->value = value_variable->value;
+              break;
+          }
+
+          break;
+
+        case AST_FUNCTION:
+          Env_function* env_function =
+            visitor_get_function(envs, ast->value.function_v);
+          if (!env_function)
+          {
+            visitor_nondefine_function_error(
+                ast_variable->value->value.function_v
+            );
+          }
+          AST_value_stack* ast_value_stack
+            = visitor_get_value_from_function(
+                  envs,
+                  ast->value.function_v,
+                  env_function
+                );
+          orora_value_type* variable_type =
+            get_single_value_type(ast_value_stack->type);
+
+          if (variable_type)
+          {
+            env_variable =
+              variable_type
+                ->visitor_set_value_Env_variable_from_AST_value_stack(
+                    env_variable,
+                    ast_value_stack
+                  );
+          }
+          else
+          {
+            printf("에러, 변수에는 값을 저장해야함1\n");
+            exit(1);
+          }
+          break;
+      }
+
+      Env* local_env = new_envs->local;
+      env_variable->next = local_env->variables;
+      local_env->variable_size ++;
+      local_env->variables = env_variable;
+    }
+    else
+    {
+      if (env_function->args[i]
+          ->value.variable_v->ast_type == AST_VARIABLE_DEFINE)
+      {
+        visitor_variable_define(new_envs,
+            env_function->args[i]->value.variable_v);
+      }
+      else
+      {
+        printf("에러, 함수의 매개변수 개수가 다름\n");
+        exit(1);
+      }
+    }
+  }
 
   return new_envs;
 }

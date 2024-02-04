@@ -5,8 +5,8 @@
 Env_function* get_env_function_from_ast_function
 (Env_function* env_function, AST_function* ast_function)
 {
-  env_function->name = ast_function->name;
-  env_function->length = ast_function->name_length;
+//   env_function->name = ast_function->name;
+//   env_function->length = ast_function->name_length;
 
   env_function->args = ast_function->args;
   env_function->args_size = ast_function->args_size;
@@ -24,6 +24,8 @@ Env_function* init_env_function(AST_function* ast_function)
     (Env_function*) malloc(sizeof(struct env_function_t));
 
   get_env_function_from_ast_function(env_function, ast_function);
+  env_function->name = ast_function->name;
+  env_function->length = ast_function->name_length;
   env_function->next = (void*) 0;
 
   return env_function;

@@ -25,8 +25,16 @@ void print_function(AST_function* checked_function)
   if (checked_function->codes)
   {
     printf("  ->code:\n");
-    if (checked_function->type == AST_FUNCTION_TYPE_SINGLE)
-      print_value(checked_function->codes);
+    switch (checked_function->type)
+    {
+      case AST_FUNCTION_TYPE_SINGLE:
+        print_value(checked_function->codes);
+        break;
+
+      case AST_FUNCTION_TYPE_DEFAULT:
+        print_ast_tree(checked_function->codes);
+        break;
+    }
   }
 }
 
