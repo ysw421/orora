@@ -12,8 +12,7 @@ typedef struct env_function_t
   struct ast_t** args;
   int args_size;
 
-  struct ast_t** codes;
-  size_t codes_size;
+  struct ast_t* codes;
 
   enum
   {

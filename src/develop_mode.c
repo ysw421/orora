@@ -22,11 +22,11 @@ void print_function(AST_function* checked_function)
         break;
     }
   }
-  if (checked_function->codes_size)
+  if (checked_function->codes)
   {
     printf("  ->code:\n");
-    if (checked_function->codes_size == 1)
-      print_value(checked_function->codes[0]);
+    if (checked_function->type == AST_FUNCTION_TYPE_SINGLE)
+      print_value(checked_function->codes);
   }
 }
 

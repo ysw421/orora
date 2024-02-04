@@ -53,10 +53,14 @@ typedef struct ast_function_t
     AST_FUNCTION_TYPE_NULL = 99
   } type;
 
-  struct ast_t** codes;   // I wonder
+  struct ast_t* codes;    // I wonder
                           //    I should use a Lexer struct
                           //    or AST struct... or Token...
-  size_t codes_size;
+                          //
+                          // When type is AST_FUNCTION_TYPE_SINGLE...
+                          //    -> codes->type is value...
+                          // When type is AST_FUNCTION_TYPE_DEFAULT...
+                          //    -> codes->type is compound...
 } AST_function;
 
 typedef struct ast_string_t
@@ -69,6 +73,8 @@ typedef struct ast_string_t
 typedef struct ast_int_t
 {
   int value;  // I should not use a pointer...??
+              // ToDo...
+              // Create a new type that unlimited length
 } AST_int;
 
 typedef struct ast_float_t

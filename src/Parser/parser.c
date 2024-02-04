@@ -11,6 +11,7 @@ GET_COMPOUND_ENV* init_get_compound_env()
   GET_COMPOUND_ENV* new_env = malloc(sizeof(GET_COMPOUND_ENV));
   new_env->is_in_parentheses = false;
   new_env->is_usefull_comma = false;
+  new_env->is_usefull_end = (void*) 0;
 
   return new_env;
 }

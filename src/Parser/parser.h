@@ -10,6 +10,7 @@ typedef struct get_compound_env_t
 {
   bool is_in_parentheses;
   bool is_usefull_comma;
+  char* is_usefull_end;
 } GET_COMPOUND_ENV;
 
 Parser* init_parser(Lexer* lexer);

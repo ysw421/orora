@@ -12,7 +12,6 @@ Env_function* get_env_function_from_ast_function
   env_function->args_size = ast_function->args_size;
 
   env_function->codes = ast_function->codes;
-  env_function->codes_size = ast_function->codes_size;
 
   env_function->type = ast_function->type;
 

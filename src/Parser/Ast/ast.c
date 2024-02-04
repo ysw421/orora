@@ -98,8 +98,8 @@ AST_function* init_ast_function(char* name, size_t length)
   ast_function->name = name;
   ast_function->name_length = length;
   ast_function->args_size = 0;
-  ast_function->codes_size = 0;
   ast_function->args = malloc(sizeof(AST));
+  ast_function->codes = malloc(sizeof(AST));
   ast_function->type = AST_FUNCTION_TYPE_NULL;
   ast_function->ast_type = AST_FUNCTION_NULL;
 

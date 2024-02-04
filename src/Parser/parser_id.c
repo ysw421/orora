@@ -109,11 +109,12 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
 
         if (value_node)
         {
-          new_ast_node->value.function_v->type = AST_FUNCTION_TYPE_SINGLE;
+          AST_function* new_ast_function = new_ast_node->value.function_v;
+          new_ast_function->type = AST_FUNCTION_TYPE_SINGLE;
 
-          new_ast_node->value.function_v->codes_size = 1;
-          new_ast_node->value.function_v->codes = malloc(sizeof(struct AST*));
-          new_ast_node->value.function_v->codes[0] = value_node;
+          new_ast_function->codes = malloc(sizeof(AST));
+
+          new_ast_function->codes = value_node;
         }
         else
         {
@@ -125,19 +126,16 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
             AST_function* new_ast_function = new_ast_node->value.function_v;
             printf("!@#$@#!@$@#$#@$#@1223 %s\n", code);
             // For test....
-            new_ast_function->codes_size += 3;
             new_ast_function->codes = 
-              realloc(new_ast_function->codes, 
-                  new_ast_function->codes_size * sizeof(AST*));
-            for (int i = 0; i < 3; i ++)
-            {
-              printf("@@@\n");
-              GET_COMPOUND_ENV* get_function_code_env
-                = init_get_compound_env();
-              printf("222 %s\n", parser->token->value);
-              new_ast_function->codes[i] = 
-                parser_get_compound(parser, get_function_code_env);
-            }
+              realloc(new_ast_function->codes, sizeof(AST));
+
+            printf("@@@\n");
+            GET_COMPOUND_ENV* get_function_code_env
+              = init_get_compound_env();
+            printf("222 %s\n", parser->token->value);
+            new_ast_function->codes = 
+              parser_get_compound(parser, get_function_code_env);
+
             exit(1);
             // ToDo
           }
