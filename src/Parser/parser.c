@@ -131,7 +131,7 @@ Parser* parser_set(Parser* parser, size_t pointer)
   }
   parser->pointer = pointer;
   parser->prev_token = (pointer >= 1)
-                          ? parser->tokens[pointer]
+                          ? parser->tokens[pointer - 1]
                           : (void*) 0;
   parser->token = parser->tokens[pointer];
   parser->next_token = (pointer < parser->size)
@@ -210,6 +210,13 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     bool is_break = true;
     switch (token->type)
     {
+      case TOKEN_END:
+        if (compound_env->is_usefull_end 
+            && parser_is_end(parser, compound_env->is_usefull_end)
+           )
+          return parser_get_compound_end(ast, compound_env);
+        break;
+
       case TOKEN_COMMA:
         if (compound_env->is_usefull_comma)
           return parser_get_compound_end(ast, compound_env);

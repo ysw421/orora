@@ -126,17 +126,30 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
             AST_function* new_ast_function = new_ast_node->value.function_v;
             printf("!@#$@#!@$@#$#@$#@1223 %s\n", code);
             // For test....
-            new_ast_function->codes = 
-              realloc(new_ast_function->codes, sizeof(AST));
 
             printf("@@@\n");
             GET_COMPOUND_ENV* get_function_code_env
               = init_get_compound_env();
+            get_function_code_env->is_usefull_end = code;
+
             printf("222 %s\n", parser->token->value);
             new_ast_function->codes = 
               parser_get_compound(parser, get_function_code_env);
 
-            exit(1);
+            printf("##### %s\n", parser->prev_token->value);
+            printf("##### %s\n", parser->token->value);
+            printf("##### %s\n", parser->next_token->value);
+
+            pointer = parser->pointer;
+            parser = parser_set(parser, parser->pointer - 4);
+            if (parser_is_end(parser, code))
+              printf("i love your cat\n");
+            parser = parser_set(parser, pointer);
+            printf("##### %s\n", parser->prev_token->value);
+            printf("##### %s\n", parser->token->value);
+            printf("##### %s\n", parser->next_token->value);
+
+//             exit(1);
             // ToDo
           }
           else
