@@ -5,11 +5,15 @@
 #include "string.h"
 
 AST* parser_get_satisfy(Parser* parser, AST* ast);
+AST* parser_get_while
+(Parser* parser, AST* ast, Token* token, Token* s_token, char* code);
 
 GET_COMPOUND_ENV* init_get_compound_env()
 {
   GET_COMPOUND_ENV* new_env = malloc(sizeof(GET_COMPOUND_ENV));
+  new_env->is_allow_linebreak = false;
   new_env->is_in_parentheses = false;
+  new_env->is_in_braces = false;
   new_env->is_usefull_comma = false;
   new_env->is_usefull_end = (void*) 0;
 
@@ -124,7 +128,7 @@ Parser* init_parser(Lexer* lexer)
 
 Parser* parser_set(Parser* parser, size_t pointer)
 {
-  if (!parser || pointer < 0 || pointer + 1 > parser->size)
+  if (!parser || pointer < 0 || pointer > parser->size)
   {
     printf("에러, 잘못된 parser 설정\n");
     exit(1);
@@ -133,7 +137,9 @@ Parser* parser_set(Parser* parser, size_t pointer)
   parser->prev_token = (pointer >= 1)
                           ? parser->tokens[pointer - 1]
                           : (void*) 0;
-  parser->token = parser->tokens[pointer];
+  parser->token = pointer == parser->size
+                          ? (void*) 0
+                          : parser->tokens[pointer];
   parser->next_token = (pointer < parser->size)
                           ? parser->tokens[pointer + 1]
                           : (void*) 0;
@@ -197,10 +203,13 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
 
   Token* token = parser->token;
 
-  while (token != (void*) 0)
+  while (token)
   {
-    if (!compound_env->is_in_parentheses && parser->prev_token &&
-        parser->prev_token->col == token->col_first)
+    if (!compound_env->is_allow_linebreak
+//         !compound_env->is_in_parentheses
+//         && !compound_env->is_in_braces
+        && parser->prev_token 
+        && parser->prev_token->col == token->col_first)
     {
       printf("에러, 각 명령어는 줄바꿈으로 구분됨:: %s 전:: 줄: %ld\n",
           token->value, token->col_first + 1);
@@ -212,11 +221,20 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     {
       case TOKEN_BEGIN:
         // ToDo
+        Token* s_token = parser->token;
         char* code = parser_is_begin(parser, 1, "while");
         if (code)
         {
           if (!strcmp(code, "while"))
-          {}
+          {
+            ast_compound_add(
+                  ast->value.compound_v, 
+                  parser_get_while(parser, ast, token, s_token, code)
+                );
+            token = parser->token;
+
+            continue;
+          }
         }
         break;
 
@@ -234,6 +252,13 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
 
       case TOKEN_RPAR:
         if (compound_env->is_in_parentheses)
+        {
+          return parser_get_compound_end(ast, compound_env);
+        }
+        break;
+
+      case TOKEN_RBRACE:
+        if (compound_env->is_in_braces)
         {
           return parser_get_compound_end(ast, compound_env);
         }
@@ -272,7 +297,9 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     Token* stoken = parser->token;
     GET_VALUE_ENV* new_get_value_env = init_get_value_env();
     if (compound_env->is_in_parentheses)
+    {
       new_get_value_env->is_in_parentheses = true;
+    }
     AST* value_node =
       parser_get_value(&parser, ast, token, new_get_value_env);
     token = parser->token;
@@ -319,6 +346,71 @@ AST* parser_parse(Parser* parser)
   // Root AST...
 
   return ast;
+}
+
+AST* parser_get_while
+(Parser* parser, AST* ast, Token* token, Token* s_token, char* code)
+{
+  // Warning! possibility error...: s_token
+  AST* new_ast_node = init_ast(AST_WHILE, ast, s_token);
+  new_ast_node->value.while_v = init_ast_while();
+
+  bool is_error = true;
+
+  token = parser->token;
+  if (token
+      && token->type == TOKEN_LBRACE
+      && parser->prev_token->col == token->col_first
+       )
+  {
+    parser = parser_advance(parser, TOKEN_LBRACE);
+    token = parser->token;
+
+    GET_COMPOUND_ENV* new_env = init_get_compound_env();
+    new_env->is_allow_linebreak = true;
+    new_env->is_in_braces = true;
+    AST* new_conditon_ast = 
+      parser_get_compound(parser, new_env);
+    token = parser->token;
+
+    if (
+        new_conditon_ast 
+        && new_conditon_ast->type == AST_COMPOUND
+        && new_conditon_ast->value.compound_v->size == 1
+        && token 
+        && token->type == TOKEN_RBRACE
+       )
+    {
+      new_ast_node->value.while_v->condition = 
+        new_conditon_ast->value.compound_v->items[0];
+      parser = parser_advance(parser, TOKEN_RBRACE);
+
+      GET_COMPOUND_ENV* get_while_code_env = 
+        init_get_compound_env();
+      get_while_code_env->is_usefull_end = code;
+      new_ast_node->value.while_v->code =
+        parser_get_compound(parser, get_while_code_env);
+
+      if (parser->prev_token->type == TOKEN_RBRACE)
+      {
+        size_t pointer = parser->pointer;
+        parser = parser_set(parser, parser->pointer - 4);
+        if (parser_is_end(parser, code))
+        {
+          is_error = false;
+          parser = parser_set(parser, pointer);
+        }
+      }
+    }
+  }
+
+  if (is_error)
+  {
+    printf("에러, while문 정의가 잘못됨\n");
+    exit(1);
+  }
+
+  return new_ast_node;
 }
 
 AST* parser_get_satisfy(Parser* parser, AST* ast)

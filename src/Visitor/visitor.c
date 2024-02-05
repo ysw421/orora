@@ -61,6 +61,8 @@ AST_value_stack* visitor_get_value_from_function
 AST_value_stack* visitor_get_value_from_variable
 (Envs* envs, Env_variable* env_variable);
 
+bool visitor_run_while(Envs* envs, AST_while* ast_while);
+
 void visitor_visit(Envs* envs, AST* ast)
 {
   switch (ast->type)
@@ -102,6 +104,11 @@ void visitor_visit(Envs* envs, AST* ast)
 #endif
           break;
       }
+      break;
+
+    case AST_WHILE:
+      AST_while* ast_while = ast->value.while_v;
+      visitor_run_while(envs, ast_while);
       break;
   }
 }
@@ -826,15 +833,18 @@ Envs* visitor_merge_envs(Envs* envs)
   new_global_env->variables = get_deep_copy_env_variable(local->variables);
   // Warning! possibility error...
 
+  Env_variable* s_v = new_global_env->variables;
   Env_variable* p_v = new_global_env->variables;
-  while (p_v->next)
+  while (p_v->next && p_v->next != s_v)
   {
     Env_variable* new_env_variable =
-      get_deep_copy_env_variable(p_v);
+      p_v;
+//       get_deep_copy_env_variable(p_v);
     p_v->next = new_env_variable;
     p_v = new_env_variable->next;
   }
-  p_v->next = get_deep_copy_env_variable(global->variables);
+//   p_v->next = get_deep_copy_env_variable(global->variables);
+  p_v->next = global->variables;
 
   new_global_env->function_size =
     global->function_size + local->function_size;
@@ -1311,5 +1321,76 @@ AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_string
   new_value_stack->type = AST_VALUE_STRING;
   new_value_stack->value.string_v = malloc(sizeof(struct ast_string_t));
   new_value_stack->value.string_v = env_variable->value.string_v;
+}
+
+bool visitor_run_while(Envs* envs, AST_while* ast_while)
+{
+  AST* condition = ast_while->condition;
+
+  AST_value_stack* get_condition_value()
+  {
+    AST_value_stack* condition_value;
+    switch (condition->type)
+    {
+      case AST_VALUE:
+        condition_value = 
+          visitor_get_value(envs, condition->value.value_v);
+        break;
+
+      case AST_VARIABLE:
+        Env_variable* env_variable =
+          visitor_get_variable(envs, condition->value.variable_v);
+        if (!env_variable)
+        {
+          visitor_nondefine_variable_error(condition->value.variable_v);
+        }
+
+        condition_value = 
+          visitor_get_value_from_variable(envs, env_variable);
+        break;
+
+      case AST_FUNCTION:
+        Env_function* env_function =
+          visitor_get_function(envs, condition->value.function_v);
+        if (!env_function)
+        {
+          visitor_nondefine_function_error(
+               condition->value.function_v
+          );
+        }
+
+        condition_value = 
+          visitor_get_value_from_function(
+              envs,
+              condition->value.function_v,
+              env_function
+          );
+        break;
+
+      default:
+        printf("에러, while문의 조건이 잘못됨: %d\n", condition->type);
+        exit(1);
+        break;
+    }
+
+    return condition_value;
+  }
+
+  printf("gekll\n");
+  while (is_true(get_condition_value()))
+  {
+    Envs* new_envs = visitor_merge_envs(envs);
+//     Envs* new_envs = envs;
+
+    AST* ast_tree = ast_while->code;
+    for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
+    {
+      visitor_visit(new_envs, ast_tree->value.compound_v->items[i]);
+    }
+//     free(new_envs);
+//     printf("!!!\n");
+  }
+
+  return true;
 }
 

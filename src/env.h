@@ -75,6 +75,7 @@ typedef struct env_t
 
 typedef struct envs_t
 {
+//   struct envs_t* global;
   struct env_t* global;
   struct env_t* local;
 } Envs;

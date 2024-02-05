@@ -1,19 +1,30 @@
+%\begin{while}{2+3}
+%  print("hello\n")
+%  print("hello\n")
+%  print("hello\n")
+%\end{while}
+
 a := 3
 
 f(x):=\begin{function}
-        print("variable a in func: ", a, "\n")
-        a:=7
-        print("variable a in func: ", a, "\n")
-        b:=9
-        print("variable b in func: ", b, "\n")
-        print("hello ")
-        print(x)
         print(" hello\n")
+        print(" hello\n")
+        print(" hello\n")
+%        print("variable a in func: ", a, "\n")
+%        a:=7
+%        print("variable a in func: ", a, "\n")
+%        b:=9
+%        print("variable b in func: ", b, "\n")
+%        print("hello ")
+%        print(x)
+%        print(" hello\n")
+%        print(" hello\n")
+%        print(" hello\n")
       \end{function}
 
 f("siwon")
 print("-------\n")
 print("variable a in func: ", a, "\n")
-print("variable b in func: ", b, "\n")
+%print("variable b in func: ", b, "\n")
 
 %print("hello", 5+2, "hello ", 32+1-3, "hello")

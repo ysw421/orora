@@ -146,7 +146,8 @@ typedef struct ast_t
     AST_INT,            // 04:
     AST_FLOAT,          // 05:
     AST_VALUE,          // 06:
-    AST_NOOP,           // 07: Similar with NULL
+    AST_WHILE,          // 07:
+    AST_NOOP = 99       // 99: Similar with NULL
   } type;
 
   union
@@ -159,13 +160,15 @@ typedef struct ast_t
     /* ---STRING--- */
     struct ast_string_t* string_v;
     /* ----INT----- */
-    struct ast_int_t* int_v;   // I can't use a 'int'
-                            //    by variable's name... 😢
-                            //        Because it is a type's name...
+    struct ast_int_t* int_v;    // I can't use a 'int'
+                                //    by variable's name... 😢
+                                //        Because it is a type's name...
     /* ---FLOAT---- */
     struct ast_float_t* float_v;
     /* ---VALUE---- */
     struct ast_value_t* value_v;
+    /* ---WHILE---- */
+    struct ast_while_t* while_v;
   } value;
 
   struct ast_t* parent;
@@ -188,6 +191,7 @@ AST* init_ast(int type, AST* parent, Token* token);
 AST_PARSER* init_ast_parser(AST* ast, Parser* parser);
 
 AST_compound* init_ast_compound();
+AST_while* init_ast_while();
 AST_value_stack* init_ast_value_stack(int type, Token* token);
 AST_value* init_ast_value();
 AST_variable* init_ast_variable(char* name, size_t length);

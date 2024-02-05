@@ -1,0 +1,10 @@
+a:=3
+
+\begin{while}{a + 202}
+  a:=a-1
+  print("hello ", a, "\n")
+%  print("hello\n")
+%  print("hello\n")
+\end{while}
+
+print("i love you\n")

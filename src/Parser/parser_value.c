@@ -30,8 +30,11 @@ AST* parser_get_value(Parser** parser_, AST* ast,
   bool is_first_turn = true;
   while (token)
   {
-    if (!is_first_turn && !value_env->is_in_parentheses &&
-        parser->prev_token && parser->prev_token->col != token->col_first)
+    if (!is_first_turn 
+        && !value_env->is_in_parentheses &&
+        parser->prev_token 
+        && parser->prev_token->col != token->col_first
+       )
       break;
 
     if (is_first_turn)
@@ -159,7 +162,6 @@ AST* parser_get_value(Parser** parser_, AST* ast,
       else if (token_type == TOKEN_TYPE_LPAR)
       {
         count_of_dearkelly ++;
-        value_env->is_in_parentheses = true;
         parser_push_value(stack,
             init_ast_value_stack(AST_VALUE_LPAR, token));
 
@@ -175,7 +177,9 @@ AST* parser_get_value(Parser** parser_, AST* ast,
 
         count_of_dearkelly --;
         if (!count_of_dearkelly && !is_in_parentheses_save)
+        {
           value_env->is_in_parentheses = false;
+        }
         while (stack->stack->type != AST_VALUE_LPAR)
         {
           parser_push_value(postfix_expression, parser_pop_value(stack));

@@ -133,8 +133,8 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
           {
             AST_function* new_ast_function = new_ast_node->value.function_v;
 
-            GET_COMPOUND_ENV* get_function_code_env
-              = init_get_compound_env();
+            GET_COMPOUND_ENV* get_function_code_env = 
+              init_get_compound_env();
             get_function_code_env->is_usefull_end = code;
 
             new_ast_function->type = AST_FUNCTION_TYPE_DEFAULT;
@@ -301,6 +301,7 @@ AST* parser_get_function(Parser* parser, AST* ast)
     while (token && !(num_of_lpar == 0 && token->type == TOKEN_RPAR))
     {
       GET_COMPOUND_ENV* new_env = init_get_compound_env();
+      new_env->is_allow_linebreak = true;
       new_env->is_in_parentheses = true;
       new_env->is_usefull_comma = true;
       AST* new_arg_ast = parser_get_compound(parser, new_env);
