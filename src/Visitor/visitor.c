@@ -261,28 +261,33 @@ Env_function* visitor_get_function(Envs* envs, AST_function* ast_function)
     check_function = check_function->next;
   }
 
-  check_function = envs->global->functions;
-  snode = (void*) 0;
-  while (check_function->next)
-  {
-    if (!strcmp(check_function->name, ast_function->name))
-    {
-      if (snode)
-      {
-        snode->next = check_function->next;
-        check_function->next = envs->global->functions;
-        envs->global->functions = check_function;
-      }
-      return check_function;
-    }
-    if (snode)
-      snode = snode->next;
-    else
-      snode = envs->global->functions;
-    check_function = check_function->next;
-  }
+  if (!envs->global)
+    return (void*) 0;
 
-  return (void*) 0;
+  return visitor_get_function(envs->global, ast_function);
+
+//   check_function = envs->global->functions;
+//   snode = (void*) 0;
+//   while (check_function->next)
+//   {
+//     if (!strcmp(check_function->name, ast_function->name))
+//     {
+//       if (snode)
+//       {
+//         snode->next = check_function->next;
+//         check_function->next = envs->global->functions;
+//         envs->global->functions = check_function;
+//       }
+//       return check_function;
+//     }
+//     if (snode)
+//       snode = snode->next;
+//     else
+//       snode = envs->global->functions;
+//     check_function = check_function->next;
+//   }
+// 
+//   return (void*) 0;
 }
 
 AST_value_stack* visitor_get_value_from_function
@@ -374,34 +379,10 @@ Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable)
     }
   }
 
-  check_variable = envs->global->variables;
-  
-  if (check_variable)
-  {
-    snode = (void*) 0;
-    while (check_variable->next && check_variable->name)
-    {
-      if (!strcmp(check_variable->name, ast_variable->name))
-      {
-        if (snode)
-        {
-          snode->next = check_variable->next;
-          check_variable->next = envs->global->variables;
-          envs->global->variables = check_variable;
-        }
-        return check_variable;
-      }
-      if (snode)
-        snode = snode->next;
-      else
-      {
-        snode = envs->global->variables;
-      }
-      check_variable = check_variable->next;
-    }
-  }
+  if (!envs->global)
+    return (void*) 0;
 
-  return (void*) 0;
+  return visitor_get_variable(envs->global, ast_variable);
 }
 
 orora_value_type* get_single_value_type(int ast_type)
@@ -823,44 +804,9 @@ Env_function* get_deep_copy_env_funtion
 
 Envs* visitor_merge_envs(Envs* envs)
 {
-  Env* global = envs->global;
-  Env* local = envs->local;
-
   Env* new_global_env = init_env();
 
-  new_global_env->variable_size =
-    global->variable_size + local->variable_size;
-  new_global_env->variables = get_deep_copy_env_variable(local->variables);
-  // Warning! possibility error...
-
-  Env_variable* s_v = new_global_env->variables;
-  Env_variable* p_v = new_global_env->variables;
-  while (p_v->next && p_v->next != s_v)
-  {
-    Env_variable* new_env_variable =
-      p_v;
-//       get_deep_copy_env_variable(p_v);
-    p_v->next = new_env_variable;
-    p_v = new_env_variable->next;
-  }
-//   p_v->next = get_deep_copy_env_variable(global->variables);
-  p_v->next = global->variables;
-
-  new_global_env->function_size =
-    global->function_size + local->function_size;
-  new_global_env->functions = get_deep_copy_env_funtion(local->functions);
-
-  Env_function* p_f = new_global_env->functions;
-  while (p_f->next)
-  {
-    Env_function* new_env_funtion =
-      get_deep_copy_env_funtion(p_f);
-    p_f->next = new_env_funtion;
-    p_f = new_env_funtion->next;
-  }
-  p_f->next = get_deep_copy_env_funtion(global->functions);
-  
-  Envs* new_envs = init_envs(new_global_env, init_env());
+  Envs* new_envs = init_envs(envs, init_env());
 
   return new_envs;
 }
@@ -1376,19 +1322,16 @@ bool visitor_run_while(Envs* envs, AST_while* ast_while)
     return condition_value;
   }
 
-  printf("gekll\n");
   while (is_true(get_condition_value()))
   {
     Envs* new_envs = visitor_merge_envs(envs);
-//     Envs* new_envs = envs;
 
     AST* ast_tree = ast_while->code;
     for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
     {
       visitor_visit(new_envs, ast_tree->value.compound_v->items[i]);
     }
-//     free(new_envs);
-//     printf("!!!\n");
+    free(new_envs);
   }
 
   return true;

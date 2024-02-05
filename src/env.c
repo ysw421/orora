@@ -65,7 +65,7 @@ Env* init_env()
   return env;
 }
 
-Envs* init_envs(Env* global, Env* local)
+Envs* init_envs(Envs* global, Env* local)
 {
   Envs* envs = (Envs*) malloc(sizeof(struct envs_t));
   envs->global = global;

@@ -75,8 +75,7 @@ typedef struct env_t
 
 typedef struct envs_t
 {
-//   struct envs_t* global;
-  struct env_t* global;
+  struct envs_t* global;
   struct env_t* local;
 } Envs;
 
@@ -86,6 +85,6 @@ Env_function* init_env_function(AST_function* ast_function);
 Env_variable* init_env_variable(char* name, size_t length);
 Env_value_list* init_env_value_list(struct ast_value_t* ast_value);
 Env* init_env();
-Envs* init_envs(Env* global, Env* local);
+Envs* init_envs(Envs* global, Env* local);
 
 #endif

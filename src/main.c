@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 
 #ifndef GLOBAL_ENV_DEFINE
 #define GLOBAL_ENV_DEFINE
-  Env* global_env = init_env();
+  Envs* global_env = init_envs((void*) 0, init_env());
   Envs* root_envs = init_envs(global_env, init_env());
 #endif
 
