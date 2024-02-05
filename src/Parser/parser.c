@@ -5,7 +5,13 @@
 #include "string.h"
 
 AST* parser_get_satisfy(Parser* parser, AST* ast);
+AST* parser_get_condition_and_code
+(Parser* parser, AST* ast, Token* token,
+ Token* s_token, char* code,
+ AST* new_ast_node);
 AST* parser_get_while
+(Parser* parser, AST* ast, Token* token, Token* s_token, char* code);
+AST* parser_get_if
 (Parser* parser, AST* ast, Token* token, Token* s_token, char* code);
 
 GET_COMPOUND_ENV* init_get_compound_env()
@@ -222,7 +228,7 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
       case TOKEN_BEGIN:
         // ToDo
         Token* s_token = parser->token;
-        char* code = parser_is_begin(parser, 1, "while");
+        char* code = parser_is_begin(parser, 2, "while", "if");
         if (code)
         {
           if (!strcmp(code, "while"))
@@ -230,6 +236,16 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
             ast_compound_add(
                   ast->value.compound_v, 
                   parser_get_while(parser, ast, token, s_token, code)
+                );
+            token = parser->token;
+
+            continue;
+          }
+          else if (!strcmp(code, "if"))
+          {
+            ast_compound_add(
+                  ast->value.compound_v, 
+                  parser_get_if(parser, ast, token, s_token, code)
                 );
             token = parser->token;
 
@@ -348,13 +364,11 @@ AST* parser_parse(Parser* parser)
   return ast;
 }
 
-AST* parser_get_while
-(Parser* parser, AST* ast, Token* token, Token* s_token, char* code)
+AST* parser_get_condition_and_code
+(Parser* parser, AST* ast, Token* token,
+ Token* s_token, char* code,
+ AST* new_ast_node)
 {
-  // Warning! possibility error...: s_token
-  AST* new_ast_node = init_ast(AST_WHILE, ast, s_token);
-  new_ast_node->value.while_v = init_ast_while();
-
   bool is_error = true;
 
   token = parser->token;
@@ -411,6 +425,31 @@ AST* parser_get_while
   }
 
   return new_ast_node;
+}
+
+AST* parser_get_while
+(Parser* parser, AST* ast, Token* token, Token* s_token, char* code)
+{
+  // Warning! possibility error...: s_token
+  AST* new_ast_node = init_ast(AST_WHILE, ast, s_token);
+  new_ast_node->value.while_v = init_ast_while();
+
+  return parser_get_condition_and_code(
+              parser, ast, token,
+              s_token, code, new_ast_node
+          );
+}
+
+AST* parser_get_if
+(Parser* parser, AST* ast, Token* token, Token* s_token, char* code)
+{
+  AST* new_ast_node = init_ast(AST_IF, ast, s_token);
+  new_ast_node->value.if_v = init_ast_if();
+
+  return parser_get_condition_and_code(
+              parser, ast, token,
+              s_token, code, new_ast_node
+          );
 }
 
 AST* parser_get_satisfy(Parser* parser, AST* ast)

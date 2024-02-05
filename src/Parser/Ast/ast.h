@@ -19,6 +19,12 @@ typedef struct ast_while_t
   struct ast_t* code;
 } AST_while;
 
+typedef struct ast_if_t
+{
+  struct ast_t* condition;
+  struct ast_t* code;
+} AST_if;
+
 typedef struct ast_variable_t
 {
   enum
@@ -147,6 +153,7 @@ typedef struct ast_t
     AST_FLOAT,          // 05:
     AST_VALUE,          // 06:
     AST_WHILE,          // 07:
+    AST_IF,             // 08:
     AST_NOOP = 99       // 99: Similar with NULL
   } type;
 
@@ -169,6 +176,8 @@ typedef struct ast_t
     struct ast_value_t* value_v;
     /* ---WHILE---- */
     struct ast_while_t* while_v;
+    /* ----IF------ */
+    struct ast_if_t* if_v;
   } value;
 
   struct ast_t* parent;
@@ -192,6 +201,7 @@ AST_PARSER* init_ast_parser(AST* ast, Parser* parser);
 
 AST_compound* init_ast_compound();
 AST_while* init_ast_while();
+AST_if* init_ast_if();
 AST_value_stack* init_ast_value_stack(int type, Token* token);
 AST_value* init_ast_value();
 AST_variable* init_ast_variable(char* name, size_t length);

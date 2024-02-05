@@ -48,6 +48,16 @@ AST_while* init_ast_while()
   return ast_while;
 }
 
+AST_if* init_ast_if()
+{
+  AST_if* ast_if =
+    (AST_if*) malloc(sizeof(struct ast_if_t));
+  ast_if->condition = (void*) 0;
+  ast_if->code = (void*) 0;
+
+  return ast_if;
+}
+
 AST_value* init_ast_value()
 {
   AST_value* ast_value =

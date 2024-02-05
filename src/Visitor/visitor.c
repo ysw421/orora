@@ -61,7 +61,11 @@ AST_value_stack* visitor_get_value_from_function
 AST_value_stack* visitor_get_value_from_variable
 (Envs* envs, Env_variable* env_variable);
 
+AST_value_stack* get_condition_value
+(Envs* envs, AST* condition);
+
 bool visitor_run_while(Envs* envs, AST_while* ast_while);
+bool visitor_run_if(Envs* envs, AST_if* ast_if);
 
 void visitor_visit(Envs* envs, AST* ast)
 {
@@ -109,6 +113,11 @@ void visitor_visit(Envs* envs, AST* ast)
     case AST_WHILE:
       AST_while* ast_while = ast->value.while_v;
       visitor_run_while(envs, ast_while);
+      break;
+
+    case AST_IF:
+      AST_if* ast_if = ast->value.if_v;
+      visitor_run_if(envs, ast_if);
       break;
   }
 }
@@ -524,6 +533,7 @@ Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
                 ast_variable->value->value.value_v
               );
       break;
+
     case AST_VARIABLE:
       Env_variable* env_variable;
       Env* local_env = envs->local;
@@ -1269,64 +1279,84 @@ AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_string
   new_value_stack->value.string_v = env_variable->value.string_v;
 }
 
+AST_value_stack* get_condition_value
+(Envs* envs, AST* condition)
+{
+  AST_value_stack* condition_value;
+  switch (condition->type)
+  {
+    case AST_VALUE:
+      condition_value = 
+        visitor_get_value(envs, condition->value.value_v);
+      break;
+
+    case AST_VARIABLE:
+      Env_variable* env_variable =
+        visitor_get_variable(envs, condition->value.variable_v);
+      if (!env_variable)
+      {
+        visitor_nondefine_variable_error(condition->value.variable_v);
+      }
+
+      condition_value = 
+        visitor_get_value_from_variable(envs, env_variable);
+      break;
+
+    case AST_FUNCTION:
+      Env_function* env_function =
+        visitor_get_function(envs, condition->value.function_v);
+      if (!env_function)
+      {
+        visitor_nondefine_function_error(
+             condition->value.function_v
+        );
+      }
+
+      condition_value = 
+        visitor_get_value_from_function(
+            envs,
+            condition->value.function_v,
+            env_function
+        );
+      break;
+
+    default:
+      printf("에러, while문의 조건이 잘못됨: %d\n", condition->type);
+      exit(1);
+      break;
+  }
+
+  return condition_value;
+}
+
 bool visitor_run_while(Envs* envs, AST_while* ast_while)
 {
   AST* condition = ast_while->condition;
 
-  AST_value_stack* get_condition_value()
-  {
-    AST_value_stack* condition_value;
-    switch (condition->type)
-    {
-      case AST_VALUE:
-        condition_value = 
-          visitor_get_value(envs, condition->value.value_v);
-        break;
-
-      case AST_VARIABLE:
-        Env_variable* env_variable =
-          visitor_get_variable(envs, condition->value.variable_v);
-        if (!env_variable)
-        {
-          visitor_nondefine_variable_error(condition->value.variable_v);
-        }
-
-        condition_value = 
-          visitor_get_value_from_variable(envs, env_variable);
-        break;
-
-      case AST_FUNCTION:
-        Env_function* env_function =
-          visitor_get_function(envs, condition->value.function_v);
-        if (!env_function)
-        {
-          visitor_nondefine_function_error(
-               condition->value.function_v
-          );
-        }
-
-        condition_value = 
-          visitor_get_value_from_function(
-              envs,
-              condition->value.function_v,
-              env_function
-          );
-        break;
-
-      default:
-        printf("에러, while문의 조건이 잘못됨: %d\n", condition->type);
-        exit(1);
-        break;
-    }
-
-    return condition_value;
-  }
-
-  while (is_true(get_condition_value()))
+  while (is_true(get_condition_value(envs, condition)))
   {
     Envs* new_envs = visitor_merge_envs(envs);
 
     AST* ast_tree = ast_while->code;
+    for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
+    {
+      visitor_visit(new_envs, ast_tree->value.compound_v->items[i]);
+    }
+    free(new_envs);
+  }
+
+  return true;
+}
+
+bool visitor_run_if(Envs* envs, AST_if* ast_if)
+{
+  AST* condition = ast_if->condition;
+
+  if (is_true(get_condition_value(envs, condition)))
+  {
+    Envs* new_envs = visitor_merge_envs(envs);
+
+    AST* ast_tree = ast_if->code;
     for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
     {
       visitor_visit(new_envs, ast_tree->value.compound_v->items[i]);
