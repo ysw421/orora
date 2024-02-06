@@ -39,6 +39,15 @@ bool init_orora()
      visitor_set_value_Env_variable_from_AST_value_stack_float,
      visitor_set_value_AST_value_stack_from_Env_variable_float
     );
+  push_value_type_list
+    (
+     &value_type_list, "null", TOKEN_NULL, parser_get_new_null_ast,
+     parser_get_new_null_ast_value_stack, is_null_ast, AST_NULL,
+     ENV_VARIABLE_NULL, AST_VALUE_NULL,
+     visitor_set_value_Env_variable_from_AST_value_stack_null,
+     visitor_set_value_AST_value_stack_from_Env_variable_null
+    );
+
   return true;
 }
 

@@ -299,6 +299,14 @@ AST* parser_get_new_string_ast(AST* ast, Token* token)
   return new_ast_node;
 }
 
+AST* parser_get_new_null_ast(AST* ast, Token* token)
+{
+  AST* new_ast_node = 
+    init_ast(AST_NULL, ast, token);
+
+  return new_ast_node;
+}
+
 AST_value_stack* parser_get_new_int_ast_value_stack
   (Token* token, bool is_minus)
 {
@@ -340,6 +348,20 @@ AST_value_stack* parser_get_new_string_ast_value_stack
   return new;
 }
 
+AST_value_stack* parser_get_new_null_ast_value_stack
+  (Token* token, bool is_minus)
+{
+  if (is_minus)
+  {
+    printf("에러, null에는 -연산이 불가함\n");
+    exit(1);
+  }
+  AST_value_stack* new = 
+    init_ast_value_stack(AST_VALUE_NULL, token);
+
+  return new;
+}
+
 bool is_string_ast(Token* token)
 {
   if (token->type == TOKEN_STRING)
@@ -357,6 +379,13 @@ bool is_float_ast(Token* token)
 bool is_int_ast(Token* token)
 {
   if (token->type == TOKEN_INT)
+    return true;
+  return false;
+}
+
+bool is_null_ast(Token* token)
+{
+  if (token->type == TOKEN_NULL)
     return true;
   return false;
 }

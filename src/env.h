@@ -39,7 +39,8 @@ typedef struct env_variable_t
   {
     ENV_VARIABLE_INT,
     ENV_VARIABLE_FLOAT,
-    ENV_VARIABLE_STRING
+    ENV_VARIABLE_STRING,
+    ENV_VARIABLE_NULL
   } type;
 
   union

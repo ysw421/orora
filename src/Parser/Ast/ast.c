@@ -223,7 +223,7 @@ orora_value_type* push_value_type_list
 
   orora_value_type* point = *head;
   init_value_type_list(&point);
-  point->name = (char*) malloc((strlen(name) + 1) * sizeof(char));
+//   point->name = (char*) malloc((strlen(name) + 1) * sizeof(char));
   point->name = name;
   point->token_id = token_id;
   point->parser_get_new_ast = parser_get_new_ast;

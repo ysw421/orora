@@ -1015,7 +1015,13 @@ AST_value_stack* visitor_operator_plus(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-  if (operand1->type == AST_VALUE_STRING
+  if (operand1->type == AST_VALUE_NULL
+      || operand2->type == AST_VALUE_NULL)
+  {
+    printf("에러, null은 + 연산이 불가함\n");
+    exit(1);
+  }
+  else if (operand1->type == AST_VALUE_STRING
       || operand2->type == AST_VALUE_STRING)
   {
     printf("에러, string은 + 연산이 불가함\n");
@@ -1061,7 +1067,13 @@ AST_value_stack* visitor_operator_minus(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-  if (operand1->type == AST_VALUE_STRING
+  if (operand1->type == AST_VALUE_NULL
+      || operand2->type == AST_VALUE_NULL)
+  {
+    printf("에러, null은 + 연산이 불가함\n");
+    exit(1);
+  }
+  else if (operand1->type == AST_VALUE_STRING
       || operand2->type == AST_VALUE_STRING)
   {
     printf("에러, string은 - 연산이 불가함\n");
@@ -1107,7 +1119,13 @@ AST_value_stack* visitor_operator_product(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-  if (operand1->type == AST_VALUE_STRING
+  if (operand1->type == AST_VALUE_NULL
+      || operand2->type == AST_VALUE_NULL)
+  {
+    printf("에러, null은 + 연산이 불가함\n");
+    exit(1);
+  }
+  else if (operand1->type == AST_VALUE_STRING
       || operand2->type == AST_VALUE_STRING)
   {
     result->type = AST_VALUE_STRING;
@@ -1170,7 +1188,13 @@ AST_value_stack* visitor_operator_div(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-  if (operand1->type == AST_VALUE_STRING
+  if (operand1->type == AST_VALUE_NULL
+      || operand2->type == AST_VALUE_NULL)
+  {
+    printf("에러, null은 + 연산이 불가함\n");
+    exit(1);
+  }
+  else if (operand1->type == AST_VALUE_STRING
       || operand2->type == AST_VALUE_STRING)
   {
     printf("에러, string은 - 연산이 불가함\n");
@@ -1246,6 +1270,17 @@ Env_variable* visitor_set_value_Env_variable_from_AST_value_stack_string
   return env_variable;
 }
 
+Env_variable* visitor_set_value_Env_variable_from_AST_value_stack_null
+(Env_variable* env_variable, AST_value_stack* new_value)
+{
+  if (!env_variable)
+    return (void*) 0;
+
+  env_variable->type = ENV_VARIABLE_STRING;
+
+  return env_variable;
+}
+
 AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_int
 (AST_value_stack* new_value_stack, Env_variable* env_variable)
 {
@@ -1277,6 +1312,15 @@ AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_string
   new_value_stack->type = AST_VALUE_STRING;
   new_value_stack->value.string_v = malloc(sizeof(struct ast_string_t));
   new_value_stack->value.string_v = env_variable->value.string_v;
+}
+
+AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_null
+(AST_value_stack* new_value_stack, Env_variable* env_variable)
+{
+  if (!new_value_stack)
+    return (void*) 0;
+
+  new_value_stack->type = AST_VALUE_NULL;
 }
 
 AST_value_stack* get_condition_value

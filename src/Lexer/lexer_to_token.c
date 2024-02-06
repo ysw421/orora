@@ -9,6 +9,8 @@ int get_special_string_type(int length, char* string)
   {
     case 7:
       if (!strcmp(string, "satisfy")) return TOKEN_SATISFY; break;
+    case 4:
+      if (!strcmp(string, "NULL")) return TOKEN_NULL; break;
   }
 
   if (string[0] != '\\')

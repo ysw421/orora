@@ -13,18 +13,26 @@ typedef struct get_value_env_t
 GET_VALUE_ENV* init_get_value_env();
 AST* parser_get_value(Parser** parser_, AST* ast,
     Token* last_token, GET_VALUE_ENV* value_env);
+
 AST* parser_get_new_int_ast(AST* ast, Token* token);
 AST* parser_get_new_float_ast(AST* ast, Token* token);
 AST* parser_get_new_string_ast(AST* ast, Token* token);
-AST_value_stack* parser_get_new_int_ast_value_stack(Token* token,
-    bool is_minus);
-AST_value_stack* parser_get_new_float_ast_value_stack(Token* token,
-    bool is_minus);
-AST_value_stack* parser_get_new_string_ast_value_stack(Token* token,
-    bool is_minus);
+AST* parser_get_new_null_ast(AST* ast, Token* token);
+
+AST_value_stack* parser_get_new_int_ast_value_stack
+  (Token* token, bool is_minus);
+AST_value_stack* parser_get_new_float_ast_value_stack
+  (Token* token, bool is_minus);
+AST_value_stack* parser_get_new_string_ast_value_stack
+  (Token* token, bool is_minus);
+AST_value_stack* parser_get_new_null_ast_value_stack
+  (Token* token, bool is_minus);
+
 bool is_string_ast(Token* token);
 bool is_float_ast(Token* token);
 bool is_int_ast(Token* token);
+bool is_null_ast(Token* token);
+
 int parser_precedence(int ast_stack_id);
 AST_value* parser_push_value(AST_value* value, AST_value_stack* node);
 AST_value_stack* parser_pop_value(AST_value* value);

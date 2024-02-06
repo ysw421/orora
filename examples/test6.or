@@ -5,4 +5,6 @@ print("aaa\n")
   print("hello")
 \end{code}
 
+a:=32+NULL
+
 print("aaa\n")
