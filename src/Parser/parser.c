@@ -485,12 +485,13 @@ AST* parser_get_code
 {
   AST* new_ast_node = init_ast(AST_CODE, ast, s_token);
 
-  GET_COMPOUND_ENV* get_while_code_env = 
+  GET_COMPOUND_ENV* get_code_env = 
     init_get_compound_env();
-  get_while_code_env->is_usefull_end = "code";
+  get_code_env->is_usefull_end = "code";
 
+  new_ast_node->value.code_v = init_ast_code();
   new_ast_node->value.code_v->code = 
-    parser_get_compound(parser, get_while_code_env)->value.compound_v;
+    parser_get_compound(parser, get_code_env)->value.compound_v;
 
   bool is_error = true;
   if (parser->prev_token->type == TOKEN_RBRACE)
