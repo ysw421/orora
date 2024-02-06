@@ -4,13 +4,18 @@ h(x, y :=2 ) := 2x - 3y + 1
 
 a:=3
 
-\begin{while}{a + 1}
-  a:=a-1
-  print("hello ", h(f(a), g(3a + 2)), "\n")
-\end{while}
-
 \begin{if}{1}
   print("condition 1\n")
+
+  \begin{while}{a + 10}
+    a:=a-1
+
+    b:=4
+    \begin{while}{b + 10}
+      b:=b-1
+      print("hello ", a, " ", b, " ", h(f(a), g(3b + 2)), "\n")
+    \end{while}
+  \end{while}
 \end{if}
 
 \begin{if}{0}

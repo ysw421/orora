@@ -1,5 +1,6 @@
-f(x) := \begin{fun}
-          print("hello\n")
-          print("hello\n")
-          print("hello\n")
-        \end{fun}
+\
+\\
+f(x) := \begin{cases}
+          x & x + 2 \\
+          f(x - 1) + f(x - 2) & else\\
+        \end{cases}

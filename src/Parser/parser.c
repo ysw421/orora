@@ -10,9 +10,11 @@ AST* parser_get_condition_and_code
  Token* s_token, char* code,
  AST* new_ast_node);
 AST* parser_get_while
-(Parser* parser, AST* ast, Token* token, Token* s_token, char* code);
+(Parser* parser, AST* ast, Token* token, Token* s_token);
 AST* parser_get_if
-(Parser* parser, AST* ast, Token* token, Token* s_token, char* code);
+(Parser* parser, AST* ast, Token* token, Token* s_token);
+AST* parser_get_code
+(Parser* parser, AST* ast, Token* token, Token* s_token);
 
 GET_COMPOUND_ENV* init_get_compound_env()
 {
@@ -228,14 +230,16 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
       case TOKEN_BEGIN:
         // ToDo
         Token* s_token = parser->token;
-        char* code = parser_is_begin(parser, 2, "while", "if");
+        char* code = parser_is_begin(parser, 4, 
+                        "while", "if", "cases", "code"
+                     );
         if (code)
         {
           if (!strcmp(code, "while"))
           {
             ast_compound_add(
                   ast->value.compound_v, 
-                  parser_get_while(parser, ast, token, s_token, code)
+                  parser_get_while(parser, ast, token, s_token)
                 );
             token = parser->token;
 
@@ -245,7 +249,23 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
           {
             ast_compound_add(
                   ast->value.compound_v, 
-                  parser_get_if(parser, ast, token, s_token, code)
+                  parser_get_if(parser, ast, token, s_token)
+                );
+            token = parser->token;
+
+            continue;
+          }
+          else if (!strcmp(code, "cases"))
+          {
+            token = parser->token;
+
+            continue;
+          }
+          else if (!strcmp(code, "code"))
+          {
+            ast_compound_add(
+                ast->value.compound_v,
+                parser_get_code(parser, ast, token, s_token)
                 );
             token = parser->token;
 
@@ -420,7 +440,7 @@ AST* parser_get_condition_and_code
 
   if (is_error)
   {
-    printf("에러, while문 정의가 잘못됨\n");
+    printf("에러, %s문 정의가 잘못됨\n", code);
     exit(1);
   }
 
@@ -428,7 +448,7 @@ AST* parser_get_condition_and_code
 }
 
 AST* parser_get_while
-(Parser* parser, AST* ast, Token* token, Token* s_token, char* code)
+(Parser* parser, AST* ast, Token* token, Token* s_token)
 {
   // Warning! possibility error...: s_token
   AST* new_ast_node = init_ast(AST_WHILE, ast, s_token);
@@ -436,20 +456,61 @@ AST* parser_get_while
 
   return parser_get_condition_and_code(
               parser, ast, token,
-              s_token, code, new_ast_node
+              s_token, "while", new_ast_node
           );
 }
 
 AST* parser_get_if
-(Parser* parser, AST* ast, Token* token, Token* s_token, char* code)
+(Parser* parser, AST* ast, Token* token, Token* s_token)
 {
   AST* new_ast_node = init_ast(AST_IF, ast, s_token);
   new_ast_node->value.if_v = init_ast_if();
 
   return parser_get_condition_and_code(
               parser, ast, token,
-              s_token, code, new_ast_node
+              s_token, "if", new_ast_node
           );
+}
+
+AST* parser_get_cases
+(Parser* parser, AST* ast, Token* token, Token* s_token)
+{
+  AST* new_ast_node = init_ast(AST_CASES, ast, s_token);
+
+  return new_ast_node;
+}
+
+AST* parser_get_code
+(Parser* parser, AST* ast, Token* token, Token* s_token)
+{
+  AST* new_ast_node = init_ast(AST_CODE, ast, s_token);
+
+  GET_COMPOUND_ENV* get_while_code_env = 
+    init_get_compound_env();
+  get_while_code_env->is_usefull_end = "code";
+
+  new_ast_node->value.code_v->code = 
+    parser_get_compound(parser, get_while_code_env)->value.compound_v;
+
+  bool is_error = true;
+  if (parser->prev_token->type == TOKEN_RBRACE)
+  {
+    size_t pointer = parser->pointer;
+    parser = parser_set(parser, parser->pointer - 4);
+    if (parser_is_end(parser, "code"))
+    {
+      is_error = false;
+      parser = parser_set(parser, pointer);
+    }
+  }
+
+  if (is_error)
+  {
+    printf("에러, code문 정의가 잘못됨\n");
+    exit(1);
+  }
+
+  return new_ast_node;
 }
 
 AST* parser_get_satisfy(Parser* parser, AST* ast)

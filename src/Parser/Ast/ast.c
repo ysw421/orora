@@ -38,6 +38,15 @@ AST_PARSER* init_ast_parser(AST* ast, Parser* parser)
   return new_ast_parser;
 }
 
+AST_code* init_ast_code()
+{
+  AST_code* ast_code =
+    (AST_code*) malloc(sizeof(struct ast_code_t));
+  ast_code->code = (void*) 0;
+
+  return ast_code;
+}
+
 AST_while* init_ast_while()
 {
   AST_while* ast_while =
@@ -56,6 +65,18 @@ AST_if* init_ast_if()
   ast_if->code = (void*) 0;
 
   return ast_if;
+}
+
+AST_cases* init_ast_cases()
+{
+  AST_cases* ast_cases = 
+    (AST_cases*) malloc(sizeof(struct ast_cases_t));
+  ast_cases->is_have_otherwise = false;
+  ast_cases->size = 0;
+  ast_cases->codes = (void*) 0;
+  ast_cases->conditions = (void*) 0;
+
+  return ast_cases;
 }
 
 AST_value* init_ast_value()

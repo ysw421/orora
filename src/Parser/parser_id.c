@@ -128,7 +128,7 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
 
           token = parser->token;
           size_t pointer = parser->pointer;
-          char* code = parser_is_begin(parser, 2, "function", "fun");
+          char* code = parser_is_begin(parser, 3, "function", "fun", "code");
           if (code)
           {
             AST_function* new_ast_function = new_ast_node->value.function_v;

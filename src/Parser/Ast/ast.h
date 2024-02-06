@@ -13,6 +13,11 @@ typedef struct ast_compound_t
   struct ast_t** items;
 } AST_compound;
 
+typedef struct ast_code_t
+{
+  struct ast_compound_t* code;
+} AST_code;
+
 typedef struct ast_while_t
 {
   struct ast_t* condition;
@@ -24,6 +29,14 @@ typedef struct ast_if_t
   struct ast_t* condition;
   struct ast_t* code;
 } AST_if;
+
+typedef struct ast_cases_t
+{
+  bool is_have_otherwise;
+  int size;
+  struct ast_t** codes;
+  struct ast_t** conditions;
+} AST_cases;
 
 typedef struct ast_variable_t
 {
@@ -154,6 +167,8 @@ typedef struct ast_t
     AST_VALUE,          // 06:
     AST_WHILE,          // 07:
     AST_IF,             // 08:
+    AST_CODE,           // 09:
+    AST_CASES,          // 10:
     AST_NOOP = 99       // 99: Similar with NULL
   } type;
 
@@ -178,6 +193,10 @@ typedef struct ast_t
     struct ast_while_t* while_v;
     /* ----IF------ */
     struct ast_if_t* if_v;
+    /* ---CODE----- */
+    struct ast_code_t* code_v;
+    /* ---CASES---- */
+    struct ast_cases_t* cases_v;
   } value;
 
   struct ast_t* parent;
@@ -200,8 +219,10 @@ AST* init_ast(int type, AST* parent, Token* token);
 AST_PARSER* init_ast_parser(AST* ast, Parser* parser);
 
 AST_compound* init_ast_compound();
+AST_code* init_ast_code();
 AST_while* init_ast_while();
 AST_if* init_ast_if();
+AST_cases* init_ast_cases();
 AST_value_stack* init_ast_value_stack(int type, Token* token);
 AST_value* init_ast_value();
 AST_variable* init_ast_variable(char* name, size_t length);
