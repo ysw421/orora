@@ -34,7 +34,8 @@ typedef struct
     TOKEN_RIGHT,              // 22: \right
     TOKEN_DEFINE,             // 23: :=, \leftarrow
     TOKEN_COLON,              // 24: :
-    TOKEN_NULL                // 25: NULL
+    TOKEN_NULL,               // 25: NULL
+    TOKEN_AMPER               // 26: &
   } type;
 
   size_t col;
