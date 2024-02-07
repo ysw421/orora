@@ -1,5 +1,10 @@
 print("aaa\n")
 
+\begin{cases}
+  x + 2 & 3 + 2 \\
+  f(x - 1) + f(x - 2) & otherwise
+\end{cases}
+
 \begin{code}
   print("hello")
   print("hello")
@@ -8,5 +13,9 @@ print("aaa\n")
 f(x) := \begin{fun}
           print("hello\n")
         \end{fun}
+
+\begin{if}{\begin{code}print("qq\n")\end{code}}
+  print("i love you\n")
+\end{if}
 
 print(f(3) + 2, "aaa\n")

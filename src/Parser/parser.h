@@ -13,6 +13,7 @@ typedef struct get_compound_env_t
   bool is_in_braces;
   bool is_usefull_comma;
   char* is_usefull_end;
+  bool is_size_one;
 } GET_COMPOUND_ENV;
 
 Parser* init_parser(Lexer* lexer);
@@ -25,5 +26,10 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env);
 
 char* parser_is_begin(Parser* parser, int count, ...);
 bool parser_is_end(Parser* parser, char* code);
+
+// For test...
+AST* parser_get_cases
+(Parser* parser, AST* ast, Token* token, Token* s_token);
+// -----------
 
 #endif

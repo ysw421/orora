@@ -267,6 +267,29 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
   }
   else
   {
+    // ToDo...
+    // Temporary workarounds...
+    // For test...
+    token = parser->token;
+    Token* s_token = parser->token;
+    char* code = parser_is_begin(parser, 1, "cases");
+
+    printf("!!!! %s\n", token->value);
+    if (code && !strcmp(code, "cases"))
+    {
+      printf("!@#!@#!@#!\n");
+      AST* new_ast_node =
+        init_ast(AST_VARIABLE, ast, last_token);
+      new_ast_node->value.variable_v =
+        init_ast_variable(last_token->value, last_token->length);
+      token = parser->token;
+      new_ast_node->value.variable_v->value = 
+        parser_get_cases(parser, ast, token, s_token);
+      new_ast_node->value.variable_v->ast_type = AST_VARIABLE_DEFINE;
+
+      return new_ast_node;
+    }
+
     printf("에러, ':=' 뒤에는 값이 와야함.");
     exit(1);
   }

@@ -1,4 +1,11 @@
-f(x) := \begin{cases}
-          x & x + 2 \\
-          f(x - 1) + f(x - 2) & otherwise\\
-        \end{cases}
+x := -2
+
+f(x) := 3x + 2
+b := f(2)
+
+a := \begin{cases}
+       x & x + 2 \\
+       3 & otherwise
+     \end{cases}
+
+print(a, "  ", b)

@@ -15,6 +15,8 @@ AST* parser_get_if
 (Parser* parser, AST* ast, Token* token, Token* s_token);
 AST* parser_get_code
 (Parser* parser, AST* ast, Token* token, Token* s_token);
+AST* parser_get_cases
+(Parser* parser, AST* ast, Token* token, Token* s_token);
 
 GET_COMPOUND_ENV* init_get_compound_env()
 {
@@ -24,6 +26,7 @@ GET_COMPOUND_ENV* init_get_compound_env()
   new_env->is_in_braces = false;
   new_env->is_usefull_comma = false;
   new_env->is_usefull_end = (void*) 0;
+  new_env->is_size_one = false;
 
   return new_env;
 }
@@ -200,7 +203,8 @@ Parser* parser_advance(Parser* parser, int type)
 
 AST* parser_get_compound_end(AST* ast, GET_COMPOUND_ENV* compound_env)
 {
-  free(compound_env);
+//   free(compound_env);
+//   for cases command...
   return ast;
 }
 
@@ -210,25 +214,37 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
   ast->value.compound_v = init_ast_compound();
 
   Token* token = parser->token;
+  bool is_first_turn = true;
 
   while (token)
   {
-    if (!compound_env->is_allow_linebreak
+    if (compound_env->is_size_one && !is_first_turn)
+    {
+      break;
+    }
+    else if (
+          !compound_env->is_allow_linebreak
 //         !compound_env->is_in_parentheses
 //         && !compound_env->is_in_braces
-        && parser->prev_token 
-        && parser->prev_token->col == token->col_first)
+          && parser->prev_token 
+          && parser->prev_token->col == token->col_first
+          && !is_first_turn
+          && !(compound_env->is_usefull_end 
+               && parser_is_end(parser, compound_env->is_usefull_end))
+        )
     {
       printf("에러, 각 명령어는 줄바꿈으로 구분됨:: %s 전:: 줄: %ld\n",
           token->value, token->col_first + 1);
       exit(1);
     }
 
+    if (is_first_turn)
+      is_first_turn = false;
+
     bool is_break = true;
     switch (token->type)
     {
       case TOKEN_BEGIN:
-        // ToDo
         Token* s_token = parser->token;
         char* code = parser_is_begin(parser, 4, 
                         "while", "if", "cases", "code"
@@ -257,6 +273,10 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
           }
           else if (!strcmp(code, "cases"))
           {
+            ast_compound_add(
+                  ast->value.compound_v, 
+                  parser_get_cases(parser, ast, token, s_token)
+                );
             token = parser->token;
 
             continue;
@@ -476,14 +496,97 @@ AST* parser_get_cases
 (Parser* parser, AST* ast, Token* token, Token* s_token)
 {
   AST* new_ast_node = init_ast(AST_CASES, ast, s_token);
+  AST_cases* new_ast_cases = init_ast_cases();
+  new_ast_node->value.cases_v = new_ast_cases;
+  new_ast_cases->codes = malloc(sizeof(struct ast_t*));
+  new_ast_cases->conditions = malloc(sizeof(struct ast_t*));
 
-  GET_COMPOUND_ENV* condition_env = init_get_compound_env();
+  GET_COMPOUND_ENV* new_env = init_get_compound_env();
+  new_env->is_size_one = true;
 
-  GET_COMPOUND_ENV* value_env = init_get_compound_env();
-
+  bool is_error = false;
+  int size = 0;
+  
   do
   {
-  } while ();
+    size ++;
+    new_ast_cases->size = size;
+
+    AST* new_value_ast = 
+      parser_get_compound(parser, new_env);
+    token = parser->token;
+
+    if (
+        !new_value_ast 
+        || !token 
+        || token->type != TOKEN_AMPER
+       )
+    {
+      is_error = true;
+      break;
+    }
+    new_ast_cases->codes = 
+      realloc(new_ast_cases->codes, size * sizeof(struct ast_t*));
+    new_ast_cases->codes[size - 1] = 
+      new_value_ast->value.compound_v->items[0];
+
+    parser = parser_advance(parser, TOKEN_AMPER);
+    token = parser->token;
+
+    if (!token)
+    {
+      is_error = true;
+      break;
+    }
+
+    if (token->type == TOKEN_OTHERWISE)
+    {
+      parser = parser_advance(parser, TOKEN_OTHERWISE);
+      token = parser->token;
+
+      new_ast_cases->is_have_otherwise = true;
+      if (token->type != TOKEN_END || !parser_is_end(parser, "cases"))
+        is_error = true;
+      break;
+    }
+    else
+    {
+      AST* new_condition_ast = 
+        parser_get_compound(parser, new_env);
+      token = parser->token;
+
+      if (!token)
+      {
+        is_error = true;
+        break;
+      }
+      new_ast_cases->conditions = 
+        realloc(new_ast_cases->conditions, size * sizeof(struct ast_t*));
+      new_ast_cases->conditions[size - 1] = 
+        new_condition_ast->value.compound_v->items[0];
+
+      if (token->type == TOKEN_DOUBLE_BACKSLASH)
+      {
+        parser = parser_advance(parser, TOKEN_DOUBLE_BACKSLASH);
+        token = parser->token;
+      }
+      else if (token->type == TOKEN_END && parser_is_end(parser, "cases"))
+      {
+        break;
+      }
+      else
+      {
+        is_error = true;
+        break;
+      }
+    }
+  } while (token);
+
+  if (is_error)
+  {
+    printf("에러, cases문에서 뭔가 잘못됨\n");
+    exit(1);
+  }
 
   return new_ast_node;
 }

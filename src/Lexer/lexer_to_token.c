@@ -66,7 +66,7 @@ int get_one_char_type(char c)
     case ']': return TOKEN_RSQB; break;
     case '$': return TOKEN_DOLLAR; break;
     case ':': return TOKEN_COLON; break;
-    case '$': return TOKEN_AMPER; break;
+    case '&': return TOKEN_AMPER; break;
     default: return -1; break;
   }
 
