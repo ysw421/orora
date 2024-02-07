@@ -31,7 +31,7 @@ bool parser_is_end(Parser* parser, char* code);
 AST* parser_get_cases
 (Parser* parser, AST* ast, Token* token, Token* s_token);
 AST* parser_get_code
-(Parser* parser, AST* ast, Token* token, Token* s_token);
+(Parser* parser, AST* ast, Token* token, Token* s_token, char* code);
 // -----------
 
 #endif

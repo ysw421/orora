@@ -139,22 +139,12 @@ AST_value_stack* visitor_function_value
   switch (env_function->type)
   {
     case ENV_FUNCTION_TYPE_SINGLE:
-      return visitor_get_value_from_function(
-                  envs, 
-                  ast_function, 
-                  env_function
-             );
-      break;
-
     case ENV_FUNCTION_TYPE_DEFAULT:
       Envs* new_envs =
         visitor_get_envs_from_function(envs, ast_function, env_function);
 
       AST_value_stack* result = 
-        visitor_get_value_from_code(
-          new_envs, 
-          env_function->code->value.compound_v
-        );
+        visitor_get_value_from_ast(new_envs, env_function->code);
 
       free(new_envs);
       
@@ -415,9 +405,6 @@ AST_value_stack* visitor_get_value_from_function
   switch (env_function->type)
   {
     case ENV_FUNCTION_TYPE_SINGLE:
-      return visitor_get_value(new_envs, env_function->code->value.value_v);
-      break;
-
     case ENV_FUNCTION_TYPE_DEFAULT:
       return visitor_function_value(envs, ast_function);
       break;

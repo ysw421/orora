@@ -14,7 +14,7 @@ AST* parser_get_while
 AST* parser_get_if
 (Parser* parser, AST* ast, Token* token, Token* s_token);
 AST* parser_get_code
-(Parser* parser, AST* ast, Token* token, Token* s_token);
+(Parser* parser, AST* ast, Token* token, Token* s_token, char* code);
 AST* parser_get_cases
 (Parser* parser, AST* ast, Token* token, Token* s_token);
 
@@ -285,7 +285,7 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
           {
             ast_compound_add(
                 ast->value.compound_v,
-                parser_get_code(parser, ast, token, s_token)
+                parser_get_code(parser, ast, token, s_token, "code")
                 );
             token = parser->token;
 
@@ -592,13 +592,13 @@ AST* parser_get_cases
 }
 
 AST* parser_get_code
-(Parser* parser, AST* ast, Token* token, Token* s_token)
+(Parser* parser, AST* ast, Token* token, Token* s_token, char* code)
 {
   AST* new_ast_node = init_ast(AST_CODE, ast, s_token);
 
   GET_COMPOUND_ENV* get_code_env = 
     init_get_compound_env();
-  get_code_env->is_usefull_end = "code";
+  get_code_env->is_usefull_end = code;
 
   new_ast_node->value.code_v = init_ast_code();
   new_ast_node->value.code_v->code = 
@@ -609,7 +609,7 @@ AST* parser_get_code
   {
     size_t pointer = parser->pointer;
     parser = parser_set(parser, parser->pointer - 4);
-    if (parser_is_end(parser, "code"))
+    if (parser_is_end(parser, code))
     {
       is_error = false;
       parser = parser_set(parser, pointer);

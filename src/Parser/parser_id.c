@@ -127,8 +127,10 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
           //         \end{function}
 
           token = parser->token;
-          size_t pointer = parser->pointer;
+          bool is_error = true;
+
           char* code = parser_is_begin(parser, 3, "function", "fun", "code");
+
           if (code)
           {
             AST_function* new_ast_function = new_ast_node->value.function_v;
@@ -138,29 +140,33 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
             get_function_code_env->is_usefull_end = code;
 
             new_ast_function->type = AST_FUNCTION_TYPE_DEFAULT;
+
             new_ast_function->code = 
-              parser_get_compound(parser, get_function_code_env);
-
-            bool is_end_function = false;
-            if (parser->prev_token->type == TOKEN_RBRACE)
-            {
-              pointer = parser->pointer;
-              parser = parser_set(parser, parser->pointer - 4);
-              if (parser_is_end(parser, code))
-              {
-                is_end_function = true;
-                parser = parser_set(parser, pointer);
-              }
-            }
-
-            if (!is_end_function)
-            {
-              printf("에러, 함수가 끝나지 아니함\n");
-              exit(1);
-            }
-
+              parser_get_code(parser, ast, token, token, code);
+            is_error = false;
           }
-          else
+          
+          if (is_error)
+          {
+            code = parser_is_begin(parser, 1, "cases");
+
+            if (code)
+            {
+              AST_function* new_ast_function = new_ast_node->value.function_v;
+
+              GET_COMPOUND_ENV* get_function_code_env = 
+                init_get_compound_env();
+              get_function_code_env->is_usefull_end = code;
+
+              new_ast_function->type = AST_FUNCTION_TYPE_DEFAULT;
+
+              new_ast_function->code = 
+                parser_get_cases(parser, ast, token, token);
+              is_error = false;
+            }
+          }
+          
+          if (is_error)
           {
             free(code);
             printf("에러, ':=' 뒤에는 값이 와야함2.");
@@ -276,29 +282,24 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
 
     if (code)
     {
+      AST* new_ast_node =
+        init_ast(AST_VARIABLE, ast, last_token);
+      new_ast_node->value.variable_v =
+        init_ast_variable(last_token->value, last_token->length);
+      token = parser->token;
+      new_ast_node->value.variable_v->ast_type = AST_VARIABLE_DEFINE;
+
       if (!strcmp(code, "cases"))
       {
-        AST* new_ast_node =
-          init_ast(AST_VARIABLE, ast, last_token);
-        new_ast_node->value.variable_v =
-          init_ast_variable(last_token->value, last_token->length);
-        token = parser->token;
         new_ast_node->value.variable_v->value = 
           parser_get_cases(parser, ast, token, s_token);
-        new_ast_node->value.variable_v->ast_type = AST_VARIABLE_DEFINE;
 
         return new_ast_node;
       }
       else if (!strcmp(code, "code"))
       {
-        AST* new_ast_node =
-          init_ast(AST_VARIABLE, ast, last_token);
-        new_ast_node->value.variable_v =
-          init_ast_variable(last_token->value, last_token->length);
-        token = parser->token;
         new_ast_node->value.variable_v->value = 
-          parser_get_code(parser, ast, token, s_token);
-        new_ast_node->value.variable_v->ast_type = AST_VARIABLE_DEFINE;
+          parser_get_code(parser, ast, token, s_token, code);
 
         return new_ast_node;
       }

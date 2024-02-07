@@ -1,0 +1,6 @@
+f(x) := \begin{cases}
+          "true" & x \\
+          "false" & x
+        \end{cases}
+
+print(f(0))

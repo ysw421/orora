@@ -12,4 +12,11 @@ b := \begin{code}
        print("aaaaaa\n")
      \end{code}
 
+
+f(x) := \begin{function}
+          print("$$$ ", x, "\n")
+        \end{function}
+
+f("hello")
+
 print(a, "  ", b)
