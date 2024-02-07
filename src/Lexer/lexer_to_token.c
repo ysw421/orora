@@ -7,10 +7,15 @@ int get_special_string_type(int length, char* string)
 {
   switch (length)
   {
+    case 9:
+      if (!strcmp(string, "otherwise")) return TOKEN_OTHERWISE;
+      break;
     case 7:
-      if (!strcmp(string, "satisfy")) return TOKEN_SATISFY; break;
+      if (!strcmp(string, "satisfy")) return TOKEN_SATISFY; 
+      break;
     case 4:
-      if (!strcmp(string, "NULL")) return TOKEN_NULL; break;
+      if (!strcmp(string, "NULL")) return TOKEN_NULL; 
+      break;
   }
 
   if (string[0] != '\\')

@@ -5,6 +5,8 @@ print("aaa\n")
   print("hello")
 \end{code}
 
-a:=32+NULL
+f(x) := \begin{fun}
+          print("hello\n")
+        \end{fun}
 
-print("aaa\n")
+print(f(3) + 2, "aaa\n")

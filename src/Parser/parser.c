@@ -477,6 +477,14 @@ AST* parser_get_cases
 {
   AST* new_ast_node = init_ast(AST_CASES, ast, s_token);
 
+  GET_COMPOUND_ENV* condition_env = init_get_compound_env();
+
+  GET_COMPOUND_ENV* value_env = init_get_compound_env();
+
+  do
+  {
+  } while ();
+
   return new_ast_node;
 }
 

@@ -18,7 +18,7 @@ Env_function* visitor_get_function(Envs* envs, AST_function* ast_function);
 Env_variable* visitor_variable
 (Envs* envs, AST_variable* ast_variable);
 
-Env_function* visitor_function_value
+AST_value_stack* visitor_function_value
 (Envs* envs, AST_function* ast_function);
 
 Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable);
@@ -122,7 +122,7 @@ void visitor_visit(Envs* envs, AST* ast)
   }
 }
 
-Env_function* visitor_function_value
+AST_value_stack* visitor_function_value
 (Envs* envs, AST_function* ast_function)
 {
   Env_function* env_function =
@@ -157,7 +157,7 @@ Env_function* visitor_function_value
       break;
   }
 
-  return env_function;
+  return init_ast_value_stack(AST_VALUE_NULL, (void*) 0);
 }
 
 Env_variable* visitor_variable
@@ -320,6 +320,7 @@ AST_value_stack* visitor_get_value_from_function
       break;
 
     case ENV_FUNCTION_TYPE_DEFAULT:
+      return visitor_function_value(envs, ast_function);
       break;
     
     default:

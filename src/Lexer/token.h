@@ -35,7 +35,9 @@ typedef struct
     TOKEN_DEFINE,             // 23: :=, \leftarrow
     TOKEN_COLON,              // 24: :
     TOKEN_NULL,               // 25: NULL
-    TOKEN_AMPER               // 26: &
+    TOKEN_AMPER,              // 26: &
+    TOKEN_OTHERWISE,          // 27: otherwise
+    TOKEN_NOOP                // 99:
   } type;
 
   size_t col;
