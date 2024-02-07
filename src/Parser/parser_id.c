@@ -113,7 +113,6 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
           // f(x) := 5x + 3
 
           AST_function* new_ast_function = new_ast_node->value.function_v;
-          new_ast_function->type = AST_FUNCTION_TYPE_SINGLE;
 
 //           new_ast_function->code = malloc(sizeof(AST));
 
@@ -139,8 +138,6 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
               init_get_compound_env();
             get_function_code_env->is_usefull_end = code;
 
-            new_ast_function->type = AST_FUNCTION_TYPE_DEFAULT;
-
             new_ast_function->code = 
               parser_get_code(parser, ast, token, token, code);
             is_error = false;
@@ -157,8 +154,6 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
               GET_COMPOUND_ENV* get_function_code_env = 
                 init_get_compound_env();
               get_function_code_env->is_usefull_end = code;
-
-              new_ast_function->type = AST_FUNCTION_TYPE_DEFAULT;
 
               new_ast_function->code = 
                 parser_get_cases(parser, ast, token, token);

@@ -141,7 +141,6 @@ AST_function* init_ast_function(char* name, size_t length)
   ast_function->args_size = 0;
   ast_function->args = (void*) 0;
   ast_function->code = (void*) 0;
-  ast_function->type = AST_FUNCTION_TYPE_NULL;
   ast_function->ast_type = AST_FUNCTION_NULL;
 
   return ast_function;

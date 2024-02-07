@@ -13,8 +13,6 @@ Env_function* get_env_function_from_ast_function
 
   env_function->code = ast_function->code;
 
-  env_function->type = ast_function->type;
-
   return env_function;
 }
 

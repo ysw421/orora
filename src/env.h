@@ -14,12 +14,12 @@ typedef struct env_function_t
 
   struct ast_t* code;
 
-  enum
-  {
-    ENV_FUNCTION_TYPE_SINGLE,  // f(x)=3x+2
-    ENV_FUNCTION_TYPE_DEFAULT,
-    ENV_FUNCTION_TYPE_NULL = 99
-  } type;
+//   enum
+//   {
+//     ENV_FUNCTION_TYPE_SINGLE,  // f(x)=3x+2
+//     ENV_FUNCTION_TYPE_DEFAULT,
+//     ENV_FUNCTION_TYPE_NULL = 99
+//   } type;
 
   struct env_function_t* next;
 } Env_function;

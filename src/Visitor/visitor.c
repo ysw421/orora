@@ -136,31 +136,15 @@ AST_value_stack* visitor_function_value
     visitor_nondefine_function_error(ast_function);
   }
 
-  switch (env_function->type)
-  {
-    case ENV_FUNCTION_TYPE_SINGLE:
-    case ENV_FUNCTION_TYPE_DEFAULT:
-      Envs* new_envs =
-        visitor_get_envs_from_function(envs, ast_function, env_function);
+  Envs* new_envs =
+    visitor_get_envs_from_function(envs, ast_function, env_function);
 
-      AST_value_stack* result = 
-        visitor_get_value_from_ast(new_envs, env_function->code);
+  AST_value_stack* result = 
+    visitor_get_value_from_ast(new_envs, env_function->code);
 
-      free(new_envs);
-      
-      return result;
-      break;
-
-    default:
-      printf("에러, 사용된 함수의 type이 문제 있음\n");
-      exit(1);
-      break;
-  }
-
-  printf("애러, 함수 가져오는데 뭔가 잘못됨\n");
-  exit(1);
-
-  return (void*) 0;
+  free(new_envs);
+  
+  return result;
 }
 
 Env_variable* visitor_variable
@@ -401,21 +385,7 @@ AST_value_stack* visitor_get_value_from_function
   Envs* new_envs =
     visitor_get_envs_from_function(envs, ast_function, env_function);
 
-  // ToDo
-  switch (env_function->type)
-  {
-    case ENV_FUNCTION_TYPE_SINGLE:
-    case ENV_FUNCTION_TYPE_DEFAULT:
-      return visitor_function_value(envs, ast_function);
-      break;
-    
-    default:
-      printf("에러, env_function type이 잘못됨\n");
-      exit(1);
-      break;
-  }
-
-  return (void*) 0;
+  return visitor_function_value(envs, ast_function);
 }
 
 AST_value_stack* visitor_get_value_from_variable
@@ -870,7 +840,6 @@ Env_function* get_deep_copy_env_funtion
   new_env_funtion->args = env_function->args;
   new_env_funtion->args_size = env_function->args_size;
   new_env_funtion->code = env_function->code;
-  new_env_funtion->type = env_function->type;
   new_env_funtion->next = env_function->next;
 
   return new_env_funtion;
@@ -1340,7 +1309,7 @@ Env_variable* visitor_set_value_Env_variable_from_AST_value_stack_null
   if (!env_variable)
     return (void*) 0;
 
-  env_variable->type = ENV_VARIABLE_STRING;
+  env_variable->type = ENV_VARIABLE_NULL;
 
   return env_variable;
 }

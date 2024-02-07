@@ -25,16 +25,7 @@ void print_function(AST_function* checked_function)
   if (checked_function->code)
   {
     printf("  ->code:\n");
-    switch (checked_function->type)
-    {
-      case AST_FUNCTION_TYPE_SINGLE:
-        print_value(checked_function->code);
-        break;
-
-      case AST_FUNCTION_TYPE_DEFAULT:
-        print_ast_tree(checked_function->code);
-        break;
-    }
+    print_ast_tree(checked_function->code);
   }
 }
 
@@ -145,12 +136,19 @@ void print_ast_tree(AST* ast_tree)
       case AST_VALUE:
         print_value(checked_ast_tree);
           break;
+          
       case AST_FUNCTION:
         print_function(checked_ast_tree->value.function_v);
         break;
+
       case AST_VARIABLE:
         print_variable(checked_ast_tree->value.variable_v);
         break;
+
+//       default:
+//         printf("에러, 테스트 용 출력에 적용 안됨\n");
+//         exit(1);
+//         break;
     }
   }
 }
@@ -200,15 +198,21 @@ void visitor_print_function(Envs* envs, AST* ast)
                     ast_function_arg_value->stack->value.
                     string_v->real_value);
                 break;
+
               case AST_VALUE_INT:
                 printf("%d",
                     ast_function_arg_value->stack->value.
                     int_v->value);
                 break;
+
               case AST_VALUE_FLOAT:
                 printf("%f",
                     ast_function_arg_value->stack->value.
                     float_v->value);
+                break;
+
+              case AST_VALUE_NULL:
+                printf("(NULL)");
                 break;
             }
           }
@@ -222,13 +226,19 @@ void visitor_print_function(Envs* envs, AST* ast)
                 printf("%s",
                     new_value->value.string_v->real_value);
                 break;
+
               case AST_VALUE_INT:
                 printf("%d",
                     new_value->value.int_v->value);
                 break;
+
               case AST_VALUE_FLOAT:
                 printf("%f",
                     new_value->value.float_v->value);
+                break;
+
+              case AST_VALUE_NULL:
+                printf("(NULL)");
                 break;
             }
           }
@@ -249,11 +259,17 @@ void visitor_print_function(Envs* envs, AST* ast)
             case ENV_VARIABLE_STRING:
               printf("%s", variable->value.string_v->real_value);
               break;
+
             case ENV_VARIABLE_INT:
               printf("%d", variable->value.int_v->value);
               break;
+
             case ENV_VARIABLE_FLOAT:
               printf("%f", variable->value.float_v->value);
+              break;
+
+            case ENV_VARIABLE_NULL:
+              printf("(NULL)");
               break;
           }
           break;
@@ -265,7 +281,7 @@ void visitor_print_function(Envs* envs, AST* ast)
             visitor_get_function(envs, ast_function_arg_function);
           if (!function)
           {
-            visitor_nondefine_function_error(ast_function);
+            visitor_nondefine_function_error(ast_function_arg_function);
           }
           AST_value_stack* new_value =
             visitor_get_value_from_function(envs, 
@@ -276,15 +292,30 @@ void visitor_print_function(Envs* envs, AST* ast)
               printf("%s",
                   new_value->value.string_v->real_value);
               break;
+
             case AST_VALUE_INT:
               printf("%d",
                   new_value->value.int_v->value);
               break;
+
             case AST_VALUE_FLOAT:
               printf("%f",
                   new_value->value.float_v->value);
               break;
+
+            case AST_VALUE_NULL:
+              printf("(NULL)");
+              break;
           }
+          break;
+
+        case AST_CODE:
+        case AST_CASES:
+          new_value = 
+            visitor_get_value_from_ast(
+                envs, 
+                ast_function_arg
+              );
           break;
       }
     }

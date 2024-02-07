@@ -1,6 +1,15 @@
 f(x) := \begin{cases}
           "true" & x \\
-          "false" & x
+          "false" & otherwise
         \end{cases}
 
-print(f(0))
+aa := \begin{code}
+          print("╰(*°▽°*)╯ ", 4, "\n")
+        \end{code}
+
+print(f(0), \begin{code}\end{code}, aa, "\n\n")
+
+b:=\begin{code}
+     q:=1
+   \end{code}
+print("hello?? ", b)
