@@ -30,6 +30,8 @@ bool parser_is_end(Parser* parser, char* code);
 // For test...
 AST* parser_get_cases
 (Parser* parser, AST* ast, Token* token, Token* s_token);
+AST* parser_get_code
+(Parser* parser, AST* ast, Token* token, Token* s_token);
 // -----------
 
 #endif

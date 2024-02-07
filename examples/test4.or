@@ -8,4 +8,8 @@ a := \begin{cases}
        3 & otherwise
      \end{cases}
 
+b := \begin{code}
+       print("aaaaaa\n")
+     \end{code}
+
 print(a, "  ", b)

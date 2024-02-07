@@ -272,22 +272,36 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
     // For test...
     token = parser->token;
     Token* s_token = parser->token;
-    char* code = parser_is_begin(parser, 1, "cases");
+    char* code = parser_is_begin(parser, 2, "cases", "code");
 
-    printf("!!!! %s\n", token->value);
-    if (code && !strcmp(code, "cases"))
+    if (code)
     {
-      printf("!@#!@#!@#!\n");
-      AST* new_ast_node =
-        init_ast(AST_VARIABLE, ast, last_token);
-      new_ast_node->value.variable_v =
-        init_ast_variable(last_token->value, last_token->length);
-      token = parser->token;
-      new_ast_node->value.variable_v->value = 
-        parser_get_cases(parser, ast, token, s_token);
-      new_ast_node->value.variable_v->ast_type = AST_VARIABLE_DEFINE;
+      if (!strcmp(code, "cases"))
+      {
+        AST* new_ast_node =
+          init_ast(AST_VARIABLE, ast, last_token);
+        new_ast_node->value.variable_v =
+          init_ast_variable(last_token->value, last_token->length);
+        token = parser->token;
+        new_ast_node->value.variable_v->value = 
+          parser_get_cases(parser, ast, token, s_token);
+        new_ast_node->value.variable_v->ast_type = AST_VARIABLE_DEFINE;
 
-      return new_ast_node;
+        return new_ast_node;
+      }
+      else if (!strcmp(code, "code"))
+      {
+        AST* new_ast_node =
+          init_ast(AST_VARIABLE, ast, last_token);
+        new_ast_node->value.variable_v =
+          init_ast_variable(last_token->value, last_token->length);
+        token = parser->token;
+        new_ast_node->value.variable_v->value = 
+          parser_get_code(parser, ast, token, s_token);
+        new_ast_node->value.variable_v->ast_type = AST_VARIABLE_DEFINE;
+
+        return new_ast_node;
+      }
     }
 
     printf("에러, ':=' 뒤에는 값이 와야함.");
