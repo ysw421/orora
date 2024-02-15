@@ -180,27 +180,17 @@ typedef struct ast_t
   union
   {
     struct ast_compound_t* compound_v;
-    /* --VARIABLE-- */
     struct ast_variable_t* variable_v;
-    /* --FUNCTION-- */
     struct ast_function_t* function_v;
-    /* ---STRING--- */
     struct ast_string_t* string_v;
-    /* ----INT----- */
     struct ast_int_t* int_v;    // I can't use a 'int'
                                 //    by variable's name... 😢
                                 //        Because it is a type's name...
-    /* ---FLOAT---- */
     struct ast_float_t* float_v;
-    /* ---VALUE---- */
     struct ast_value_t* value_v;
-    /* ---WHILE---- */
     struct ast_while_t* while_v;
-    /* ----IF------ */
     struct ast_if_t* if_v;
-    /* ---CODE----- */
     struct ast_code_t* code_v;
-    /* ---CASES---- */
     struct ast_cases_t* cases_v;
   } value;
 

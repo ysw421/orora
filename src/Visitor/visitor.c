@@ -81,6 +81,7 @@ GET_VISITOR_ENV* init_get_visitor_env()
     (GET_VISITOR_ENV*)malloc(sizeof(struct get_visitor_env_t));
 
   new_env->is_break = false;
+  new_env->is_continue = false;
 
   return new_env;
 }
@@ -145,6 +146,10 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
 
     case AST_BREAK:
       get_visitor_env->is_break = true;
+      break;
+
+    case AST_CONTINUE:
+      get_visitor_env->is_continue = true;
       break;
   }
 
@@ -1470,11 +1475,17 @@ GET_VISITOR_ENV* visitor_run_while(Envs* envs, AST_while* ast_while)
     bool is_break = false;
     for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
     {
-      if (ast_tree->value.compound_v->items[i]->type == AST_BREAK)
+      switch (ast_tree->value.compound_v->items[i]->type)
       {
-        get_visitor_env = init_get_visitor_env();
-        is_break = true;
-        break;
+        case AST_BREAK:
+          get_visitor_env = init_get_visitor_env();
+          // get_visitor_env->is_break = true;
+          break;
+
+        case AST_CONTINUE:
+          get_visitor_env = init_get_visitor_env();
+          // get_visitor_env->is_continue = true;
+          break;
       }
 
       free(get_visitor_env);
@@ -1489,13 +1500,16 @@ GET_VISITOR_ENV* visitor_run_while(Envs* envs, AST_while* ast_while)
         is_break = true;
         break;
       }
+      if (get_visitor_env->is_continue)
+        break;
     }
     free(new_envs);
     if (is_break)
       break;
   }
 
-  return get_visitor_env;
+  // return get_visitor_env;
+  return init_get_visitor_env();
 }
 
 GET_VISITOR_ENV* visitor_run_if(Envs* envs, AST_if* ast_if)
@@ -1512,11 +1526,17 @@ GET_VISITOR_ENV* visitor_run_if(Envs* envs, AST_if* ast_if)
     AST* ast_tree = ast_if->code;
     for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
     {
-      if (ast_tree->value.compound_v->items[i]->type == AST_BREAK)
+      switch (ast_tree->value.compound_v->items[i]->type)
       {
-        get_visitor_env = init_get_visitor_env();
-        get_visitor_env->is_break = true;
-        break;
+        case AST_BREAK:
+          get_visitor_env = init_get_visitor_env();
+          get_visitor_env->is_break = true;
+          break;
+
+        case AST_CONTINUE:
+          get_visitor_env = init_get_visitor_env();
+          get_visitor_env->is_continue = true;
+          break;
       }
 
       free(get_visitor_env);
@@ -1527,6 +1547,8 @@ GET_VISITOR_ENV* visitor_run_if(Envs* envs, AST_if* ast_if)
           );
 
       if (get_visitor_env->is_break)
+        break;
+      if (get_visitor_env->is_continue)
         break;
     }
     free(new_envs);

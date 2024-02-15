@@ -7,6 +7,7 @@
 typedef struct get_visitor_env_t
 {
   bool is_break;
+  bool is_continue;
 } GET_VISITOR_ENV;
 
 GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast);

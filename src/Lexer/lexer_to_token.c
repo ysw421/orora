@@ -11,6 +11,10 @@ int get_special_string_type(int length, char* string)
       if (!strcmp(string, "otherwise")) return TOKEN_OTHERWISE;
       break;
 
+    case 8:
+      if (!strcmp(string, "continue")) return TOKEN_CONTINUE; 
+      break;
+
     case 7:
       if (!strcmp(string, "satisfy")) return TOKEN_SATISFY; 
       break;

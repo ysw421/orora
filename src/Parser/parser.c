@@ -32,11 +32,16 @@ GET_COMPOUND_ENV* init_get_compound_env(GET_COMPOUND_ENV* env)
   new_env->is_usefull_comma = false;
   new_env->is_usefull_end = (void*) 0;
   new_env->is_size_one = false;
-  new_env->is_usefull_break = false;
 
   if (env)
   {
     new_env->is_usefull_break = env->is_usefull_break;
+    new_env->is_usefull_continue = env->is_usefull_continue;
+  }
+  else
+  {
+    new_env->is_usefull_break = false;
+    new_env->is_usefull_continue = false;
   }
 
   return new_env;
@@ -392,6 +397,24 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         }
         break;
 
+      case TOKEN_CONTINUE:
+        if (compound_env->is_usefull_continue)
+        {
+          AST* new_continue_ast = init_ast(AST_CONTINUE, ast, parser->token);
+          parser = parser_advance(parser, TOKEN_CONTINUE);
+          token = parser->token;
+
+          ast_compound_add(ast->value.compound_v, new_continue_ast);
+
+          continue;
+        }
+        else
+        {
+          printf("에러, continue를 사용할 수 없는 위치임\n");
+          exit(1);
+        }
+        break;
+
       case TOKEN_DEFINE:
         printf("에러, '%s'의 주어가 존재하지 않음\n", token->value);
         exit(1);
@@ -520,6 +543,7 @@ AST* parser_get_condition_and_code
       if (!strcmp(code, "while"))
       {
         get_while_code_env->is_usefull_break = true;
+        get_while_code_env->is_usefull_continue = true;
       }
 
       new_ast_node->value.while_v->code =

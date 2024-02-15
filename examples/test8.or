@@ -1,13 +1,45 @@
-x := 5
+%x := 5
+%
+%\begin{while}{1}
+%  x := x - 1
+%  \begin{if}{x = 2}
+%    continue
+%  \end{if}
+%  print(x, "\n")
+%  \begin{if}{x = -10}
+%    print("qqq\n")
+%    print("qqq\n")
+%    break
+%  \end{if}
+%\end{while}
+%
+%break
 
+
+MAX := 100
+i := 0
 \begin{while}{1}
-  print(x, "\n")
-  \begin{if}{x = -10}
-    print("qqq\n")
-    print("qqq\n")
+  i := i + 1
+  j := 0
+  c := ""
+  k := 0
+  \begin{while}{1}
+    k := k + 1
+    \begin{if}{k = MAX - i + 1}
+      break
+    \end{if}
+    c := c * " "
+  \end{while}
+  \begin{while}{1}
+    j := j + 1
+    c := c * "*"
+    \begin{if}{i = j}
+      print(c)
+      break
+    \end{if}
+  \end{while}
+  \begin{if}{i = MAX}
     break
   \end{if}
-  x := x - 1
+  print("\n")
 \end{while}
-
-%break
