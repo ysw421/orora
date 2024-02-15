@@ -12,7 +12,8 @@ typedef struct get_value_env_t
 
 GET_VALUE_ENV* init_get_value_env();
 AST* parser_get_value(Parser** parser_, AST* ast,
-    Token* last_token, GET_VALUE_ENV* value_env);
+    Token* last_token, GET_VALUE_ENV* value_env,
+    GET_COMPOUND_ENV* compound_env);
 
 AST* parser_get_new_int_ast(AST* ast, Token* token);
 AST* parser_get_new_float_ast(AST* ast, Token* token);

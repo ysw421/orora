@@ -124,6 +124,7 @@ typedef struct ast_value_stack_t
     AST_VALUE_NEG,              //  !
     AST_VALUE_LPAR,
     AST_VALUE_RPAR,
+    AST_VALUE_EQUAL,
     AST_VALUE_NULL
   } type;
 
@@ -171,6 +172,8 @@ typedef struct ast_t
     AST_CODE,           // 09:
     AST_CASES,          // 10:
     AST_NULL,           // 11:
+    AST_BREAK,          // 12:
+    AST_CONTINUE,       // 13:
     AST_NOOP = 99       // 99: Similar with NULL
   } type;
 

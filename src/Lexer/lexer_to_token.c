@@ -10,9 +10,15 @@ int get_special_string_type(int length, char* string)
     case 9:
       if (!strcmp(string, "otherwise")) return TOKEN_OTHERWISE;
       break;
+
     case 7:
       if (!strcmp(string, "satisfy")) return TOKEN_SATISFY; 
       break;
+
+    case 5:
+      if (!strcmp(string, "break")) return TOKEN_BREAK;
+      break;
+
     case 4:
       if (!strcmp(string, "NULL")) return TOKEN_NULL; 
       break;
@@ -27,22 +33,29 @@ int get_special_string_type(int length, char* string)
       if (!strcmp(string, "\\leftarrow")) return TOKEN_DEFINE;
       if (!strcmp(string, "\\subjectto")) return TOKEN_SATISFY;
       break;
+
     case 8:
       if (!strcmp(string, "\\satisty")) return TOKEN_SATISFY;
       break;
+
     case 6:
       if (!strcmp(string, "\\begin")) return TOKEN_BEGIN;
       if (!strcmp(string, "\\times")) return TOKEN_STAR;
       if (!strcmp(string, "\\right")) return TOKEN_RIGHT;
       break;
+
     case 5:
       if (!strcmp(string, "\\left")) return TOKEN_LEFT;
       break;
+
     case 4:
       if (!strcmp(string, "\\end")) return TOKEN_END;
       if (!strcmp(string, "\\div")) return TOKEN_SLASH;
       break;
-    default: return -1; break;
+
+    default: 
+      return -1; 
+      break;
   }
 
   return -1;

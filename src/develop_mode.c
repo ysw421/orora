@@ -15,6 +15,7 @@ void print_function(AST_function* checked_function)
         print_value(checked_function->args[i]);
         printf("\n");
         break;
+
       case AST_VARIABLE:
         printf("    ->");
         print_variable(checked_function->args[i]->value.variable_v);
@@ -283,9 +284,11 @@ void visitor_print_function(Envs* envs, AST* ast)
           {
             visitor_nondefine_function_error(ast_function_arg_function);
           }
+
           AST_value_stack* new_value =
             visitor_get_value_from_function(envs, 
                 ast_function_arg_function, function);
+
           switch (new_value->type)
           {
             case AST_VALUE_STRING:
@@ -316,6 +319,28 @@ void visitor_print_function(Envs* envs, AST* ast)
                 envs, 
                 ast_function_arg
               );
+
+          switch (new_value->type)
+          {
+            case AST_VALUE_STRING:
+              printf("%s",
+                  new_value->value.string_v->real_value);
+              break;
+
+            case AST_VALUE_INT:
+              printf("%d",
+                  new_value->value.int_v->value);
+              break;
+
+            case AST_VALUE_FLOAT:
+              printf("%f",
+                  new_value->value.float_v->value);
+              break;
+
+            case AST_VALUE_NULL:
+              printf("(NULL)");
+              break;
+          }
           break;
       }
     }
@@ -323,3 +348,4 @@ void visitor_print_function(Envs* envs, AST* ast)
 }
 
 #endif
+

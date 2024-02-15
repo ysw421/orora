@@ -6,7 +6,9 @@
 AST* parser_set_variable_value(Parser* parser, AST* ast, Token* last_token);
 AST* parser_set_function(Parser* parser, AST* ast, Token* last_token);
 
-AST* parser_parse_variable(Parser* parser, AST* ast, Token* last_token)
+AST* parser_parse_variable
+(Parser* parser, AST* ast, 
+ Token* last_token, GET_COMPOUND_ENV* compound_env)
 {
   Token* token = parser->token;
 
@@ -20,7 +22,12 @@ AST* parser_parse_variable(Parser* parser, AST* ast, Token* last_token)
       if (parser->prev_token->col == token->col_first)
       {
         parser = parser_advance(parser, TOKEN_DEFINE);
-        AST* new_ast = parser_value_define(parser, ast, last_token);
+        AST* new_ast = parser_value_define(
+                          parser, 
+                          ast, 
+                          last_token, 
+                          compound_env
+                        );
       
         return new_ast;
       }
@@ -32,7 +39,7 @@ AST* parser_parse_variable(Parser* parser, AST* ast, Token* last_token)
 }
 
 AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
-    AST_function* fa)
+    AST_function* fa, GET_COMPOUND_ENV* compound_env)
 {
   Token* token = parser->token;
 
@@ -104,7 +111,13 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
         }
 
         AST* value_node =
-            parser_get_value(&parser, ast, token, init_get_value_env());
+            parser_get_value(
+                &parser, 
+                ast, 
+                token, 
+                init_get_value_env(), 
+                compound_env
+              );
         token = parser->prev_token;
 
         if (value_node)
@@ -135,11 +148,18 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
             AST_function* new_ast_function = new_ast_node->value.function_v;
 
             GET_COMPOUND_ENV* get_function_code_env = 
-              init_get_compound_env();
+              init_get_compound_env(compound_env);
             get_function_code_env->is_usefull_end = code;
 
             new_ast_function->code = 
-              parser_get_code(parser, ast, token, token, code);
+              parser_get_code(
+                  parser, 
+                  ast, 
+                  token, 
+                  token, 
+                  compound_env, 
+                  code
+                );
             is_error = false;
           }
           
@@ -152,11 +172,17 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
               AST_function* new_ast_function = new_ast_node->value.function_v;
 
               GET_COMPOUND_ENV* get_function_code_env = 
-                init_get_compound_env();
+                init_get_compound_env(compound_env);
               get_function_code_env->is_usefull_end = code;
 
               new_ast_function->code = 
-                parser_get_cases(parser, ast, token, token);
+                parser_get_cases(
+                    parser, 
+                    ast, 
+                    token, 
+                    token, 
+                    compound_env
+                  );
               is_error = false;
             }
           }
@@ -178,7 +204,9 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
   return new_ast_node;
 }
 
-AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
+AST* parser_value_define
+(Parser* parser, AST* ast, 
+ Token* last_token, GET_COMPOUND_ENV* compound_env)
 {
   Token* token = parser->token;
 
@@ -195,7 +223,13 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
     exit(1);
   }
   AST* value_node =
-      parser_get_value(&parser, ast, token, init_get_value_env());
+      parser_get_value(
+          &parser, 
+          ast, 
+          token, 
+          init_get_value_env(), 
+          compound_env
+        );
   token = parser->prev_token;
   if (value_node)
   {
@@ -214,7 +248,12 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
         parser = parser_advance(parser, TOKEN_DEFINE);
 
         new_ast_node->value.variable_v->value =
-          parser_value_define(parser, new_ast_node, stoken);
+          parser_value_define(
+              parser, 
+              new_ast_node, 
+              stoken, 
+              compound_env
+            );
         
         token = parser->token;
       }
@@ -287,14 +326,27 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
       if (!strcmp(code, "cases"))
       {
         new_ast_node->value.variable_v->value = 
-          parser_get_cases(parser, ast, token, s_token);
+          parser_get_cases(
+              parser, 
+              ast, 
+              token, 
+              s_token, 
+              compound_env
+            );
 
         return new_ast_node;
       }
       else if (!strcmp(code, "code"))
       {
         new_ast_node->value.variable_v->value = 
-          parser_get_code(parser, ast, token, s_token, code);
+          parser_get_code(
+              parser, 
+              ast, 
+              token, 
+              s_token, 
+              compound_env, 
+              code
+            );
 
         return new_ast_node;
       }
@@ -307,7 +359,8 @@ AST* parser_value_define(Parser* parser, AST* ast, Token* last_token)
   return (void*) 0;
 }
 
-AST* parser_get_function(Parser* parser, AST* ast)
+AST* parser_get_function
+(Parser* parser, AST* ast, GET_COMPOUND_ENV* compound_env)
 {
 //   parser = parser_advance(parser, TOKEN_ID);
   Token* token = parser->token;
@@ -333,7 +386,7 @@ AST* parser_get_function(Parser* parser, AST* ast)
     int num_of_lpar = 0;
     while (token && !(num_of_lpar == 0 && token->type == TOKEN_RPAR))
     {
-      GET_COMPOUND_ENV* new_env = init_get_compound_env();
+      GET_COMPOUND_ENV* new_env = init_get_compound_env(compound_env);
       new_env->is_allow_linebreak = true;
       new_env->is_in_parentheses = true;
       new_env->is_usefull_comma = true;

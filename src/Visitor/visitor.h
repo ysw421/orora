@@ -4,7 +4,12 @@
 #include "../Parser/Ast/ast.h"
 #include "../env.h"
 
-void visitor_visit(Envs* envs, AST* ast);
+typedef struct get_visitor_env_t
+{
+  bool is_break;
+} GET_VISITOR_ENV;
+
+GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast);
 
 // ToDo: merge...
 Env_variable* visitor_set_value_Env_variable_from_AST_value_stack_int

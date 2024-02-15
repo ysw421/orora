@@ -10,6 +10,7 @@
 void visitor_print_function(Envs* envs, AST* ast);
 #endif
 
+GET_VISITOR_ENV* init_get_visitor_env();
 orora_value_type* get_single_value_type(int ast_type);
 
 Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable);
@@ -36,6 +37,9 @@ AST_value_stack* visitor_operator_product(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
 AST_value_stack* visitor_operator_div(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2);
+AST_value_stack* visitor_operator_equal(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
 
@@ -65,14 +69,27 @@ AST_value_stack* visitor_get_value_from_variable
 AST_value_stack* visitor_get_value_from_cases
 (Envs* envs, AST_cases* ast_cases);
 
-bool visitor_run_while(Envs* envs, AST_while* ast_while);
-bool visitor_run_if(Envs* envs, AST_if* ast_if);
+GET_VISITOR_ENV* visitor_run_while(Envs* envs, AST_while* ast_while);
+GET_VISITOR_ENV* visitor_run_if(Envs* envs, AST_if* ast_if);
 
 AST_value_stack* visitor_get_value_from_code
 (Envs* envs, AST_compound* ast_code);
 
-void visitor_visit(Envs* envs, AST* ast)
+GET_VISITOR_ENV* init_get_visitor_env()
 {
+  GET_VISITOR_ENV* new_env = 
+    (GET_VISITOR_ENV*)malloc(sizeof(struct get_visitor_env_t));
+
+  new_env->is_break = false;
+
+  return new_env;
+}
+
+GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
+{
+  GET_VISITOR_ENV* get_visitor_env = 
+    init_get_visitor_env();
+
   switch (ast->type)
   {
     case AST_VARIABLE:
@@ -116,14 +133,22 @@ void visitor_visit(Envs* envs, AST* ast)
 
     case AST_WHILE:
       AST_while* ast_while = ast->value.while_v;
-      visitor_run_while(envs, ast_while);
+      get_visitor_env = 
+        visitor_run_while(envs, ast_while);
       break;
 
     case AST_IF:
       AST_if* ast_if = ast->value.if_v;
-      visitor_run_if(envs, ast_if);
+      get_visitor_env = 
+        visitor_run_if(envs, ast_if);
+      break;
+
+    case AST_BREAK:
+      get_visitor_env->is_break = true;
       break;
   }
+
+  return get_visitor_env;
 }
 
 AST_value_stack* visitor_function_value
@@ -799,6 +824,10 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
         case AST_VALUE_DIV:
           result = visitor_operator_div(result, operand1, operand2);
           break;
+
+        case AST_VALUE_EQUAL:
+          result = visitor_operator_equal(result, operand1, operand2);
+          break;
       }
 
       parser_push_value(stack, result);
@@ -1264,6 +1293,75 @@ AST_value_stack* visitor_operator_div(AST_value_stack* result,
   return result;
 }
 
+AST_value_stack* visitor_operator_equal(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  // ToDo... bool type
+  result->type = AST_VALUE_INT;
+  result->value.int_v = malloc(sizeof(struct ast_int_t));
+  int result_value = 0;
+
+  int true_value = 1;
+  int false_value = 0;
+
+  switch (operand1->type)
+  {
+    case AST_VALUE_NULL:
+      if (operand2->type == AST_VALUE_NULL)
+        result_value = true_value;
+      else
+        result_value = false_value;
+      break;
+
+    case AST_VALUE_STRING:
+      if (operand2->type == AST_VALUE_STRING
+          && !strcmp(operand1->value.string_v->value,
+                     operand2->value.string_v->value))
+        result_value = true_value;
+      else
+        result_value = false_value;
+      break;
+
+    case AST_VALUE_INT:
+      if ((operand2->type == AST_VALUE_INT
+           && operand1->value.int_v->value 
+              == operand2->value.int_v->value)
+          ||
+           (operand2->type == AST_VALUE_FLOAT
+           && operand1->value.int_v->value 
+              == operand2->value.float_v->value)
+         )
+        result_value = true_value;
+      else
+        result_value = false_value;
+      break;
+
+    case AST_VALUE_FLOAT:
+      if ((operand2->type == AST_VALUE_INT
+           && operand1->value.float_v->value 
+              == operand2->value.int_v->value)
+          ||
+           (operand2->type == AST_VALUE_FLOAT
+           && operand1->value.float_v->value 
+              == operand2->value.float_v->value)
+         )
+        result_value = true_value;
+      else
+        result_value = false_value;
+      break;
+
+    default:
+      printf("에러, 정의되지 않은 연산\n");
+      exit(1);
+      break;
+  }
+
+  result->value.int_v->value = result_value;
+
+  return result;
+}
+
 Env_variable* visitor_set_value_Env_variable_from_AST_value_stack_int
 (Env_variable* env_variable, AST_value_stack* new_value)
 {
@@ -1356,8 +1454,11 @@ AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_null
   new_value_stack->type = AST_VALUE_NULL;
 }
 
-bool visitor_run_while(Envs* envs, AST_while* ast_while)
+GET_VISITOR_ENV* visitor_run_while(Envs* envs, AST_while* ast_while)
 {
+  GET_VISITOR_ENV* get_visitor_env = 
+    init_get_visitor_env();
+
   AST* condition = ast_while->condition;
 
   while (is_true(visitor_get_value_from_ast(envs, condition)))
@@ -1365,18 +1466,43 @@ bool visitor_run_while(Envs* envs, AST_while* ast_while)
     Envs* new_envs = visitor_merge_envs(envs);
 
     AST* ast_tree = ast_while->code;
+
+    bool is_break = false;
     for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
     {
-      visitor_visit(new_envs, ast_tree->value.compound_v->items[i]);
+      if (ast_tree->value.compound_v->items[i]->type == AST_BREAK)
+      {
+        get_visitor_env = init_get_visitor_env();
+        is_break = true;
+        break;
+      }
+
+      free(get_visitor_env);
+      get_visitor_env = 
+        visitor_visit(
+            new_envs, 
+            ast_tree->value.compound_v->items[i]
+          );
+
+      if (get_visitor_env->is_break)
+      {
+        is_break = true;
+        break;
+      }
     }
     free(new_envs);
+    if (is_break)
+      break;
   }
 
-  return true;
+  return get_visitor_env;
 }
 
-bool visitor_run_if(Envs* envs, AST_if* ast_if)
+GET_VISITOR_ENV* visitor_run_if(Envs* envs, AST_if* ast_if)
 {
+  GET_VISITOR_ENV* get_visitor_env = 
+    init_get_visitor_env();
+
   AST* condition = ast_if->condition;
 
   if (is_true(visitor_get_value_from_ast(envs, condition)))
@@ -1386,11 +1512,26 @@ bool visitor_run_if(Envs* envs, AST_if* ast_if)
     AST* ast_tree = ast_if->code;
     for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
     {
-      visitor_visit(new_envs, ast_tree->value.compound_v->items[i]);
+      if (ast_tree->value.compound_v->items[i]->type == AST_BREAK)
+      {
+        get_visitor_env = init_get_visitor_env();
+        get_visitor_env->is_break = true;
+        break;
+      }
+
+      free(get_visitor_env);
+      get_visitor_env = 
+        visitor_visit(
+            new_envs, 
+            ast_tree->value.compound_v->items[i]
+          );
+
+      if (get_visitor_env->is_break)
+        break;
     }
     free(new_envs);
   }
 
-  return true;
+  return get_visitor_env;
 }
 

@@ -8,7 +8,8 @@ bool is_operator(int token_id);
 
 
 AST* parser_get_value(Parser** parser_, AST* ast,
-    Token* last_token, GET_VALUE_ENV* value_env)
+    Token* last_token, GET_VALUE_ENV* value_env, 
+    GET_COMPOUND_ENV* compound_env)
 {
   bool is_in_parentheses_save = value_env->is_in_parentheses;
   Parser* parser = *parser_;
@@ -134,7 +135,11 @@ AST* parser_get_value(Parser** parser_, AST* ast,
           exit(1);
         }
         
-        AST* function_ast = parser_get_function(parser, ast);
+        AST* function_ast = parser_get_function(
+                                parser, 
+                                ast, 
+                                compound_env
+                              );
         token = parser->token;
 
         is_last_value = true;
@@ -434,18 +439,25 @@ int parser_precedence(int ast_stack_id)
 {
   switch (ast_stack_id)
   {
-    case AST_VALUE_LPAR:
+    case AST_VALUE_LPAR:          // (
       return 1;
       break;
-    case AST_VALUE_PLUS:
-    case AST_VALUE_MINUS:
+
+    case AST_VALUE_EQUAL:         // =
       return 2;
       break;
-    case AST_VALUE_DOT_PRODUCT:
-    case AST_VALUE_PRODUCT:
-    case AST_VALUE_DIV:
+
+    case AST_VALUE_PLUS:          // +
+    case AST_VALUE_MINUS:         // -
       return 3;
       break;
+
+    case AST_VALUE_DOT_PRODUCT:   // *
+    case AST_VALUE_PRODUCT:       // 
+    case AST_VALUE_DIV:
+      return 4;
+      break;
+
     case AST_VALUE_RPAR:
       return 99;
       break;
@@ -462,6 +474,7 @@ bool is_operator(int token_id)
     case TOKEN_MINUS:
     case TOKEN_STAR:
     case TOKEN_SLASH:
+    case TOKEN_EQUAL:
       return true;
   }
 
@@ -485,12 +498,18 @@ int get_ast_value_type(int token_id)
   {
     case TOKEN_PLUS:
       return AST_VALUE_PLUS;
+
     case TOKEN_MINUS:
       return AST_VALUE_MINUS;
+
     case TOKEN_STAR:
       return AST_VALUE_PRODUCT;
+
     case TOKEN_SLASH:
       return AST_VALUE_DIV;
+
+    case TOKEN_EQUAL:
+      return AST_VALUE_EQUAL;
   }
 
   return -1;
@@ -502,12 +521,18 @@ int get_token_type(int ast_value_id)
   {
     case AST_VALUE_PLUS:
       return TOKEN_PLUS;
+
     case AST_VALUE_MINUS:
       return TOKEN_MINUS;
+
     case AST_VALUE_PRODUCT:
       return TOKEN_STAR;
+
     case AST_VALUE_DIV:
       return TOKEN_SLASH;
+
+    case AST_VALUE_EQUAL:
+      return TOKEN_EQUAL;
   }
 
   return -1;

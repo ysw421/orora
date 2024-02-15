@@ -1,0 +1,13 @@
+x := 5
+
+\begin{while}{1}
+  print(x, "\n")
+  \begin{if}{x = -10}
+    print("qqq\n")
+    print("qqq\n")
+    break
+  \end{if}
+  x := x - 1
+\end{while}
+
+%break

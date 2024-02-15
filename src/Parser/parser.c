@@ -4,21 +4,26 @@
 #include "../main.h"
 #include "string.h"
 
-AST* parser_get_satisfy(Parser* parser, AST* ast);
+AST* parser_get_satisfy
+(Parser* parser, AST* ast, GET_COMPOUND_ENV* compound_env);
 AST* parser_get_condition_and_code
 (Parser* parser, AST* ast, Token* token,
  Token* s_token, char* code,
- AST* new_ast_node);
+ AST* new_ast_node, GET_COMPOUND_ENV* compound_env);
 AST* parser_get_while
-(Parser* parser, AST* ast, Token* token, Token* s_token);
+(Parser* parser, AST* ast, Token* token, 
+ Token* s_token, GET_COMPOUND_ENV* compound_env);
 AST* parser_get_if
-(Parser* parser, AST* ast, Token* token, Token* s_token);
+(Parser* parser, AST* ast, Token* token, 
+ Token* s_token, GET_COMPOUND_ENV* compound_env);
 AST* parser_get_code
-(Parser* parser, AST* ast, Token* token, Token* s_token, char* code);
+(Parser* parser, AST* ast, Token* token, 
+ Token* s_token, GET_COMPOUND_ENV* compound_env, char* code);
 AST* parser_get_cases
-(Parser* parser, AST* ast, Token* token, Token* s_token);
+(Parser* parser, AST* ast, Token* token, 
+ Token* s_token, GET_COMPOUND_ENV* compound_env);
 
-GET_COMPOUND_ENV* init_get_compound_env()
+GET_COMPOUND_ENV* init_get_compound_env(GET_COMPOUND_ENV* env)
 {
   GET_COMPOUND_ENV* new_env = malloc(sizeof(GET_COMPOUND_ENV));
   new_env->is_allow_linebreak = false;
@@ -27,6 +32,12 @@ GET_COMPOUND_ENV* init_get_compound_env()
   new_env->is_usefull_comma = false;
   new_env->is_usefull_end = (void*) 0;
   new_env->is_size_one = false;
+  new_env->is_usefull_break = false;
+
+  if (env)
+  {
+    new_env->is_usefull_break = env->is_usefull_break;
+  }
 
   return new_env;
 }
@@ -255,7 +266,13 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
           {
             ast_compound_add(
                   ast->value.compound_v, 
-                  parser_get_while(parser, ast, token, s_token)
+                  parser_get_while(
+                      parser, 
+                      ast, 
+                      token, 
+                      s_token,
+                      compound_env
+                    )
                 );
             token = parser->token;
 
@@ -265,7 +282,13 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
           {
             ast_compound_add(
                   ast->value.compound_v, 
-                  parser_get_if(parser, ast, token, s_token)
+                  parser_get_if(
+                      parser, 
+                      ast, 
+                      token, 
+                      s_token,
+                      compound_env
+                    )
                 );
             token = parser->token;
 
@@ -275,7 +298,13 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
           {
             ast_compound_add(
                   ast->value.compound_v, 
-                  parser_get_cases(parser, ast, token, s_token)
+                  parser_get_cases(
+                      parser, 
+                      ast, 
+                      token, 
+                      s_token,
+                      compound_env
+                    )
                 );
             token = parser->token;
 
@@ -285,7 +314,14 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
           {
             ast_compound_add(
                 ast->value.compound_v,
-                parser_get_code(parser, ast, token, s_token, "code")
+                parser_get_code(
+                    parser, 
+                    ast, 
+                    token, 
+                    s_token, 
+                    compound_env, 
+                    "code"
+                  )
                 );
             token = parser->token;
 
@@ -321,7 +357,8 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         break;
 
       case TOKEN_SATISFY:
-        AST* new_satisfy_ast = parser_get_satisfy(parser, ast);
+        AST* new_satisfy_ast = 
+          parser_get_satisfy(parser, ast, compound_env);
         if (new_satisfy_ast)
         {
           ast_compound_add(ast->value.compound_v, new_satisfy_ast);
@@ -333,6 +370,24 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         {
           free(new_satisfy_ast);
           printf("satisfy 사용법: 'satisfy (variable name):(condition1), (condition2)\n");
+          exit(1);
+        }
+        break;
+
+      case TOKEN_BREAK:
+        if (compound_env->is_usefull_break)
+        {
+          AST* new_break_ast = init_ast(AST_BREAK, ast, parser->token);
+          parser = parser_advance(parser, TOKEN_BREAK);
+          token = parser->token;
+
+          ast_compound_add(ast->value.compound_v, new_break_ast);
+
+          continue;
+        }
+        else
+        {
+          printf("에러, break를 사용할 수 없는 위치임\n");
           exit(1);
         }
         break;
@@ -357,7 +412,13 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
       new_get_value_env->is_in_parentheses = true;
     }
     AST* value_node =
-      parser_get_value(&parser, ast, token, new_get_value_env);
+      parser_get_value(
+          &parser, 
+          ast, 
+          token, 
+          new_get_value_env, 
+          compound_env
+        );
     token = parser->token;
     if (value_node)
     {
@@ -365,15 +426,27 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
           && value_node->value.value_v->stack->type == AST_VALUE_VARIABLE)
       {
         ast_compound_add(ast->value.compound_v,
-            parser_parse_variable(parser, ast, parser->prev_token));
+            parser_parse_variable(
+                parser, 
+                ast, 
+                parser->prev_token, 
+                compound_env
+              )
+            );
         token = parser->token;
       }
       else if (value_node->value.value_v->size == 1
           && value_node->value.value_v->stack->type == AST_VALUE_FUNCTION)
       {
         ast_compound_add(ast->value.compound_v,
-            parser_parse_function(parser, ast, stoken,
-                value_node->value.value_v->stack->value.function_v));
+            parser_parse_function(
+                parser, 
+                ast, 
+                stoken,
+                value_node->value.value_v->stack->value.function_v,
+                compound_env
+              )
+            );
         token = parser->token;
       }
       else
@@ -398,7 +471,8 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
 
 AST* parser_parse(Parser* parser)
 {
-  AST* ast = parser_get_compound(parser, init_get_compound_env());
+  AST* ast = 
+    parser_get_compound(parser, init_get_compound_env((void*)0));
   // Root AST...
 
   return ast;
@@ -407,7 +481,7 @@ AST* parser_parse(Parser* parser)
 AST* parser_get_condition_and_code
 (Parser* parser, AST* ast, Token* token,
  Token* s_token, char* code,
- AST* new_ast_node)
+ AST* new_ast_node, GET_COMPOUND_ENV* compound_env)
 {
   bool is_error = true;
 
@@ -420,9 +494,10 @@ AST* parser_get_condition_and_code
     parser = parser_advance(parser, TOKEN_LBRACE);
     token = parser->token;
 
-    GET_COMPOUND_ENV* new_env = init_get_compound_env();
+    GET_COMPOUND_ENV* new_env = init_get_compound_env((void*) 0);
     new_env->is_allow_linebreak = true;
     new_env->is_in_braces = true;
+
     AST* new_conditon_ast = 
       parser_get_compound(parser, new_env);
     token = parser->token;
@@ -440,8 +515,13 @@ AST* parser_get_condition_and_code
       parser = parser_advance(parser, TOKEN_RBRACE);
 
       GET_COMPOUND_ENV* get_while_code_env = 
-        init_get_compound_env();
+        init_get_compound_env(compound_env);
       get_while_code_env->is_usefull_end = code;
+      if (!strcmp(code, "while"))
+      {
+        get_while_code_env->is_usefull_break = true;
+      }
+
       new_ast_node->value.while_v->code =
         parser_get_compound(parser, get_while_code_env);
 
@@ -468,7 +548,8 @@ AST* parser_get_condition_and_code
 }
 
 AST* parser_get_while
-(Parser* parser, AST* ast, Token* token, Token* s_token)
+(Parser* parser, AST* ast, Token* token, 
+ Token* s_token, GET_COMPOUND_ENV* compound_env)
 {
   // Warning! possibility error...: s_token
   AST* new_ast_node = init_ast(AST_WHILE, ast, s_token);
@@ -476,24 +557,28 @@ AST* parser_get_while
 
   return parser_get_condition_and_code(
               parser, ast, token,
-              s_token, "while", new_ast_node
+              s_token, "while", new_ast_node,
+              compound_env
           );
 }
 
 AST* parser_get_if
-(Parser* parser, AST* ast, Token* token, Token* s_token)
+(Parser* parser, AST* ast, Token* token, 
+ Token* s_token, GET_COMPOUND_ENV* compound_env)
 {
   AST* new_ast_node = init_ast(AST_IF, ast, s_token);
   new_ast_node->value.if_v = init_ast_if();
 
   return parser_get_condition_and_code(
               parser, ast, token,
-              s_token, "if", new_ast_node
+              s_token, "if", new_ast_node,
+              compound_env
           );
 }
 
 AST* parser_get_cases
-(Parser* parser, AST* ast, Token* token, Token* s_token)
+(Parser* parser, AST* ast, Token* token, 
+ Token* s_token, GET_COMPOUND_ENV* compound_env)
 {
   AST* new_ast_node = init_ast(AST_CASES, ast, s_token);
   AST_cases* new_ast_cases = init_ast_cases();
@@ -501,7 +586,8 @@ AST* parser_get_cases
   new_ast_cases->codes = malloc(sizeof(struct ast_t*));
   new_ast_cases->conditions = malloc(sizeof(struct ast_t*));
 
-  GET_COMPOUND_ENV* new_env = init_get_compound_env();
+  GET_COMPOUND_ENV* new_env = 
+    init_get_compound_env(compound_env);
   new_env->is_size_one = true;
 
   bool is_error = false;
@@ -592,12 +678,15 @@ AST* parser_get_cases
 }
 
 AST* parser_get_code
-(Parser* parser, AST* ast, Token* token, Token* s_token, char* code)
+(Parser* parser, AST* ast, Token* token, 
+ Token* s_token, GET_COMPOUND_ENV* compound_env, char* code)
 {
   AST* new_ast_node = init_ast(AST_CODE, ast, s_token);
 
   GET_COMPOUND_ENV* get_code_env = 
-    init_get_compound_env();
+    init_get_compound_env((void*) 0);
+  // code command do not pass break...
+//     init_get_compound_env(compound_env);
   get_code_env->is_usefull_end = code;
 
   new_ast_node->value.code_v = init_ast_code();
@@ -625,7 +714,8 @@ AST* parser_get_code
   return new_ast_node;
 }
 
-AST* parser_get_satisfy(Parser* parser, AST* ast)
+AST* parser_get_satisfy
+(Parser* parser, AST* ast, GET_COMPOUND_ENV* compound_env)
 {
   Token* token = parser->token;
   parser = parser_advance(parser, TOKEN_SATISFY);
@@ -636,7 +726,13 @@ AST* parser_get_satisfy(Parser* parser, AST* ast)
       init_ast(AST_VARIABLE, ast, parser->token);
 
   AST_value* main_value =
-    parser_get_value(&parser, ast, token, value_env)->value.value_v;
+    parser_get_value(
+        &parser, 
+        ast, 
+        token, 
+        value_env, 
+        compound_env
+      )->value.value_v;
   token = parser->token;
   if (main_value->size == 1
       && main_value->stack->type == AST_VALUE_VARIABLE
@@ -656,7 +752,13 @@ AST* parser_get_satisfy(Parser* parser, AST* ast)
     do
     {
       AST* condition =
-        parser_get_value(&parser, ast, token, value_env);
+        parser_get_value(
+            &parser, 
+            ast, 
+            token, 
+            value_env, 
+            compound_env
+          );
       token = parser->token;
       if (!condition)
         break;

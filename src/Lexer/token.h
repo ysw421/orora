@@ -37,6 +37,8 @@ typedef struct
     TOKEN_NULL,               // 25: NULL
     TOKEN_AMPER,              // 26: &
     TOKEN_OTHERWISE,          // 27: otherwise
+    TOKEN_BREAK,              // 28: break
+    TOKEN_CONTINUE,           // 29: continue
     TOKEN_NOOP                // 99:
   } type;
 
