@@ -39,6 +39,7 @@ typedef struct
     TOKEN_OTHERWISE,          // 27: otherwise
     TOKEN_BREAK,              // 28: break
     TOKEN_CONTINUE,           // 29: continue
+    TOKEN_RETURN,             // 30: return
     TOKEN_NOOP                // 99:
   } type;
 

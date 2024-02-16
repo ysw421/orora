@@ -19,6 +19,10 @@ int get_special_string_type(int length, char* string)
       if (!strcmp(string, "satisfy")) return TOKEN_SATISFY; 
       break;
 
+    case 6:
+      if (!strcmp(string, "return")) return TOKEN_RETURN; 
+      break;
+
     case 5:
       if (!strcmp(string, "break")) return TOKEN_BREAK;
       break;

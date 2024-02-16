@@ -79,6 +79,15 @@ AST_cases* init_ast_cases()
   return ast_cases;
 }
 
+AST_return* init_ast_return()
+{
+  AST_return* ast_return = 
+    (AST_return*) malloc(sizeof(struct ast_return_t));
+  ast_return->value = (void*) 0;
+
+  return ast_return;
+}
+
 AST_value* init_ast_value()
 {
   AST_value* ast_value =

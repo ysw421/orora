@@ -16,7 +16,7 @@
 %break
 
 
-MAX := 100
+MAX := 10
 i := 0
 \begin{while}{1}
   i := i + 1
@@ -33,13 +33,44 @@ i := 0
   \begin{while}{1}
     j := j + 1
     c := c * "*"
-    \begin{if}{i = j}
+    \begin{if}{i * 2 - 1 = j}
       print(c)
       break
     \end{if}
   \end{while}
+  print("\n")
   \begin{if}{i = MAX}
     break
   \end{if}
-  print("\n")
 \end{while}
+
+f(x) := \begin{fun}
+          q := 0
+          \begin{while}{1}
+            \begin{if}{q = 30 + x}
+              return q
+            \end{if}
+            q := q + 1
+          \end{while}
+        \end{fun}
+
+g(a, b) := \begin{cases}
+             \begin{code}
+               print("case 1: ")
+               return "true"
+             \end{code} & a = b \\
+
+             \begin{code}
+               print("case 2: ")
+               return "false"
+             \end{code} & otherwise
+           \end{cases}
+
+h(\alpha, \beta) := 32\alpha + 10\beta - 2
+
+print(f(10), "\n", g(4, 2), "\n", g(1, 1), "\n", h(2, 4), "\n")
+
+
+fun(a) := i + 2
+
+print(fun(i := 2))

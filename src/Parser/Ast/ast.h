@@ -38,6 +38,11 @@ typedef struct ast_cases_t
   struct ast_t** conditions;
 } AST_cases;
 
+typedef struct ast_return_t
+{
+  struct ast_t* value;
+} AST_return;
+
 typedef struct ast_variable_t
 {
   enum
@@ -174,6 +179,7 @@ typedef struct ast_t
     AST_NULL,           // 11:
     AST_BREAK,          // 12:
     AST_CONTINUE,       // 13:
+    AST_RETURN,         // 14:
     AST_NOOP = 99       // 99: Similar with NULL
   } type;
 
@@ -192,6 +198,7 @@ typedef struct ast_t
     struct ast_if_t* if_v;
     struct ast_code_t* code_v;
     struct ast_cases_t* cases_v;
+    struct ast_return_t* return_v;
   } value;
 
   struct ast_t* parent;
@@ -218,6 +225,7 @@ AST_code* init_ast_code();
 AST_while* init_ast_while();
 AST_if* init_ast_if();
 AST_cases* init_ast_cases();
+AST_return* init_ast_return();
 AST_value_stack* init_ast_value_stack(int type, Token* token);
 AST_value* init_ast_value();
 AST_variable* init_ast_variable(char* name, size_t length);

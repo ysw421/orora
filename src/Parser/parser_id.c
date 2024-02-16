@@ -458,3 +458,4 @@ AST* parser_set_function(Parser* parser, AST* ast, Token* last_token)
 
   return new_ast_node;
 }
+

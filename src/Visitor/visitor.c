@@ -82,6 +82,7 @@ GET_VISITOR_ENV* init_get_visitor_env()
 
   new_env->is_break = false;
   new_env->is_continue = false;
+  new_env->is_return = (void*) 0;
 
   return new_env;
 }
@@ -150,6 +151,11 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
 
     case AST_CONTINUE:
       get_visitor_env->is_continue = true;
+      break;
+
+    case AST_RETURN:
+      get_visitor_env->is_return = 
+        visitor_get_value_from_ast(envs, ast->value.return_v->value);
       break;
   }
 
@@ -396,7 +402,25 @@ AST_value_stack* visitor_get_value_from_code
 {
   for (int i = 0; i < ast_code->size; i ++)
   {
-    visitor_visit(envs, ast_code->items[i]);
+    AST* selected_ast = ast_code->items[i];
+    switch (selected_ast->type)
+    {
+      case AST_RETURN:
+        return visitor_get_value_from_ast(
+                  envs, 
+                  selected_ast->value.return_v->value 
+                );
+        break;
+    }
+
+    GET_VISITOR_ENV* get_visitor_env = 
+      visitor_visit(
+          envs, 
+          selected_ast 
+        );
+
+    if (get_visitor_env->is_return)
+      return get_visitor_env->is_return;
   }
 
   return init_ast_value_stack(AST_VALUE_NULL, (void*) 0);
@@ -1475,41 +1499,60 @@ GET_VISITOR_ENV* visitor_run_while(Envs* envs, AST_while* ast_while)
     bool is_break = false;
     for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
     {
-      switch (ast_tree->value.compound_v->items[i]->type)
+      AST* selected_ast = ast_tree->value.compound_v->items[i];
+      bool is_used = false;
+      switch (selected_ast->type)
       {
         case AST_BREAK:
           get_visitor_env = init_get_visitor_env();
-          // get_visitor_env->is_break = true;
+          is_used = true;
           break;
 
         case AST_CONTINUE:
           get_visitor_env = init_get_visitor_env();
-          // get_visitor_env->is_continue = true;
+          is_used = true;
+          break;
+
+        case AST_RETURN:
+          get_visitor_env = init_get_visitor_env();
+          get_visitor_env->is_return = 
+            visitor_get_value_from_ast(
+                envs, 
+                selected_ast->value.return_v->value 
+              );
+          is_used = true;
           break;
       }
+      if (is_used)
+        break;
 
       free(get_visitor_env);
       get_visitor_env = 
         visitor_visit(
             new_envs, 
-            ast_tree->value.compound_v->items[i]
+            selected_ast 
           );
 
-      if (get_visitor_env->is_break)
+      if (get_visitor_env->is_break
+          || get_visitor_env->is_return
+         )
       {
+        get_visitor_env->is_break = false;
         is_break = true;
         break;
       }
       if (get_visitor_env->is_continue)
+      {
+        get_visitor_env->is_continue = false;
         break;
+      }
     }
     free(new_envs);
     if (is_break)
       break;
   }
-
-  // return get_visitor_env;
-  return init_get_visitor_env();
+  
+  return get_visitor_env;
 }
 
 GET_VISITOR_ENV* visitor_run_if(Envs* envs, AST_if* ast_if)
@@ -1526,29 +1569,46 @@ GET_VISITOR_ENV* visitor_run_if(Envs* envs, AST_if* ast_if)
     AST* ast_tree = ast_if->code;
     for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
     {
-      switch (ast_tree->value.compound_v->items[i]->type)
+      AST* selected_ast = ast_tree->value.compound_v->items[i];
+      bool is_used = false;
+      switch (selected_ast->type)
       {
         case AST_BREAK:
           get_visitor_env = init_get_visitor_env();
           get_visitor_env->is_break = true;
+          is_used = true;
           break;
 
         case AST_CONTINUE:
           get_visitor_env = init_get_visitor_env();
           get_visitor_env->is_continue = true;
+          is_used = true;
+          break;
+
+        case AST_RETURN:
+          get_visitor_env = init_get_visitor_env();
+          get_visitor_env->is_return = 
+            visitor_get_value_from_ast(
+                envs, 
+                selected_ast->value.return_v->value 
+              );
+          is_used = true;
           break;
       }
+      if (is_used)
+        break;
 
       free(get_visitor_env);
       get_visitor_env = 
         visitor_visit(
             new_envs, 
-            ast_tree->value.compound_v->items[i]
+            selected_ast 
           );
 
-      if (get_visitor_env->is_break)
-        break;
-      if (get_visitor_env->is_continue)
+      if (get_visitor_env->is_break
+          || get_visitor_env->is_continue
+          || get_visitor_env->is_return
+         )
         break;
     }
     free(new_envs);

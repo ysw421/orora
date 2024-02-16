@@ -6,6 +6,8 @@
 
 AST* parser_get_satisfy
 (Parser* parser, AST* ast, GET_COMPOUND_ENV* compound_env);
+AST* parser_get_return
+(Parser* parser, AST* ast, GET_COMPOUND_ENV* compound_env);
 AST* parser_get_condition_and_code
 (Parser* parser, AST* ast, Token* token,
  Token* s_token, char* code,
@@ -37,11 +39,13 @@ GET_COMPOUND_ENV* init_get_compound_env(GET_COMPOUND_ENV* env)
   {
     new_env->is_usefull_break = env->is_usefull_break;
     new_env->is_usefull_continue = env->is_usefull_continue;
+    new_env->is_usefull_return = env->is_usefull_return;
   }
   else
   {
     new_env->is_usefull_break = false;
     new_env->is_usefull_continue = false;
+    new_env->is_usefull_return = false;
   }
 
   return new_env;
@@ -379,6 +383,31 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         }
         break;
 
+      case TOKEN_RETURN:
+        if (compound_env->is_usefull_return)
+        {
+          AST* new_return_ast = parser_get_return(parser, ast, compound_env);
+          if (new_return_ast)
+          {
+            ast_compound_add(ast->value.compound_v, new_return_ast);
+            token = parser->token;
+
+            continue;
+          }
+          else
+          {
+            free(new_return_ast);
+            printf("return이 잘못됨...\n");
+            exit(1);
+          }
+        }
+        else
+        {
+          printf("에러, return을 사용할 수 없는 위치임\n");
+          exit(1);
+        }
+        break;
+
       case TOKEN_BREAK:
         if (compound_env->is_usefull_break)
         {
@@ -712,6 +741,7 @@ AST* parser_get_code
   // code command do not pass break...
 //     init_get_compound_env(compound_env);
   get_code_env->is_usefull_end = code;
+  get_code_env->is_usefull_return = true;
 
   new_ast_node->value.code_v = init_ast_code();
   new_ast_node->value.code_v->code = 
@@ -749,14 +779,18 @@ AST* parser_get_satisfy
   AST* new_ast_node =
       init_ast(AST_VARIABLE, ast, parser->token);
 
-  AST_value* main_value =
+  AST* main_value_ast = 
     parser_get_value(
-        &parser, 
-        ast, 
-        token, 
-        value_env, 
-        compound_env
-      )->value.value_v;
+      &parser, 
+      ast, 
+      token, 
+      value_env, 
+      compound_env
+    );
+  if (!main_value_ast)
+    return (void*) 0;
+
+  AST_value* main_value = main_value_ast->value.value_v;
   token = parser->token;
   if (main_value->size == 1
       && main_value->stack->type == AST_VALUE_VARIABLE
@@ -812,6 +846,42 @@ AST* parser_get_satisfy
   }
 
   free(new_ast_node);
+  return (void*) 0;
+}
+
+AST* parser_get_return
+(Parser* parser, AST* ast, GET_COMPOUND_ENV* compound_env)
+{
+  parser = parser_advance(parser, TOKEN_RETURN);
+  Token* token = parser->token;
+
+  int return_col = parser->prev_token->col;
+
+  AST* new_ast_node =
+      init_ast(AST_RETURN, ast, parser->token);
+  new_ast_node->value.return_v = init_ast_return();
+
+  AST* main_value_ast = 
+    parser_get_value(
+      &parser, 
+      ast, 
+      token, 
+      init_get_value_env(), 
+      compound_env
+    );
+  if (!main_value_ast)
+  {
+    return (void*) 0;
+  }
+
+  if (return_col == parser->prev_token->col_first
+      && return_col == token->col_first)
+  {
+    new_ast_node->value.return_v->value = main_value_ast;
+
+    return new_ast_node;
+  }
+
   return (void*) 0;
 }
 

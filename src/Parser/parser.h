@@ -16,6 +16,7 @@ typedef struct get_compound_env_t
   bool is_size_one;
   bool is_usefull_break;
   bool is_usefull_continue;
+  bool is_usefull_return;
 } GET_COMPOUND_ENV;
 
 Parser* init_parser(Lexer* lexer);
