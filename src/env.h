@@ -40,7 +40,8 @@ typedef struct env_variable_t
     ENV_VARIABLE_INT,
     ENV_VARIABLE_FLOAT,
     ENV_VARIABLE_STRING,
-    ENV_VARIABLE_NULL
+    ENV_VARIABLE_NULL,
+    ENV_VARIABLE_BOOL
   } type;
 
   union
@@ -48,6 +49,7 @@ typedef struct env_variable_t
     struct ast_int_t* int_v;
     struct ast_float_t* float_v;
     struct ast_string_t* string_v;
+    struct ast_bool_t* bool_v;
   } value;
 
   size_t satisfy_size;

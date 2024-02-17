@@ -188,6 +188,19 @@ AST_float* init_ast_float(Token* token)
   return ast_float;
 }
 
+AST_bool* init_ast_bool(Token* token)
+{
+  AST_bool* ast_bool = 
+    (AST_bool*) malloc(sizeof(struct ast_bool_t));
+
+  if (!strcmp(token->value, "true"))
+    ast_bool->value = true;
+  else
+    ast_bool->value = false;
+
+  return ast_bool;
+}
+
 AST_compound* ast_compound_add(AST_compound* compound, AST* ast)
 {
   if (!ast)

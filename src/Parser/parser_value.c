@@ -312,6 +312,15 @@ AST* parser_get_new_null_ast(AST* ast, Token* token)
   return new_ast_node;
 }
 
+AST* parser_get_new_bool_ast(AST* ast, Token* token)
+{
+  AST* new_ast_node =
+    init_ast(AST_BOOL, ast, token);
+  new_ast_node->value.bool_v = init_ast_bool(token);
+
+  return new_ast_node;
+}
+
 AST_value_stack* parser_get_new_int_ast_value_stack
   (Token* token, bool is_minus)
 {
@@ -367,6 +376,21 @@ AST_value_stack* parser_get_new_null_ast_value_stack
   return new;
 }
 
+AST_value_stack* parser_get_new_bool_ast_value_stack
+  (Token* token, bool is_minus)
+{
+  AST_value_stack* new =
+    init_ast_value_stack(AST_VALUE_BOOL, token);
+  AST_bool* new_value = init_ast_bool(token);
+  if (is_minus)
+    new_value->value = !new_value->value;
+  new->value.bool_v = new_value;
+
+  return new;
+}
+
+// ToDo...
+// Delete it
 bool is_string_ast(Token* token)
 {
   if (token->type == TOKEN_STRING)
@@ -391,6 +415,13 @@ bool is_int_ast(Token* token)
 bool is_null_ast(Token* token)
 {
   if (token->type == TOKEN_NULL)
+    return true;
+  return false;
+}
+
+bool is_bool_ast(Token* token)
+{
+  if (token->type == TOKEN_BOOL)
     return true;
   return false;
 }
@@ -475,6 +506,8 @@ bool is_operator(int token_id)
     case TOKEN_STAR:
     case TOKEN_SLASH:
     case TOKEN_EQUAL:
+    case TOKEN_LESS:
+    case TOKEN_GREATER:
       return true;
   }
 
@@ -496,20 +529,13 @@ int get_ast_value_type(int token_id)
 {
   switch (token_id)
   {
-    case TOKEN_PLUS:
-      return AST_VALUE_PLUS;
-
-    case TOKEN_MINUS:
-      return AST_VALUE_MINUS;
-
-    case TOKEN_STAR:
-      return AST_VALUE_PRODUCT;
-
-    case TOKEN_SLASH:
-      return AST_VALUE_DIV;
-
-    case TOKEN_EQUAL:
-      return AST_VALUE_EQUAL;
+    case TOKEN_PLUS:                return AST_VALUE_PLUS;
+    case TOKEN_MINUS:               return AST_VALUE_MINUS;
+    case TOKEN_STAR:                return AST_VALUE_PRODUCT;
+    case TOKEN_SLASH:               return AST_VALUE_DIV;
+    case TOKEN_EQUAL:               return AST_VALUE_EQUAL;
+    case TOKEN_LESS:                return AST_VALUE_LESS;
+    case TOKEN_GREATER:             return AST_VALUE_GREATER;
   }
 
   return -1;
@@ -519,21 +545,15 @@ int get_token_type(int ast_value_id)
 {
   switch (ast_value_id)
   {
-    case AST_VALUE_PLUS:
-      return TOKEN_PLUS;
-
-    case AST_VALUE_MINUS:
-      return TOKEN_MINUS;
-
-    case AST_VALUE_PRODUCT:
-      return TOKEN_STAR;
-
-    case AST_VALUE_DIV:
-      return TOKEN_SLASH;
-
-    case AST_VALUE_EQUAL:
-      return TOKEN_EQUAL;
+    case AST_VALUE_PLUS:            return TOKEN_PLUS;
+    case AST_VALUE_MINUS:           return TOKEN_MINUS;
+    case AST_VALUE_PRODUCT:         return TOKEN_STAR;
+    case AST_VALUE_DIV:             return TOKEN_SLASH;
+    case AST_VALUE_EQUAL:           return TOKEN_EQUAL;
+    case AST_VALUE_LESS:            return TOKEN_LESS;
+    case AST_VALUE_GREATER:         return TOKEN_GREATER;
   }
 
   return -1;
 }
+

@@ -112,6 +112,11 @@ typedef struct ast_float_t
   double value;   // double
 } AST_float;
 
+typedef struct ast_bool_t
+{
+  bool value;
+} AST_bool;
+
 typedef struct ast_value_stack_t
 {
   enum
@@ -121,6 +126,7 @@ typedef struct ast_value_stack_t
     AST_VALUE_INT,
     AST_VALUE_FLOAT,
     AST_VALUE_STRING,
+    AST_VALUE_BOOL,
     AST_VALUE_PLUS,
     AST_VALUE_MINUS,
     AST_VALUE_PRODUCT,
@@ -130,6 +136,8 @@ typedef struct ast_value_stack_t
     AST_VALUE_LPAR,
     AST_VALUE_RPAR,
     AST_VALUE_EQUAL,
+    AST_VALUE_LESS,
+    AST_VALUE_GREATER,
     AST_VALUE_NULL
   } type;
 
@@ -138,6 +146,7 @@ typedef struct ast_value_stack_t
     struct ast_string_t* string_v;
     struct ast_int_t* int_v;
     struct ast_float_t* float_v;
+    struct ast_bool_t* bool_v;
     struct ast_variable_t* variable_v;
     struct ast_function_t* function_v;
   } value;
@@ -180,6 +189,7 @@ typedef struct ast_t
     AST_BREAK,          // 12:
     AST_CONTINUE,       // 13:
     AST_RETURN,         // 14:
+    AST_BOOL,           // 15:
     AST_NOOP = 99       // 99: Similar with NULL
   } type;
 
@@ -193,6 +203,7 @@ typedef struct ast_t
                                 //    by variable's name... 😢
                                 //        Because it is a type's name...
     struct ast_float_t* float_v;
+    struct ast_bool_t* bool_v;
     struct ast_value_t* value_v;
     struct ast_while_t* while_v;
     struct ast_if_t* if_v;
@@ -233,6 +244,7 @@ AST_function* init_ast_function(char* name, size_t length);
 AST_string* init_ast_string(Token* token);
 AST_int* init_ast_int(Token* token);
 AST_float* init_ast_float(Token* token);
+AST_bool* init_ast_bool(Token* token);
 
 AST_compound* ast_compound_add(AST_compound* compound, AST* ast);
 

@@ -25,10 +25,12 @@ int get_special_string_type(int length, char* string)
 
     case 5:
       if (!strcmp(string, "break")) return TOKEN_BREAK;
+      if (!strcmp(string, "false")) return TOKEN_BOOL;
       break;
 
     case 4:
       if (!strcmp(string, "NULL")) return TOKEN_NULL; 
+      if (!strcmp(string, "true")) return TOKEN_BOOL; 
       break;
   }
 
@@ -88,6 +90,8 @@ int get_one_char_type(char c)
     case '$': return TOKEN_DOLLAR; break;
     case ':': return TOKEN_COLON; break;
     case '&': return TOKEN_AMPER; break;
+    case '<': return TOKEN_LESS; break;
+    case '>': return TOKEN_GREATER; break;
     default: return -1; break;
   }
 
