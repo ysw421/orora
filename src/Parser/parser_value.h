@@ -32,12 +32,6 @@ AST_value_stack* parser_get_new_null_ast_value_stack
 AST_value_stack* parser_get_new_bool_ast_value_stack
   (Token* token, bool is_minus);
 
-bool is_string_ast(Token* token);
-bool is_float_ast(Token* token);
-bool is_int_ast(Token* token);
-bool is_null_ast(Token* token);
-bool is_bool_ast(Token* token);
-
 int parser_precedence(int ast_stack_id);
 AST_value* parser_push_value(AST_value* value, AST_value_stack* node);
 AST_value_stack* parser_pop_value(AST_value* value);

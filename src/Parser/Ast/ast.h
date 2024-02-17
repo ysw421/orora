@@ -255,7 +255,6 @@ typedef struct orora_value_type_t
   int token_id;
   AST* (*parser_get_new_ast)(AST*, Token*);
   AST_value_stack* (*parser_get_new_ast_value_stack)(Token*, bool);
-  bool (*is_check_type)(Token*);
   int ast_type_id;
   int env_variable_type_id;
   int ast_value_type_id;
@@ -270,7 +269,6 @@ orora_value_type* push_value_type_list
    orora_value_type** head, char* name, int token_id,
    AST* (*parser_get_new_ast)(AST*, Token*),
    AST_value_stack* (*parser_get_new_ast_value_stack)(Token*, bool),
-   bool (*is_check_type)(Token*),
    int ast_type_id,
    int env_variable_type_id,
    int ast_value_type_id,

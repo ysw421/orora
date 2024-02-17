@@ -18,7 +18,7 @@ bool init_orora()
   push_value_type_list
     (
      &value_type_list, "string", TOKEN_STRING, parser_get_new_string_ast,
-     parser_get_new_string_ast_value_stack, is_string_ast, AST_STRING,
+     parser_get_new_string_ast_value_stack, AST_STRING,
      ENV_VARIABLE_STRING, AST_VALUE_STRING,
      visitor_set_value_Env_variable_from_AST_value_stack_string,
      visitor_set_value_AST_value_stack_from_Env_variable_string
@@ -26,7 +26,7 @@ bool init_orora()
   push_value_type_list
     (
      &value_type_list, "int", TOKEN_INT, parser_get_new_int_ast,
-     parser_get_new_int_ast_value_stack, is_int_ast, AST_INT,
+     parser_get_new_int_ast_value_stack, AST_INT,
      ENV_VARIABLE_INT, AST_VALUE_INT,
      visitor_set_value_Env_variable_from_AST_value_stack_int,
      visitor_set_value_AST_value_stack_from_Env_variable_int
@@ -34,7 +34,7 @@ bool init_orora()
   push_value_type_list
     (
      &value_type_list, "float", TOKEN_FLOAT, parser_get_new_float_ast,
-     parser_get_new_float_ast_value_stack, is_float_ast, AST_FLOAT,
+     parser_get_new_float_ast_value_stack, AST_FLOAT,
      ENV_VARIABLE_FLOAT, AST_VALUE_FLOAT,
      visitor_set_value_Env_variable_from_AST_value_stack_float,
      visitor_set_value_AST_value_stack_from_Env_variable_float
@@ -42,7 +42,7 @@ bool init_orora()
   push_value_type_list
     (
      &value_type_list, "null", TOKEN_NULL, parser_get_new_null_ast,
-     parser_get_new_null_ast_value_stack, is_null_ast, AST_NULL,
+     parser_get_new_null_ast_value_stack, AST_NULL,
      ENV_VARIABLE_NULL, AST_VALUE_NULL,
      visitor_set_value_Env_variable_from_AST_value_stack_null,
      visitor_set_value_AST_value_stack_from_Env_variable_null
@@ -50,7 +50,7 @@ bool init_orora()
   push_value_type_list
     (
      &value_type_list, "bool", TOKEN_BOOL, parser_get_new_bool_ast, 
-     parser_get_new_bool_ast_value_stack, is_bool_ast, AST_BOOL, 
+     parser_get_new_bool_ast_value_stack, AST_BOOL, 
      ENV_VARIABLE_BOOL, AST_VALUE_BOOL, 
      visitor_set_value_Env_variable_from_AST_value_stack_bool, 
      visitor_set_value_AST_value_stack_from_Env_variable_bool

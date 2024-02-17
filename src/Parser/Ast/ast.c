@@ -230,7 +230,7 @@ orora_value_type* push_value_type_list
    int token_id,
    AST* (*parser_get_new_ast)(AST*, Token*),
    AST_value_stack* (*parser_get_new_ast_value_stack)(Token*, bool),
-   bool (*is_check)(Token*),
+//    bool (*is_check)(Token*),
    int ast_type_id,
    int env_variable_type_id,
    int ast_value_type_id,
@@ -249,7 +249,7 @@ orora_value_type* push_value_type_list
   point->token_id = token_id;
   point->parser_get_new_ast = parser_get_new_ast;
   point->parser_get_new_ast_value_stack = parser_get_new_ast_value_stack;
-  point->is_check_type = is_check;
+//   point->is_check_type = is_check;
   point->ast_type_id = ast_type_id;
   point->env_variable_type_id = env_variable_type_id;
   point->ast_value_type_id = ast_value_type_id;
@@ -265,3 +265,4 @@ orora_value_type* push_value_type_list
 
   return point;
 }
+

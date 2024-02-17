@@ -45,7 +45,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
     orora_value_type* p = value_type_list;
     do
     {
-      if (p->is_check_type(token))
+      if (p->token_id == token->type)
       {
         is_single_value = true;
         break;
@@ -387,43 +387,6 @@ AST_value_stack* parser_get_new_bool_ast_value_stack
   new->value.bool_v = new_value;
 
   return new;
-}
-
-// ToDo...
-// Delete it
-bool is_string_ast(Token* token)
-{
-  if (token->type == TOKEN_STRING)
-    return true;
-  return false;
-}
-
-bool is_float_ast(Token* token)
-{
-  if (token->type == TOKEN_FLOAT)
-    return true;
-  return false;
-}
-
-bool is_int_ast(Token* token)
-{
-  if (token->type == TOKEN_INT)
-    return true;
-  return false;
-}
-
-bool is_null_ast(Token* token)
-{
-  if (token->type == TOKEN_NULL)
-    return true;
-  return false;
-}
-
-bool is_bool_ast(Token* token)
-{
-  if (token->type == TOKEN_BOOL)
-    return true;
-  return false;
 }
 
 AST_value_stack* parser_pop_value(AST_value* value)
