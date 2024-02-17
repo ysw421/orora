@@ -26,7 +26,11 @@ void print_function(AST_function* checked_function)
   if (checked_function->code)
   {
     printf("  ->code:\n");
-    print_ast_tree(checked_function->code);
+    AST* ast = init_ast(AST_COMPOUND, (void*) 0, (void*) 0);
+    ast->value.compound_v = init_ast_compound();
+    ast->value.compound_v->size = 1;
+    ast->value.compound_v->items[0] = checked_function->code;
+    print_ast_tree(ast);
   }
 }
 

@@ -387,17 +387,19 @@ AST_value_stack* visitor_get_value_from_cases
   AST** codes = ast_cases->codes;
   AST** conditions = ast_cases->conditions;
 
+  Envs* new_envs = visitor_merge_envs(envs);
   for (int i = 0; i < size; i ++)
   {
     if (i + 1 == size && is_have_otherwise)
     {
-       return visitor_get_value_from_ast(envs, codes[i]);
+       return visitor_get_value_from_ast(new_envs, codes[i]);
     }
-    else if (is_true(visitor_get_value_from_ast(envs, conditions[i])))
+    else if (is_true(visitor_get_value_from_ast(new_envs, conditions[i])))
     {
-      return visitor_get_value_from_ast(envs, codes[i]);
+      return visitor_get_value_from_ast(new_envs, codes[i]);
     }
   }
+  free(new_envs);
   
   return init_ast_value_stack(AST_VALUE_NULL, (void*) 0);
 }
