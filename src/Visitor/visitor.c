@@ -921,6 +921,13 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
           result->value.bool_v->value = 
             is_true(operand1) && is_true(operand2);
           break;
+
+        case AST_VALUE_NEG:
+          result->type = AST_VALUE_BOOL;
+          result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+
+          result->value.bool_v->value = !is_true(operand2);
+          break;
       }
 
       parser_push_value(stack, result);

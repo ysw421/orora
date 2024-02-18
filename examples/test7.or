@@ -1,7 +1,7 @@
 i := 0
 \begin{while}{1}
   i := i + 1
-  \begin{if}{i >= 10 || i <= 3}
+  \begin{if}{!(i >= 10 || i <= 3)}
     print(i, "\n")
   \end{if}
   \begin{if}{i = 30}

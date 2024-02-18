@@ -219,6 +219,11 @@ void visitor_print_function(Envs* envs, AST* ast)
               case AST_VALUE_NULL:
                 printf("(NULL)");
                 break;
+
+              case AST_VALUE_BOOL:
+                printf(ast_function_arg_value->stack->value.
+                        bool_v->value ? "true" : "false");
+                break;
             }
           }
           else
@@ -244,6 +249,11 @@ void visitor_print_function(Envs* envs, AST* ast)
 
               case AST_VALUE_NULL:
                 printf("(NULL)");
+                break;
+
+              case AST_VALUE_BOOL:
+                printf(new_value->value.
+                        bool_v->value ? "true" : "false");
                 break;
             }
           }
@@ -276,6 +286,11 @@ void visitor_print_function(Envs* envs, AST* ast)
             case ENV_VARIABLE_NULL:
               printf("(NULL)");
               break;
+
+            case ENV_VARIABLE_BOOL:
+                printf(variable->value.
+                        bool_v->value ? "true" : "false");
+                break;
           }
           break;
 
@@ -313,6 +328,11 @@ void visitor_print_function(Envs* envs, AST* ast)
             case AST_VALUE_NULL:
               printf("(NULL)");
               break;
+
+            case AST_VALUE_BOOL:
+              printf(new_value->value.
+                      bool_v->value ? "true" : "false");
+              break;
           }
           break;
 
@@ -343,6 +363,11 @@ void visitor_print_function(Envs* envs, AST* ast)
 
             case AST_VALUE_NULL:
               printf("(NULL)");
+              break;
+
+            case AST_VALUE_BOOL:
+              printf(new_value->value.
+                      bool_v->value ? "true" : "false");
               break;
           }
           break;

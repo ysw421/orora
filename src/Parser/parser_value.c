@@ -185,7 +185,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         {
           value_env->is_in_parentheses = false;
         }
-        while (stack->stack->type != AST_VALUE_LPAR)
+        while (stack->stack && stack->stack->type != AST_VALUE_LPAR)
         {
           parser_push_value(postfix_expression, parser_pop_value(stack));
         }
@@ -433,11 +433,12 @@ int parser_precedence(int ast_stack_id)
 {
   switch (ast_stack_id)
   {
-    case AST_VALUE_OR:            // ||
-    case AST_VALUE_AND:           // &&
+    case AST_VALUE_LPAR:          // (
       return 1;
       break;
-    case AST_VALUE_LPAR:          // (
+
+    case AST_VALUE_OR:            // ||
+    case AST_VALUE_AND:           // &&
       return 2;
       break;
 
@@ -464,6 +465,10 @@ int parser_precedence(int ast_stack_id)
       return 6;
       break;
 
+    case AST_VALUE_NEG:           // !
+      return 7;
+      break;
+
     case AST_VALUE_RPAR:
       return 99;
       break;
@@ -488,6 +493,7 @@ bool is_operator(int token_id)
     case TOKEN_GREATEREQUAL:
     case TOKEN_OR:
     case TOKEN_AND:
+    case TOKEN_NEG:
       return true;
   }
 
@@ -499,6 +505,7 @@ bool is_operator_use_one_value(int token_id)
   switch (token_id)
   {
     case TOKEN_MINUS:
+    case TOKEN_NEG:
       return true;
   }
 
@@ -521,6 +528,7 @@ int get_ast_value_type(int token_id)
     case TOKEN_NOTEQUAL:            return AST_VALUE_NOTEQUAL;
     case TOKEN_OR:                  return AST_VALUE_OR;
     case TOKEN_AND:                 return AST_VALUE_AND;
+    case TOKEN_NEG:                 return AST_VALUE_NEG;
   }
 
   return -1;
@@ -542,6 +550,7 @@ int get_token_type(int ast_value_id)
     case AST_VALUE_NOTEQUAL:        return TOKEN_NOTEQUAL;
     case AST_VALUE_OR:              return TOKEN_OR;
     case AST_VALUE_AND:             return TOKEN_AND;
+    case AST_VALUE_NEG:             return TOKEN_NEG;
   }
 
   return -1;

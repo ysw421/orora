@@ -48,6 +48,7 @@ typedef struct
     TOKEN_NOTEQUAL,           // 36: !=, \neq
     TOKEN_OR,                 // 37: ||, \lor
     TOKEN_AND,                // 38: &&, \land
+    TOKEN_NEG,                // 39: !, \neg
     TOKEN_NOOP                // 99:
   } type;
 

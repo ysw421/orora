@@ -71,6 +71,7 @@ int get_special_string_type(int length, char* string)
       if (!strcmp(string, "\\div")) return TOKEN_SLASH;
       if (!strcmp(string, "\\neq")) return TOKEN_NOTEQUAL;
       if (!strcmp(string, "\\lor")) return TOKEN_OR;
+      if (!strcmp(string, "\\neg")) return TOKEN_NEG;
       break;
 
     default: 
@@ -102,6 +103,7 @@ int get_one_char_type(char c)
     case '&': return TOKEN_AMPER; break;
     case '<': return TOKEN_LESS; break;
     case '>': return TOKEN_GREATER; break;
+    case '!': return TOKEN_NEG; break;
     default: return -1; break;
   }
 
