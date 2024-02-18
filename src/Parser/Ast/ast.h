@@ -138,6 +138,9 @@ typedef struct ast_value_stack_t
     AST_VALUE_EQUAL,
     AST_VALUE_LESS,
     AST_VALUE_GREATER,
+    AST_VALUE_LESSEQUAL,
+    AST_VALUE_GREATEREQUAL,
+    AST_VALUE_NOTEQUAL,
     AST_VALUE_NULL
   } type;
 
@@ -279,3 +282,4 @@ orora_value_type* push_value_type_list
   );
 
 #endif
+

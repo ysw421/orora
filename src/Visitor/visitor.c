@@ -42,6 +42,12 @@ AST_value_stack* visitor_operator_div(AST_value_stack* result,
 AST_value_stack* visitor_operator_equal(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
+AST_value_stack* visitor_operator_less(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2);
+AST_value_stack* visitor_operator_greater(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2);
 
 AST_value_stack* get_variable_from_Env_variable
 (Envs* envs, AST_value_stack* ast);
@@ -864,6 +870,41 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
         case AST_VALUE_EQUAL:
           result = visitor_operator_equal(result, operand1, operand2);
           break;
+
+        case AST_VALUE_NOTEQUAL:
+          result = visitor_operator_equal(result, operand1, operand2);
+          result->value.bool_v->value = !result->value.bool_v->value;
+          break;
+
+        case AST_VALUE_LESS:
+          result = visitor_operator_less(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_GREATER:
+          result = visitor_operator_greater(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_LESSEQUAL:
+          result->type = AST_VALUE_BOOL;
+          result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+
+          result->value.bool_v->value = 
+            visitor_operator_less(result, operand1, operand2)
+              ->value.bool_v->value
+                || visitor_operator_equal(result, operand1, operand2)
+                   ->value.bool_v->value;
+          break;
+
+        case AST_VALUE_GREATEREQUAL:
+          result->type = AST_VALUE_BOOL;
+          result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+
+          result->value.bool_v->value = 
+            visitor_operator_greater(result, operand1, operand2)
+              ->value.bool_v->value
+                || visitor_operator_equal(result, operand1, operand2)
+                   ->value.bool_v->value;
+          break;
       }
 
       parser_push_value(stack, result);
@@ -1395,21 +1436,21 @@ AST_value_stack* visitor_operator_product(AST_value_stack* result,
           result->type = AST_VALUE_INT;
           result->value.int_v = malloc(sizeof(struct ast_int_t));
           result->value.int_v->value =
-            int_value + operand2->value.int_v->value;
+            int_value * operand2->value.int_v->value;
           break;
 
         case AST_VALUE_FLOAT:
           result->type = AST_VALUE_FLOAT;
           result->value.float_v = malloc(sizeof(struct ast_float_t));
           result->value.float_v->value =
-            int_value + operand2->value.float_v->value;
+            int_value * operand2->value.float_v->value;
           break;
 
         case AST_VALUE_BOOL:
           result->type = AST_VALUE_INT;
           result->value.int_v = malloc(sizeof(struct ast_int_t));
           result->value.int_v->value =
-            int_value + (operand2->value.bool_v->value ? 1 : 0);
+            int_value * (operand2->value.bool_v->value ? 1 : 0);
           break;
 
         default:
@@ -1426,21 +1467,21 @@ AST_value_stack* visitor_operator_product(AST_value_stack* result,
           result->type = AST_VALUE_FLOAT;
           result->value.float_v = malloc(sizeof(struct ast_float_t));
           result->value.float_v->value =
-            float_value + operand2->value.int_v->value;
+            float_value * operand2->value.int_v->value;
           break;
 
         case AST_VALUE_FLOAT:
           result->type = AST_VALUE_FLOAT;
           result->value.float_v = malloc(sizeof(struct ast_float_t));
           result->value.float_v->value =
-            float_value + operand2->value.float_v->value;
+            float_value * operand2->value.float_v->value;
           break;
 
         case AST_VALUE_BOOL:
           result->type = AST_VALUE_FLOAT;
           result->value.float_v = malloc(sizeof(struct ast_float_t));
           result->value.int_v->value =
-            float_value + (operand2->value.bool_v->value ? 1 : 0);
+            float_value * (operand2->value.bool_v->value ? 1 : 0);
           break;
 
         default:
@@ -1457,21 +1498,21 @@ AST_value_stack* visitor_operator_product(AST_value_stack* result,
           result->type = AST_VALUE_INT;
           result->value.int_v = malloc(sizeof(struct ast_int_t));
           result->value.int_v->value =
-            bool_value + (operand2->value.bool_v->value ? 1 : 0);
+            bool_value * (operand2->value.bool_v->value ? 1 : 0);
           break;
 
         case AST_VALUE_INT:
           result->type = AST_VALUE_INT;
           result->value.int_v = malloc(sizeof(struct ast_int_t));
           result->value.int_v->value = 
-            bool_value + operand2->value.int_v->value;
+            bool_value * operand2->value.int_v->value;
           break;
 
         case AST_VALUE_FLOAT:
           result->type = AST_VALUE_FLOAT;
           result->value.float_v = malloc(sizeof(struct ast_float_t));
           result->value.float_v->value = 
-            bool_value + operand2->value.float_v->value;
+            bool_value * operand2->value.float_v->value;
           break;
 
         default:
@@ -1698,50 +1739,171 @@ AST_value_stack* visitor_operator_equal(AST_value_stack* result,
   return result;
 }
 
-// AST_value_stack* visitor_operator_less(AST_value_stack* result,
-//     AST_value_stack* operand1,
-//     AST_value_stack* operand2)
-// {
-//   if (operand1->type == AST_VALUE_NULL
-//       || operand2->type == AST_VALUE_NULL)
-//   {
-//     printf("에러, null은 + 연산이 불가함\n");
-//     exit(1);
-//   }
-//   else if (operand1->type == AST_VALUE_STRING
-//       && operand2->type == AST_VALUE_STRING)
-//   {
-//   }
-//   else if ((operand1->type == AST_VALUE_INT
-//       || operand1->type == AST_VALUE_FLOAT)
-//       && (operand2->type == AST_VALUE_INT
-//       || operand2->type == AST_VALUE_FLOAT))
-//   {
-//     result->type = AST_VALUE_FLOAT;
-//     result->value.float_v = malloc(sizeof(struct ast_float_t));
-//     if (operand1->type == AST_VALUE_INT
-//         && operand2->type == AST_VALUE_INT)
-//       result->value.float_v->value =
-//         (float)operand1->value.int_v->value
-//           / (float)operand2->value.int_v->value;
-//     else if (operand1->type == AST_VALUE_INT)
-//       result->value.float_v->value =
-//         (float)operand1->value.int_v->value / operand2->value.float_v->value;
-//     else if (operand2->type == AST_VALUE_INT)
-//       result->value.float_v->value =
-//         operand1->value.float_v->value / (float)operand2->value.int_v->value;
-//     else
-//       result->value.float_v->value =
-//         operand1->value.float_v->value / operand2->value.float_v->value;
-//   }
-//   else
-//   {
-//     printf("에러, 정의되지 않은 연산\n");
-//     exit(1);
-//   }
-// 
-//   return result;
-// }
+AST_value_stack* visitor_operator_less(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  bool result_value = false;
+
+  switch (operand1->type)
+  {
+    case AST_VALUE_NULL:
+      // ToDo...
+      break;
+
+    case AST_VALUE_STRING:
+      // ToDo...
+      break;
+
+    case AST_VALUE_INT:
+      if ((operand2->type == AST_VALUE_INT
+           && operand1->value.int_v->value 
+              < operand2->value.int_v->value)
+          ||
+          (operand2->type == AST_VALUE_FLOAT
+           && operand1->value.int_v->value 
+              < operand2->value.float_v->value)
+          ||
+          (operand2->type == AST_VALUE_BOOL
+           && operand1->value.int_v->value
+              < operand2->value.bool_v->value)
+         )
+        result_value = true;
+      else
+        result_value = false;
+      break;
+
+    case AST_VALUE_FLOAT:
+      if ((operand2->type == AST_VALUE_INT
+           && operand1->value.float_v->value 
+              < operand2->value.int_v->value)
+          ||
+          (operand2->type == AST_VALUE_FLOAT
+           && operand1->value.float_v->value 
+              < operand2->value.float_v->value)
+          ||
+          (operand2->type == AST_VALUE_BOOL
+           && operand1->value.float_v->value
+              < operand2->value.bool_v->value)
+         )
+        result_value = true;
+      else
+        result_value = false;
+      break;
+
+    case AST_VALUE_BOOL:
+      if ((operand2->type == AST_VALUE_INT
+           && operand1->value.bool_v->value 
+              < operand2->value.int_v->value)
+          ||
+          (operand2->type == AST_VALUE_FLOAT
+           && operand1->value.bool_v->value 
+              < operand2->value.float_v->value)
+          ||
+          (operand2->type == AST_VALUE_BOOL
+           && operand1->value.bool_v->value
+              < operand2->value.bool_v->value)
+         )
+        result_value = true;
+      else
+        result_value = false;
+      break;
+
+    default:
+      printf("에러, 정의되지 않은 연산\n");
+      exit(1);
+      break;
+  }
+
+  result->value.bool_v->value = result_value;
+
+  return result;
+}
+
+AST_value_stack* visitor_operator_greater(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  bool result_value = false;
+
+  switch (operand1->type)
+  {
+    case AST_VALUE_NULL:
+      // ToDo...
+      break;
+
+    case AST_VALUE_STRING:
+      // ToDo...
+      break;
+
+    case AST_VALUE_INT:
+      if ((operand2->type == AST_VALUE_INT
+           && operand1->value.int_v->value 
+              > operand2->value.int_v->value)
+          ||
+          (operand2->type == AST_VALUE_FLOAT
+           && operand1->value.int_v->value 
+              > operand2->value.float_v->value)
+          ||
+          (operand2->type == AST_VALUE_BOOL
+           && operand1->value.int_v->value
+              > operand2->value.bool_v->value)
+         )
+        result_value = true;
+      else
+        result_value = false;
+      break;
+
+    case AST_VALUE_FLOAT:
+      if ((operand2->type == AST_VALUE_INT
+           && operand1->value.float_v->value 
+              > operand2->value.int_v->value)
+          ||
+          (operand2->type == AST_VALUE_FLOAT
+           && operand1->value.float_v->value 
+              > operand2->value.float_v->value)
+          ||
+          (operand2->type == AST_VALUE_BOOL
+           && operand1->value.float_v->value
+              > operand2->value.bool_v->value)
+         )
+        result_value = true;
+      else
+        result_value = false;
+      break;
+
+    case AST_VALUE_BOOL:
+      if ((operand2->type == AST_VALUE_INT
+           && operand1->value.bool_v->value 
+              > operand2->value.int_v->value)
+          ||
+          (operand2->type == AST_VALUE_FLOAT
+           && operand1->value.bool_v->value 
+              > operand2->value.float_v->value)
+          ||
+          (operand2->type == AST_VALUE_BOOL
+           && operand1->value.bool_v->value
+              > operand2->value.bool_v->value)
+         )
+        result_value = true;
+      else
+        result_value = false;
+      break;
+
+    default:
+      printf("에러, 정의되지 않은 연산\n");
+      exit(1);
+      break;
+  }
+
+  result->value.bool_v->value = result_value;
+
+  return result;
+}
 
 Env_variable* visitor_set_value_Env_variable_from_AST_value_stack_int
 (Env_variable* env_variable, AST_value_stack* new_value)

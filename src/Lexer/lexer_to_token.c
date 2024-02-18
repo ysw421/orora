@@ -44,6 +44,11 @@ int get_special_string_type(int length, char* string)
       if (!strcmp(string, "\\subjectto")) return TOKEN_SATISFY;
       break;
 
+    case 9:
+      if (!strcmp(string, "\\leqslant")) return TOKEN_LESSEQUAL;
+      if (!strcmp(string, "\\geqslant")) return TOKEN_GREATEREQUAL;
+      break;
+
     case 8:
       if (!strcmp(string, "\\satisty")) return TOKEN_SATISFY;
       break;
@@ -56,11 +61,14 @@ int get_special_string_type(int length, char* string)
 
     case 5:
       if (!strcmp(string, "\\left")) return TOKEN_LEFT;
+      if (!strcmp(string, "\\leqq")) return TOKEN_LESSEQUAL;
+      if (!strcmp(string, "\\geqq")) return TOKEN_GREATEREQUAL;
       break;
 
     case 4:
       if (!strcmp(string, "\\end")) return TOKEN_END;
       if (!strcmp(string, "\\div")) return TOKEN_SLASH;
+      if (!strcmp(string, "\\neq")) return TOKEN_NOTEQUAL;
       break;
 
     default: 
@@ -117,6 +125,12 @@ INT_STRING_T* get_two_char_type(Lexer* lexer)
 
   if (!strcmp(value, ":="))
     result->int_v = TOKEN_DEFINE;
+  else if (!strcmp(value, "<="))
+    result->int_v = TOKEN_LESSEQUAL;
+  else if (!strcmp(value, ">="))
+    result->int_v = TOKEN_GREATEREQUAL;
+  else if (!strcmp(value, "!="))
+    result->int_v = TOKEN_NOTEQUAL;
   else
   {
     result->string_v = (void*) 0;

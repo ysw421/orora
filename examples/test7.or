@@ -1,15 +1,10 @@
-f(x) := \begin{cases}
-          "true" & x \\
-          "false" & otherwise
-        \end{cases}
-
-aa := \begin{code}
-          print("╰(*°▽°*)╯ ", 4, "\n")
-        \end{code}
-
-print(\begin{code}\end{code}, aa, "\n\n")
-
-b:=\begin{code}
-     q:=1
-   \end{code}
-print("hello?? ", b)
+i := 0
+\begin{while}{1}
+  i := i + 1
+  \begin{if}{i >= 10}
+    print(i, "\n")
+  \end{if}
+  \begin{if}{i = 30}
+    break
+  \end{if}
+\end{while}
