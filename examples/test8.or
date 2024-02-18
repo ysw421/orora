@@ -73,4 +73,4 @@ print(f(10), "\n", g(4, 2), "\n", g(1, 1), "\n", h(2, 4), "\n")
 print("!!! ", true - 2, "\n")
 fun(a) := i + 2
 
-print(fun(i := 2))
+print(fun(i := 2), "qq"*"aa")
