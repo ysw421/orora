@@ -433,31 +433,35 @@ int parser_precedence(int ast_stack_id)
 {
   switch (ast_stack_id)
   {
-    case AST_VALUE_LPAR:          // (
+    case AST_VALUE_OR:            // ||
+    case AST_VALUE_AND:           // &&
       return 1;
+      break;
+    case AST_VALUE_LPAR:          // (
+      return 2;
       break;
 
     case AST_VALUE_EQUAL:         // =
     case AST_VALUE_NOTEQUAL:      // !=
-      return 2;
+      return 3;
       break;
 
     case AST_VALUE_LESS:          // <
     case AST_VALUE_GREATER:       // >
     case AST_VALUE_LESSEQUAL:     // <=
     case AST_VALUE_GREATEREQUAL:  // >=
-      return 3;
+      return 4;
       break;
 
     case AST_VALUE_PLUS:          // +
     case AST_VALUE_MINUS:         // -
-      return 4;
+      return 5;
       break;
 
     case AST_VALUE_DOT_PRODUCT:   // *
     case AST_VALUE_PRODUCT:       // 
     case AST_VALUE_DIV:
-      return 5;
+      return 6;
       break;
 
     case AST_VALUE_RPAR:
@@ -482,6 +486,8 @@ bool is_operator(int token_id)
     case TOKEN_NOTEQUAL:
     case TOKEN_LESSEQUAL:
     case TOKEN_GREATEREQUAL:
+    case TOKEN_OR:
+    case TOKEN_AND:
       return true;
   }
 
@@ -513,6 +519,8 @@ int get_ast_value_type(int token_id)
     case TOKEN_LESSEQUAL:           return AST_VALUE_LESSEQUAL;
     case TOKEN_GREATEREQUAL:        return AST_VALUE_GREATEREQUAL;
     case TOKEN_NOTEQUAL:            return AST_VALUE_NOTEQUAL;
+    case TOKEN_OR:                  return AST_VALUE_OR;
+    case TOKEN_AND:                 return AST_VALUE_AND;
   }
 
   return -1;
@@ -532,6 +540,8 @@ int get_token_type(int ast_value_id)
     case AST_VALUE_LESSEQUAL:       return TOKEN_LESSEQUAL;
     case AST_VALUE_GREATEREQUAL:    return TOKEN_GREATEREQUAL;
     case AST_VALUE_NOTEQUAL:        return TOKEN_NOTEQUAL;
+    case AST_VALUE_OR:              return TOKEN_OR;
+    case AST_VALUE_AND:             return TOKEN_AND;
   }
 
   return -1;

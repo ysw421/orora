@@ -46,6 +46,8 @@ typedef struct
     TOKEN_LESSEQUAL,          // 34: <=, \leqq, \leqslant
     TOKEN_GREATEREQUAL,       // 35: >=, \geqq, \geqslant
     TOKEN_NOTEQUAL,           // 36: !=, \neq
+    TOKEN_OR,                 // 37: ||, \lor
+    TOKEN_AND,                // 38: &&, \land
     TOKEN_NOOP                // 99:
   } type;
 
