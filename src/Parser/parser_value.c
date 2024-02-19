@@ -27,6 +27,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
   AST_value_stack* save_value;
 
   int count_of_dearkelly = 0;
+  int count_of_brace = 0;
 
   bool is_first_turn = true;
   while (token)
@@ -87,6 +88,8 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         TOKEN_TYPE_LPAR,
         TOKEN_TYPE_RPAR,
         TOKEN_TYPE_OPERATOR,
+        TOKEN_TYPE_LBRACE,
+        TOKEN_TYPE_RBRACE
       };
       int token_type = TOKEN_TYPE_NULL;
       switch (token->type)
@@ -94,12 +97,23 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         case TOKEN_ID:
           token_type = TOKEN_TYPE_ID;
           break;
+
         case TOKEN_LPAR:
           token_type = TOKEN_TYPE_LPAR;
           break;
+
         case TOKEN_RPAR:
           token_type = TOKEN_TYPE_RPAR;
           break;
+
+        case TOKEN_LBRACE:
+          token_type = TOKEN_TYPE_LBRACE;
+          break;
+
+        case TOKEN_RBRACE:
+          token_type = TOKEN_TYPE_RBRACE;
+          break;
+
         default:
           if (is_operator(token->type))
             token_type = TOKEN_TYPE_OPERATOR;
@@ -114,117 +128,164 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         exit(1);
       }
 
-      // ToDo... use switch
-      if (token_type == TOKEN_TYPE_ID)
+      bool is_continue = false;
+      bool is_break = false;
+      switch (token_type)
       {
-        if (is_last_single_value)
-        {
-          while (stack->size
-              && parser_precedence(stack->stack->type)
-                  >= parser_precedence(AST_VALUE_PRODUCT))
+        case TOKEN_TYPE_ID:
+          if (is_last_single_value)
           {
-            save_value = parser_pop_value(stack);
-            parser_push_value(postfix_expression, save_value);
+            while (stack->size
+                && parser_precedence(stack->stack->type)
+                    >= parser_precedence(AST_VALUE_PRODUCT))
+            {
+              save_value = parser_pop_value(stack);
+              parser_push_value(postfix_expression, save_value);
+            }
+            parser_push_value(stack,
+                init_ast_value_stack(AST_VALUE_PRODUCT, token));
           }
-          parser_push_value(stack,
-              init_ast_value_stack(AST_VALUE_PRODUCT, token));
-        }
-        else if (is_last_value)
-        {
-          printf("에러, 값 전에 operator가 와야함\n");
-          exit(1);
-        }
-        
-        AST* function_ast = parser_get_function(
-                                parser, 
-                                ast, 
-                                compound_env
-                              );
-        token = parser->token;
-
-        is_last_value = true;
-        is_last_minus_value = false;
-        is_last_operator = false;
-        AST_value_stack* new;
-        if (function_ast)
-        {
-          new = init_ast_value_stack(AST_VALUE_FUNCTION, token);
-          function_ast->value.function_v->ast_type = AST_FUNCTION_VALUE;
-          new->value.function_v = function_ast->value.function_v;
-          parser_push_value(postfix_expression, new);
-  
-          continue;
-        }
-        else
-        {
-          new = init_ast_value_stack(AST_VALUE_VARIABLE, token);
-          new->value.variable_v =
-            init_ast_variable(token->value, token->length);
-          new->value.variable_v->ast_type = AST_VARIABLE_VALUE;
-          parser_push_value(postfix_expression, new);
-        }
-      }
-      else if (token_type == TOKEN_TYPE_LPAR)
-      {
-        count_of_dearkelly ++;
-        parser_push_value(stack,
-            init_ast_value_stack(AST_VALUE_LPAR, token));
-
-        is_last_value = false;
-        is_last_minus_value = true;
-        is_last_single_value = false;
-        is_last_operator = false;
-      }
-      else if (token_type == TOKEN_TYPE_RPAR)
-      {
-        if (!count_of_dearkelly)
-          break;
-
-        count_of_dearkelly --;
-        if (!count_of_dearkelly && !is_in_parentheses_save)
-        {
-          value_env->is_in_parentheses = false;
-        }
-        while (stack->stack && stack->stack->type != AST_VALUE_LPAR)
-        {
-          parser_push_value(postfix_expression, parser_pop_value(stack));
-        }
-        parser_pop_value(stack);
-
-        is_last_value = true;
-        is_last_minus_value = false;
-        is_last_single_value = true;
-        is_last_operator = false;
-      }
-      else if (token_type == TOKEN_TYPE_OPERATOR)
-      {
-        if (token->type == TOKEN_MINUS
-            && (is_last_minus_value || is_last_operator))
-        {
-          is_last_minus_value2 = true;
-        }
-        else
-        {
-          if (!is_last_value && !is_operator_use_one_value(token->type))
+          else if (is_last_value)
           {
-            printf("에러, operator는 값 다음에 와야 함\n");
+            printf("에러, 값 전에 operator가 와야함\n");
             exit(1);
           }
-          while (stack->size
-              && parser_precedence(stack->stack->type)
-                  >= parser_precedence(get_ast_value_type(token->type)))
+          
+          AST* function_ast = parser_get_function(
+                                  parser, 
+                                  ast, 
+                                  compound_env
+                                );
+          token = parser->token;
+
+          is_last_value = true;
+          is_last_minus_value = false;
+          is_last_operator = false;
+          AST_value_stack* new;
+          if (function_ast)
+          {
+            new = init_ast_value_stack(AST_VALUE_FUNCTION, token);
+            function_ast->value.function_v->ast_type = AST_FUNCTION_VALUE;
+            new->value.function_v = function_ast->value.function_v;
+            parser_push_value(postfix_expression, new);
+    
+            is_continue = true;
+            break;
+          }
+          else
+          {
+            new = init_ast_value_stack(AST_VALUE_VARIABLE, token);
+            new->value.variable_v =
+              init_ast_variable(token->value, token->length);
+            new->value.variable_v->ast_type = AST_VARIABLE_VALUE;
+            parser_push_value(postfix_expression, new);
+          }
+          break;
+
+        case TOKEN_TYPE_LPAR:
+          count_of_dearkelly ++;
+          parser_push_value(stack,
+              init_ast_value_stack(AST_VALUE_LPAR, token));
+
+          is_last_value = false;
+          is_last_minus_value = true;
+          is_last_single_value = false;
+          is_last_operator = false;
+          break;
+
+        case TOKEN_TYPE_RPAR:
+          if (!count_of_dearkelly)
+          {
+            is_break = true;
+            break;
+          }
+
+          count_of_dearkelly --;
+          if (!count_of_dearkelly && !is_in_parentheses_save)
+          {
+            value_env->is_in_parentheses = false;
+          }
+          while (stack->stack && stack->stack->type != AST_VALUE_LPAR)
           {
             parser_push_value(postfix_expression, parser_pop_value(stack));
           }
+          parser_pop_value(stack);
+
+          is_last_value = true;
+          is_last_minus_value = false;
+          is_last_single_value = true;
+          is_last_operator = false;
+          break;
+
+        case TOKEN_TYPE_LBRACE:
+          count_of_brace ++;
           parser_push_value(stack,
-              init_ast_value_stack(get_ast_value_type(token->type), token));
-        }
-        is_last_minus_value = false;
-        is_last_value = false;
-        is_last_single_value = false;
-        is_last_operator = true;
+              init_ast_value_stack(AST_VALUE_LBRACE, token));
+
+          is_last_value = false;
+          is_last_minus_value = true;
+          is_last_single_value = false;
+          is_last_operator = false;
+          break;
+
+        case TOKEN_TYPE_RBRACE:
+          if (!count_of_brace)
+          {
+            is_break = true;
+            break;
+          }
+
+          count_of_brace --;
+          if (!count_of_brace && !is_in_parentheses_save)
+          {
+            value_env->is_in_parentheses = false;
+          }
+          while (stack->stack && stack->stack->type != AST_VALUE_LBRACE)
+          {
+            parser_push_value(postfix_expression, parser_pop_value(stack));
+          }
+          parser_pop_value(stack);
+
+          is_last_value = true;
+          is_last_minus_value = false;
+          is_last_single_value = true;
+          is_last_operator = false;
+          break;
+
+        case TOKEN_TYPE_OPERATOR:
+          if (token->type == TOKEN_MINUS
+            && (is_last_minus_value || is_last_operator))
+          {
+            is_last_minus_value2 = true;
+          }
+          else
+          {
+            if (!is_last_value && !is_operator_use_one_value(token->type))
+            {
+              printf("에러, operator는 값 다음에 와야 함\n");
+              exit(1);
+            }
+            while (stack->size
+                && parser_precedence(stack->stack->type)
+                    >= parser_precedence(get_ast_value_type(token->type)))
+            {
+              parser_push_value(postfix_expression, parser_pop_value(stack));
+            }
+            parser_push_value(stack,
+                init_ast_value_stack(get_ast_value_type(token->type), token));
+          }
+          is_last_minus_value = false;
+          is_last_value = false;
+          is_last_single_value = false;
+          is_last_operator = true;
+          break;
       }
+
+      if (is_continue)
+        continue;
       
+      if (is_break)
+        break;
     }
 
     parser = parser_advance(parser, token->type);
@@ -250,6 +311,11 @@ AST* parser_get_value(Parser** parser_, AST* ast,
   else if(count_of_dearkelly)
   {
     printf("에러, (가 끝나지 아니함\n");
+    exit(1);
+  }
+  else if(count_of_brace)
+  {
+    printf("에러, {가 끝나지 아니함\n");
     exit(1);
   }
 
@@ -434,6 +500,7 @@ int parser_precedence(int ast_stack_id)
   switch (ast_stack_id)
   {
     case AST_VALUE_LPAR:          // (
+    case AST_VALUE_LBRACE:        // {
       return 1;
       break;
 
@@ -470,6 +537,7 @@ int parser_precedence(int ast_stack_id)
       break;
 
     case AST_VALUE_RPAR:
+    case AST_VALUE_RBRACE:
       return 99;
       break;
   }

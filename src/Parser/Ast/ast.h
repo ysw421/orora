@@ -143,6 +143,8 @@ typedef struct ast_value_stack_t
     AST_VALUE_NOTEQUAL,
     AST_VALUE_OR,
     AST_VALUE_AND,
+    AST_VALUE_LBRACE,
+    AST_VALUE_RBRACE,
     AST_VALUE_NULL
   } type;
 
