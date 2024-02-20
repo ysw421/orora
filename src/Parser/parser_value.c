@@ -1,15 +1,21 @@
 #include "parser_id.h"
 #include "../main.h"
 #include <stdlib.h>
+#include <string.h>
 
 AST_value_stack* get_single_value(Parser* parser, AST* ast, bool is_minus);
 GET_VALUE_ENV* init_get_value_env();
 bool is_operator(int token_id);
 
+// AST* parser_get_value_from_ast
+// (Parser* parser, AST* ast,)
 
-AST* parser_get_value(Parser** parser_, AST* ast,
-    Token* last_token, GET_VALUE_ENV* value_env, 
-    GET_COMPOUND_ENV* compound_env)
+AST* parser_get_value
+(
+ Parser** parser_, AST* ast,
+ Token* last_token, GET_VALUE_ENV* value_env, 
+ GET_COMPOUND_ENV* compound_env
+)
 {
   bool is_in_parentheses_save = value_env->is_in_parentheses;
   Parser* parser = *parser_;
@@ -92,7 +98,8 @@ AST* parser_get_value(Parser** parser_, AST* ast,
         TOKEN_TYPE_RPAR,
         TOKEN_TYPE_OPERATOR,
         TOKEN_TYPE_LBRACE,
-        TOKEN_TYPE_RBRACE
+        TOKEN_TYPE_RBRACE,
+        TOKEN_TYPE_BEGIN
       };
       int token_type = TOKEN_TYPE_NULL;
       switch (token->type)
@@ -115,6 +122,10 @@ AST* parser_get_value(Parser** parser_, AST* ast,
 
         case TOKEN_RBRACE:
           token_type = TOKEN_TYPE_RBRACE;
+          break;
+
+        case TOKEN_BEGIN:
+          token_type = TOKEN_TYPE_BEGIN;
           break;
 
         default:
@@ -253,6 +264,94 @@ AST* parser_get_value(Parser** parser_, AST* ast,
           is_last_minus_value = false;
           is_last_single_value = true;
           is_last_operator = false;
+          break;
+
+        case TOKEN_TYPE_BEGIN:
+          Token* s_token = parser->token;
+          char* code = parser_is_begin(parser, 4, 
+                          "cases", "code", "function", "fun"
+                       );
+          if (code)
+          {
+            AST* begin_ast;
+            if (!strcmp(code, "cases"))
+            {
+              begin_ast = parser_get_cases(
+                              parser, 
+                              ast, 
+                              token, 
+                              s_token,
+                              compound_env
+                            );
+              token = parser->token;
+            }
+            else if (
+                     !strcmp(code, "code") 
+                     || !strcmp(code, "function") 
+                     || !strcmp(code, "fun")
+                    )
+            {
+              begin_ast = parser_get_code(
+                              parser, 
+                              ast, 
+                              token, 
+                              s_token, 
+                              compound_env, 
+                              code
+                            );
+              token = parser->token;
+            }
+
+            if (is_last_single_value)
+              break;
+            else if (is_last_value)
+            {
+              while (stack->size
+                  && parser_precedence(stack->stack->type)
+                      >= parser_precedence(AST_VALUE_PRODUCT))
+              {
+                save_value = parser_pop_value(stack);
+                parser_push_value(postfix_expression, save_value);
+              }
+              parser_push_value(stack,
+                  init_ast_value_stack(AST_VALUE_PRODUCT, token));
+            }
+            Token* token = parser->token;
+
+            AST_value_stack* new;
+            if (is_last_minus_value2)
+            {
+              printf("에러, begin은 -연산이 불가함\n");
+              exit(1);
+            }
+
+            if (!strcmp(code, "cases"))
+            {
+              new = init_ast_value_stack(AST_VALUE_CASES, token);
+              new->value.cases_v = begin_ast->value.cases_v;
+            }
+            else if (
+                     !strcmp(code, "code") 
+                     || !strcmp(code, "function") 
+                     || !strcmp(code, "fun")
+                    )
+            {
+              new = init_ast_value_stack(AST_VALUE_CODE, token);
+              new->value.code_v = begin_ast->value.code_v;
+            }
+
+            save_value = new;
+            parser_push_value(postfix_expression, save_value);
+            
+            is_last_value = true;
+            is_last_minus_value = false;
+            is_last_minus_value2 = false;
+            is_last_single_value = true;
+            is_last_operator = false;
+
+            token = parser->token;
+            continue;
+          }
           break;
 
         case TOKEN_TYPE_OPERATOR:

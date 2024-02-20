@@ -19,4 +19,8 @@ f(x) := \begin{function}
 
 f("hello")
 
-print(a, "  ", b)
+print(a, "  ", b, "\n")
+
+q := \begin{code}
+       return 4
+     \end{code} + 2

@@ -1,2 +1,11 @@
-(2 || 2)
-%print((10 > 2 || 3 > 2), 3, true)
+q(x) := \begin{function}
+          print("hello ")
+          return 9
+        \end{function}
+
+print(\begin{function}
+          print("hello ")
+          return 9
+        \end{function})
+
+%print(q())

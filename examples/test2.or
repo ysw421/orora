@@ -22,3 +22,9 @@ print("variable a: ", a, "  ", f(3), "\n") %해결해야할 오류2 값 얻어�
 print("variable x: ", x, "\n")
 print("variable y: ", y, "\n")
 print("hello")
+
+qwer := q := 10
+asdf := qwer
+%f(x) := qwer
+%asdf := f(2)
+print("\n\n||| ", asdf, q)

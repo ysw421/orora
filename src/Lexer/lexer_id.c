@@ -25,12 +25,13 @@ Token* lexer_get_id(Lexer* lexer)
 
   bool is_next_backslash = false;
 
+  INT_STRING_T* check_get_two_char_type = get_two_char_type(lexer);
   while (!IS_LEXER_CONTENTS_END(lexer)
         && !IS_WHITESPACE(lexer->c)
         && !(lexer->c == '\\' && is_next_backslash == false)
         && lexer->c != '\n'
         && get_one_char_type(lexer->c) == -1
-        && get_two_char_type(lexer)->int_v == -1)
+        && check_get_two_char_type->int_v == -1)
   {
     if (is_next_backslash) // Special literal, e.g.) \n, \t, \r
     {
@@ -57,6 +58,11 @@ Token* lexer_get_id(Lexer* lexer)
         id = lexer_get_id_add_char(id, s);
         lexer_advance(lexer);
         free(s);
+      
+        if (check_get_two_char_type->string_v)
+          free(check_get_two_char_type->string_v);
+        free(check_get_two_char_type);
+        check_get_two_char_type = get_two_char_type(lexer);
         continue;
       }
       free(s);
@@ -74,7 +80,13 @@ Token* lexer_get_id(Lexer* lexer)
     lexer_advance(lexer);
 
     length ++;
+
+    if (check_get_two_char_type->string_v)
+      free(check_get_two_char_type->string_v);
+    free(check_get_two_char_type);
+    check_get_two_char_type = get_two_char_type(lexer);
   }
+  free(check_get_two_char_type);
 
   int token_type = get_special_string_type(length, id);
 

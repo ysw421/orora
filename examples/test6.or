@@ -1,21 +1,5 @@
-print("aaa\n")
+a := 2 + 1
+print(a)
 
-\begin{cases}
-  x + 2 & 3 + 2 \\
-  f(x - 1) + f(x - 2) & otherwise
-\end{cases}
-
-\begin{code}
-  print("hello")
-  print("hello")
-\end{code}
-
-f(x) := \begin{fun}
-          print("hello\n")
-        \end{fun}
-
-\begin{if}{\begin{code}print("qq\n")\end{code}}
-  print("i love you\n")
-\end{if}
-
-print(f(3) + 2, "aaa\n")
+%f(z, x, y:=2) := 3x
+%print(f(3, 2))

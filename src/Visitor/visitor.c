@@ -288,9 +288,13 @@ void visitor_nondefine_function_error(AST_function* ast_function)
 
 Env_function* visitor_get_function(Envs* envs, AST_function* ast_function)
 {
+  if (!envs->local->functions)
+    return (void*) 0;
+
   Env_function* check_function = envs->local->functions;
+
   Env_function* snode = (void*) 0;
-  while (check_function->next)
+  while (check_function)
   {
     if (!strcmp(check_function->name, ast_function->name))
     {
@@ -303,9 +307,16 @@ Env_function* visitor_get_function(Envs* envs, AST_function* ast_function)
       return check_function;
     }
     if (snode)
+    {
       snode = snode->next;
+    }
     else
+    {
       snode = envs->local->functions;
+    }
+    if (!check_function->next)
+      break;
+
     check_function = check_function->next;
   }
 
@@ -487,29 +498,34 @@ AST_value_stack* visitor_get_value_from_variable
 
 Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable)
 {
+  if (!envs->local->variables)
+    return (void*) 0;
+
   Env_variable* check_variable = envs->local->variables;
+
   Env_variable* snode = (void*) 0;
   
-  if (check_variable)
+  while (check_variable)
   {
-    while (check_variable->next && check_variable->name)
+    if (!strcmp(check_variable->name, ast_variable->name))
     {
-      if (!strcmp(check_variable->name, ast_variable->name))
-      {
-        if (snode)
-        {
-          snode->next = check_variable->next;
-          check_variable->next = envs->local->variables;
-          envs->local->variables = check_variable;
-        }
-        return check_variable;
-      }
       if (snode)
-        snode = snode->next;
-      else
-        snode = envs->local->variables;
-      check_variable = check_variable->next;
+      {
+        snode->next = check_variable->next;
+        check_variable->next = envs->local->variables;
+        envs->local->variables = check_variable;
+      }
+      return check_variable;
     }
+    if (snode)
+      snode = snode->next;
+    else
+      snode = envs->local->variables;
+
+    if (!check_variable->next)
+      break;
+
+    check_variable = check_variable->next;
   }
 
   if (!envs->global)
@@ -831,6 +847,20 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
           parser_push_value(stack, new_value_stack);
           break;
 
+        case AST_VALUE_CASES:
+          parser_push_value(
+              stack, 
+              visitor_get_value_from_cases(envs, text->value.cases_v) 
+            );
+          break;
+
+        case AST_VALUE_CODE:
+          parser_push_value(
+              stack, 
+              visitor_get_value_from_code(envs, text->value.code_v->code) 
+            );
+          break;
+
         default:
           parser_push_value(stack, text);
           break;
@@ -931,6 +961,7 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
       }
 
       parser_push_value(stack, result);
+//       free(operand2);
     }
   }
 
@@ -939,6 +970,8 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
     printf("에러, 연산 불가함\n");
     exit(1);
   }
+
+  free(text_array);
 
   return parser_pop_value(stack);
 }

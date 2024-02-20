@@ -55,10 +55,20 @@ Env* init_env()
 {
   Env* env = (Env*) malloc(sizeof(struct env_t));
   env->variable_size = 0;
-  env->variables = malloc(sizeof(struct env_variable_t));
+//   env->variables = malloc(sizeof(struct env_variable_t));
+//   env->variables->name = (void*) 0;
+//   env->variables->length = 0;
+//   env->variables->satisfy_size = 0;
+//   env->variables->satisfy = (void*) 0;
+//   env->variables->next = (void*) 0;
+  env->variables = (void*) 0;
 
   env->function_size = 0;
-  env->functions = malloc(sizeof(struct env_function_t));
+//   env->functions = malloc(sizeof(struct env_function_t));
+//   env->functions->name = (void*) 0;
+//   env->functions->length = 0;
+//   env->functions->next = (void*) 0;
+  env->functions = (void*) 0;
 
   return env;
 }

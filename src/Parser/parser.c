@@ -266,8 +266,11 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     {
       case TOKEN_BEGIN:
         Token* s_token = parser->token;
-        char* code = parser_is_begin(parser, 4, 
-                        "while", "if", "cases", "code"
+        char* code = parser_is_begin(parser, 6, 
+                        "while", 
+                        "if", 
+                        "cases", 
+                        "code", "function", "fun"
                      );
         if (code)
         {
@@ -319,7 +322,11 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
 
             continue;
           }
-          else if (!strcmp(code, "code"))
+          else if (
+                   !strcmp(code, "code") 
+                   || !strcmp(code, "function") 
+                   || !strcmp(code, "fun")
+                  )
           {
             ast_compound_add(
                 ast->value.compound_v,
@@ -329,7 +336,7 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
                     token, 
                     s_token, 
                     compound_env, 
-                    "code"
+                    code
                   )
                 );
             token = parser->token;
@@ -507,10 +514,13 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         ast_compound_add(ast->value.compound_v, value_node);
         token = parser->token;
       }
+
+//       free(value_node);
       continue;
     }
     else
     {
+      free(value_node);
       printf("에러, 설정되지 않은 token이 있음: %s\n", token->value);
       exit(1);
     }

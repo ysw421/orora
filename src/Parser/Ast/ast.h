@@ -153,6 +153,8 @@ typedef struct ast_value_stack_t
     AST_VALUE_AND,
     AST_VALUE_LBRACE,
     AST_VALUE_RBRACE,
+    AST_VALUE_CASES,
+    AST_VALUE_CODE,
     AST_VALUE_NULL
   } type;
 
@@ -165,6 +167,8 @@ typedef struct ast_value_stack_t
     struct ast_matrix_t* matrix_v;
     struct ast_variable_t* variable_v;
     struct ast_function_t* function_v;
+    struct ast_cases_t* cases_v;
+    struct ast_code_t* code_v;
   } value;
 
   struct ast_value_stack_t* next;
