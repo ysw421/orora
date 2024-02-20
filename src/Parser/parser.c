@@ -810,7 +810,10 @@ AST* parser_get_satisfy
       compound_env
     );
   if (!main_value_ast)
+  {
+    free(main_value_ast);
     return (void*) 0;
+  }
 
   AST_value* main_value = main_value_ast->value.value_v;
   token = parser->token;
@@ -841,7 +844,10 @@ AST* parser_get_satisfy
           );
       token = parser->token;
       if (!condition)
+      {
+        free(condition);
         break;
+      }
       main_variable->satisfy_size ++;
       main_variable->satisfy =
         realloc(main_variable->satisfy,
@@ -893,6 +899,7 @@ AST* parser_get_return
     );
   if (!main_value_ast)
   {
+    free(main_value_ast);
     return (void*) 0;
   }
 

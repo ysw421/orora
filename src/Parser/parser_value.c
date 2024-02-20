@@ -223,7 +223,7 @@ AST* parser_get_value
           {
             parser_push_value(postfix_expression, parser_pop_value(stack));
           }
-          parser_pop_value(stack);
+          free(parser_pop_value(stack));
 
           is_last_value = true;
           is_last_minus_value = false;
@@ -258,7 +258,7 @@ AST* parser_get_value
           {
             parser_push_value(postfix_expression, parser_pop_value(stack));
           }
-          parser_pop_value(stack);
+          free(parser_pop_value(stack));
 
           is_last_value = true;
           is_last_minus_value = false;

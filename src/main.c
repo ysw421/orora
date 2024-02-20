@@ -112,7 +112,15 @@ int main(int argc, char** argv)
 #ifdef DEVELOP_MODE
     print_ast_tree(ast_tree);
 #endif
+
+    free(file);
+    free(root);
+    free(parser);
+    free(ast_tree);
   }
+
+  free(global_env);
+  free(root_envs);
   return 0;
 }
 

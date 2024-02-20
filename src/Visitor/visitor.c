@@ -288,9 +288,6 @@ void visitor_nondefine_function_error(AST_function* ast_function)
 
 Env_function* visitor_get_function(Envs* envs, AST_function* ast_function)
 {
-  if (!envs->local->functions)
-    return (void*) 0;
-
   Env_function* check_function = envs->local->functions;
 
   Env_function* snode = (void*) 0;
@@ -498,9 +495,6 @@ AST_value_stack* visitor_get_value_from_variable
 
 Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable)
 {
-  if (!envs->local->variables)
-    return (void*) 0;
-
   Env_variable* check_variable = envs->local->variables;
 
   Env_variable* snode = (void*) 0;
@@ -961,6 +955,12 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
       }
 
       parser_push_value(stack, result);
+      free(text);
+//       if (!is_operator_use_one_value(get_token_type(text->type))
+//           || text->type == AST_VALUE_MINUS)
+//       {
+//         free(operand1);
+//       }
 //       free(operand2);
     }
   }
