@@ -78,6 +78,9 @@ AST* parser_get_value(Parser** parser_, AST* ast,
       is_last_minus_value2 = false;
       is_last_single_value = true;
       is_last_operator = false;
+
+      token = parser->token;
+      continue;
     }
     else
     {
@@ -383,6 +386,8 @@ AST* parser_get_new_null_ast(AST* ast, Parser* parser)
   AST* new_ast_node = 
     init_ast(AST_NULL, ast, token);
 
+  parser = parser_advance(parser, TOKEN_NULL);
+
   return new_ast_node;
 }
 
@@ -393,6 +398,17 @@ AST* parser_get_new_bool_ast(AST* ast, Parser* parser)
   AST* new_ast_node =
     init_ast(AST_BOOL, ast, token);
   new_ast_node->value.bool_v = init_ast_bool(parser);
+
+  return new_ast_node;
+}
+
+AST* parser_get_new_matrix_ast(AST* ast, Parser* parser)
+{
+  Token* token = parser->token;
+
+  AST* new_ast_node = 
+    init_ast(AST_MATRIX, ast, token);
+  new_ast_node->value.matrix_v = init_ast_matrix(parser, false);
 
   return new_ast_node;
 }
@@ -457,6 +473,8 @@ AST_value_stack* parser_get_new_null_ast_value_stack
   AST_value_stack* new = 
     init_ast_value_stack(AST_VALUE_NULL, token);
 
+  parser = parser_advance(parser, TOKEN_NULL);
+
   return new;
 }
 
@@ -471,6 +489,20 @@ AST_value_stack* parser_get_new_bool_ast_value_stack
   if (is_minus)
     new_value->value = !new_value->value;
   new->value.bool_v = new_value;
+
+  return new;
+}
+
+AST_value_stack* parser_get_new_matrix_ast_value_stack
+  (Parser* parser, bool is_minus)
+{
+  Token* token = parser->token;
+
+  AST_value_stack* new =
+    init_ast_value_stack(AST_VALUE_MATRIX, token);
+  AST_matrix* new_value = init_ast_matrix(parser, is_minus);
+
+  new->value.matrix_v = new_value;
 
   return new;
 }
@@ -517,6 +549,22 @@ bool is_bool_ast(Parser* parser)
 
   if (token->type == TOKEN_BOOL)
     return true;
+  return false;
+}
+
+bool is_matrix_ast(Parser* parser)
+{
+  Token* token = parser->token;
+
+  size_t pointer = parser->pointer;
+  char* code = parser_is_begin(parser, 3, "matrix", "pmatrix", "bmatrix");
+
+  if (code)
+  {
+    // Warning!
+    parser = parser_set(parser, pointer);
+    return true;
+  }
   return false;
 }
 

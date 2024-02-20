@@ -685,7 +685,14 @@ AST* parser_get_cases
       token = parser->token;
 
       new_ast_cases->is_have_otherwise = true;
-      if (token->type != TOKEN_END || !parser_is_end(parser, "cases"))
+      if (token->type == TOKEN_DOUBLE_BACKSLASH)
+      {
+        parser = parser_advance(parser, TOKEN_DOUBLE_BACKSLASH);
+        token = parser->token;
+        if (!(token->type == TOKEN_END && parser_is_end(parser, "cases")))
+          is_error = true; 
+      }
+      else if (token->type != TOKEN_END || !parser_is_end(parser, "cases"))
         is_error = true;
       break;
     }
@@ -709,6 +716,10 @@ AST* parser_get_cases
       {
         parser = parser_advance(parser, TOKEN_DOUBLE_BACKSLASH);
         token = parser->token;
+        if (token->type == TOKEN_END && parser_is_end(parser, "cases"))
+        {
+          break;
+        }
       }
       else if (token->type == TOKEN_END && parser_is_end(parser, "cases"))
       {

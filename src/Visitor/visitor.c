@@ -1991,6 +1991,19 @@ Env_variable* visitor_set_value_Env_variable_from_AST_value_stack_bool
   return env_variable;
 }
 
+Env_variable* visitor_set_value_Env_variable_from_AST_value_stack_matrix
+(Env_variable* env_variable, AST_value_stack* new_value)
+{
+  if (!env_variable)
+    return (void*) 0;
+
+  env_variable->type = ENV_VARIABLE_MATRIX;
+  env_variable->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+  env_variable->value.matrix_v = new_value->value.matrix_v;
+
+  return env_variable;
+}
+
 AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_int
 (AST_value_stack* new_value_stack, Env_variable* env_variable)
 {
@@ -2042,6 +2055,17 @@ AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_bool
   new_value_stack->type = AST_VALUE_BOOL;
   new_value_stack->value.bool_v = malloc(sizeof(struct ast_bool_t));
   new_value_stack->value.bool_v = env_variable->value.bool_v;
+}
+
+AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_matrix
+(AST_value_stack* new_value_stack, Env_variable* env_variable)
+{
+  if (!new_value_stack)
+    return (void*) 0;
+
+  new_value_stack->type = AST_VALUE_MATRIX;
+  new_value_stack->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+  new_value_stack->value.matrix_v = env_variable->value.matrix_v;
 }
 
 GET_VISITOR_ENV* visitor_run_while(Envs* envs, AST_while* ast_while)

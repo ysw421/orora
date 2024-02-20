@@ -41,6 +41,7 @@ typedef struct env_variable_t
     ENV_VARIABLE_FLOAT,
     ENV_VARIABLE_STRING,
     ENV_VARIABLE_NULL,
+    ENV_VARIABLE_MATRIX,
     ENV_VARIABLE_BOOL
   } type;
 
@@ -50,6 +51,7 @@ typedef struct env_variable_t
     struct ast_float_t* float_v;
     struct ast_string_t* string_v;
     struct ast_bool_t* bool_v;
+    struct ast_matrix_t* matrix_v;
   } value;
 
   size_t satisfy_size;

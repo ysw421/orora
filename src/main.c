@@ -61,10 +61,14 @@ bool init_orora()
      visitor_set_value_AST_value_stack_from_Env_variable_bool
     );
   /* matrix type */
-//   push_value_type_list
-//     (
-//      &value_type_list, "matrix", 
-//     );
+  push_value_type_list
+    (
+     &value_type_list, parser_get_new_matrix_ast, 
+     parser_get_new_matrix_ast_value_stack, is_matrix_ast, AST_MATRIX, 
+     ENV_VARIABLE_MATRIX, AST_VALUE_MATRIX, 
+     visitor_set_value_Env_variable_from_AST_value_stack_matrix, 
+     visitor_set_value_AST_value_stack_from_Env_variable_matrix
+    );
 
   return true;
 }

@@ -20,6 +20,7 @@ AST* parser_get_new_float_ast(AST* ast, Parser* parser);
 AST* parser_get_new_string_ast(AST* ast, Parser* parser);
 AST* parser_get_new_null_ast(AST* ast, Parser* parser);
 AST* parser_get_new_bool_ast(AST* ast, Parser* parser);
+AST* parser_get_new_matrix_ast(AST* ast, Parser* parser);
 
 AST_value_stack* parser_get_new_int_ast_value_stack
   (Parser* parser, bool is_minus);
@@ -31,12 +32,15 @@ AST_value_stack* parser_get_new_null_ast_value_stack
   (Parser* parser, bool is_minus);
 AST_value_stack* parser_get_new_bool_ast_value_stack
   (Parser* parser, bool is_minus);
+AST_value_stack* parser_get_new_matrix_ast_value_stack
+  (Parser* parser, bool is_minus);
 
 bool is_string_ast(Parser* parser);
 bool is_float_ast(Parser* parser);
 bool is_int_ast(Parser* parser);
 bool is_null_ast(Parser* parser);
 bool is_bool_ast(Parser* parser);
+bool is_matrix_ast(Parser* parser);
 
 int parser_precedence(int ast_stack_id);
 AST_value* parser_push_value(AST_value* value, AST_value_stack* node);

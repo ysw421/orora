@@ -8,3 +8,29 @@ i := 0
     break
   \end{if}
 \end{while}
+
+f(x) := \begin{cases}
+          \begin{code}
+            print("없는 코드...\n")
+            return 1
+          \end{code} & x = 1 \\
+          "이" & x = 2 \\
+          "삼" & x = 3 \\
+          "다른 수" & otherwise \\
+        \end{cases}
+
+print(f(1))
+
+print(NULL)
+
+a :=  \begin{matrix}
+        1 & 2 & 3 \\
+      \end{matrix}
+
+b := \begin{code}
+        return 3
+      \end{code}
+print(b)
+print(a)
+print("QQ\n")
+%        4 & 5 & 6 \\

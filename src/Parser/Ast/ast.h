@@ -134,6 +134,7 @@ typedef struct ast_value_stack_t
     AST_VALUE_FLOAT,
     AST_VALUE_STRING,
     AST_VALUE_BOOL,
+    AST_VALUE_MATRIX,
     AST_VALUE_PLUS,
     AST_VALUE_MINUS,
     AST_VALUE_PRODUCT,
@@ -161,6 +162,7 @@ typedef struct ast_value_stack_t
     struct ast_int_t* int_v;
     struct ast_float_t* float_v;
     struct ast_bool_t* bool_v;
+    struct ast_matrix_t* matrix_v;
     struct ast_variable_t* variable_v;
     struct ast_function_t* function_v;
   } value;
@@ -219,7 +221,7 @@ typedef struct ast_t
                                 //        Because it is a type's name...
     struct ast_float_t* float_v;
     struct ast_bool_t* bool_v;
-    struct ast_matirx_t* matrix_v;
+    struct ast_matrix_t* matrix_v;
     struct ast_value_t* value_v;
     struct ast_while_t* while_v;
     struct ast_if_t* if_v;
@@ -262,6 +264,7 @@ AST_string* init_ast_string(Parser* parser);
 AST_int* init_ast_int(Parser* parser);
 AST_float* init_ast_float(Parser* parser);
 AST_bool* init_ast_bool(Parser* parser);
+AST_matrix* init_ast_matrix(Parser* parser, bool is_minus);
 
 AST_compound* ast_compound_add(AST_compound* compound, AST* ast);
 

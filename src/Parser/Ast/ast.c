@@ -1,6 +1,8 @@
 #include "ast.h"
+#include "../parser.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 AST* init_ast(int type, AST* parent, Token* token)
 {
@@ -169,6 +171,8 @@ AST_string* init_ast_string(Parser* parser)
   ast_string->real_value = real_value;
   ast_string->value_length = strlen(token->value);
 
+  parser = parser_advance(parser, TOKEN_STRING);
+
   return ast_string;
 }
 
@@ -180,6 +184,8 @@ AST_int* init_ast_int(Parser* parser)
     (AST_int*) malloc(sizeof(struct ast_int_t));
   ast_int->value = atoi(token->value);
 
+  parser = parser_advance(parser, TOKEN_INT);
+
   return ast_int;
 }
 
@@ -190,6 +196,8 @@ AST_float* init_ast_float(Parser* parser)
   AST_float* ast_float =
     (AST_float*) malloc(sizeof(struct ast_float_t));
   ast_float->value = atof(token->value);
+
+  parser = parser_advance(parser, TOKEN_FLOAT);
 
   return ast_float;
 }
@@ -206,14 +214,107 @@ AST_bool* init_ast_bool(Parser* parser)
   else
     ast_bool->value = false;
 
+  parser = parser_advance(parser, TOKEN_BOOL);
+
   return ast_bool;
 }
 
-// AST_matrix* init_ast_matrix(Token* token)
-// {
-//   AST_matrix* ast_matrix = 
-//     (AST_matrix*) malloc(sizeof(struct ast_matirx_t));
-// }
+AST_matrix* init_ast_matrix(Parser* parser, bool is_minus)
+{
+  Token* token = parser->token;
+
+  AST_matrix* ast_matrix = 
+    (AST_matrix*) malloc(sizeof(struct ast_matrix_t));
+
+  char* code = parser_is_begin(parser, 3, "matrix", "pmatrix", "bmatrix");
+
+  bool is_error = true;
+  int col_size = 0;
+  int row_size = 0;
+
+  if (code)
+  {
+    GET_COMPOUND_ENV* new_env = 
+    //Warning! high possibility error!!!
+      init_get_compound_env((void*) 0);
+    new_env->is_size_one = true;
+
+    do
+    {
+      if (token->type == TOKEN_AMPER)
+      {
+        parser = parser_advance(parser, TOKEN_AMPER);
+        token = parser->token;
+      }
+
+      row_size ++;
+
+      AST* new_value_ast = 
+        parser_get_compound(parser, new_env);
+      token = parser->token;
+
+      if (
+          !new_value_ast 
+          || !token 
+          || (token->type != TOKEN_AMPER
+              && token->type != TOKEN_DOUBLE_BACKSLASH
+              && token->type != TOKEN_END
+             )
+         )
+      {
+        is_error = true;
+        break;
+      }
+
+      ast_matrix->value = 
+        realloc(ast_matrix->value, row_size * sizeof(struct ast_t*));
+      ast_matrix->value[row_size - 1] = 
+        new_value_ast->value.compound_v->items[0];
+    } while (token 
+             && token->type != TOKEN_DOUBLE_BACKSLASH
+             && token->type != TOKEN_END 
+             && !parser_is_end(parser, code)
+            );
+
+    if (token->type == TOKEN_END && parser_is_end(parser, code))
+    {
+      is_error = false;
+    }
+    else
+    {
+      parser = parser_advance(parser, TOKEN_DOUBLE_BACKSLASH);
+      token = parser->token;
+
+      if (token 
+          && token->type == TOKEN_END 
+          && parser_is_end(parser, code)
+         )
+      {
+        is_error = false;
+      }
+    }
+
+    ast_matrix->row_size = row_size;
+    ast_matrix->col_size = col_size;
+
+//     do 
+//     {
+//       do
+//       {
+//       } while ();
+//     } while ();
+  }
+
+  if (is_error)
+  {
+    printf("에러, matrix 정의가 잘못됨\n");
+    exit(1);
+  }
+
+  // ToDo...
+
+  return ast_matrix;
+}
 
 AST_compound* ast_compound_add(AST_compound* compound, AST* ast)
 {

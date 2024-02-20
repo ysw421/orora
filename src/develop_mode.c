@@ -288,9 +288,53 @@ void visitor_print_function(Envs* envs, AST* ast)
               break;
 
             case ENV_VARIABLE_BOOL:
-                printf(variable->value.
-                        bool_v->value ? "true" : "false");
-                break;
+              printf(variable->value.
+                      bool_v->value ? "true" : "false");
+              break;
+
+            case ENV_VARIABLE_MATRIX:
+              // ToDo...
+              printf("[");
+              for (int i = 0; 
+                   i < variable->value.matrix_v->row_size;
+                   i++ 
+                  )
+              {
+                AST_value_stack* new_value = 
+                  visitor_get_value(
+                      envs, 
+                      variable->value.matrix_v->value[i]->value.value_v
+                    );
+                switch (new_value->type)
+                {
+                  case AST_VALUE_STRING:
+                    printf("%s",
+                        new_value->value.string_v->real_value);
+                    break;
+
+                  case AST_VALUE_INT:
+                    printf("%d",
+                        new_value->value.int_v->value);
+                    break;
+
+                  case AST_VALUE_FLOAT:
+                    printf("%f",
+                        new_value->value.float_v->value);
+                    break;
+
+                  case AST_VALUE_NULL:
+                    printf("(NULL)");
+                    break;
+
+                  case AST_VALUE_BOOL:
+                    printf(new_value->value.
+                            bool_v->value ? "true" : "false");
+                    break;
+                }
+                printf(", ");
+              }
+              printf("]");
+              break;
           }
           break;
 
