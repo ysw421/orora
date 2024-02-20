@@ -523,6 +523,7 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
 
 AST* parser_parse(Parser* parser)
 {
+  parser = parser_set(parser, 0);
   AST* ast = 
     parser_get_compound(parser, init_get_compound_env((void*)0));
   // Root AST...

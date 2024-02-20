@@ -155,8 +155,10 @@ AST_function* init_ast_function(char* name, size_t length)
   return ast_function;
 }
 
-AST_string* init_ast_string(Token* token)
+AST_string* init_ast_string(Parser* parser)
 {
+  Token* token = parser->token;
+
   AST_string* ast_string =
     (AST_string*) malloc(sizeof(struct ast_string_t));
   ast_string->value = token->value;
@@ -170,8 +172,10 @@ AST_string* init_ast_string(Token* token)
   return ast_string;
 }
 
-AST_int* init_ast_int(Token* token)
+AST_int* init_ast_int(Parser* parser)
 {
+  Token* token = parser->token;
+
   AST_int* ast_int =
     (AST_int*) malloc(sizeof(struct ast_int_t));
   ast_int->value = atoi(token->value);
@@ -179,8 +183,10 @@ AST_int* init_ast_int(Token* token)
   return ast_int;
 }
 
-AST_float* init_ast_float(Token* token)
+AST_float* init_ast_float(Parser* parser)
 {
+  Token* token = parser->token;
+
   AST_float* ast_float =
     (AST_float*) malloc(sizeof(struct ast_float_t));
   ast_float->value = atof(token->value);
@@ -188,8 +194,10 @@ AST_float* init_ast_float(Token* token)
   return ast_float;
 }
 
-AST_bool* init_ast_bool(Token* token)
+AST_bool* init_ast_bool(Parser* parser)
 {
+  Token* token = parser->token;
+
   AST_bool* ast_bool = 
     (AST_bool*) malloc(sizeof(struct ast_bool_t));
 
@@ -200,6 +208,12 @@ AST_bool* init_ast_bool(Token* token)
 
   return ast_bool;
 }
+
+// AST_matrix* init_ast_matrix(Token* token)
+// {
+//   AST_matrix* ast_matrix = 
+//     (AST_matrix*) malloc(sizeof(struct ast_matirx_t));
+// }
 
 AST_compound* ast_compound_add(AST_compound* compound, AST* ast)
 {
@@ -216,7 +230,6 @@ orora_value_type* init_value_type_list(orora_value_type** head)
 {
   orora_value_type* node =
     (orora_value_type*) malloc(sizeof(struct orora_value_type_t));
-  node->name = (void*) 0;
 
   *head = node;
   
@@ -226,11 +239,9 @@ orora_value_type* init_value_type_list(orora_value_type** head)
 orora_value_type* push_value_type_list
   (
    orora_value_type** head,
-   char* name,
-   int token_id,
-   AST* (*parser_get_new_ast)(AST*, Token*),
-   AST_value_stack* (*parser_get_new_ast_value_stack)(Token*, bool),
-//    bool (*is_check)(Token*),
+   AST* (*parser_get_new_ast)(AST*, Parser*),
+   AST_value_stack* (*parser_get_new_ast_value_stack)(Parser*, bool),
+   bool (*is_check)(Parser* parser),
    int ast_type_id,
    int env_variable_type_id,
    int ast_value_type_id,
@@ -245,11 +256,9 @@ orora_value_type* push_value_type_list
   orora_value_type* point = *head;
   init_value_type_list(&point);
 //   point->name = (char*) malloc((strlen(name) + 1) * sizeof(char));
-  point->name = name;
-  point->token_id = token_id;
   point->parser_get_new_ast = parser_get_new_ast;
   point->parser_get_new_ast_value_stack = parser_get_new_ast_value_stack;
-//   point->is_check_type = is_check;
+  point->is_check_type = is_check;
   point->ast_type_id = ast_type_id;
   point->env_variable_type_id = env_variable_type_id;
   point->ast_value_type_id = ast_value_type_id;

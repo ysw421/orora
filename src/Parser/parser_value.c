@@ -46,7 +46,7 @@ AST* parser_get_value(Parser** parser_, AST* ast,
     orora_value_type* p = value_type_list;
     do
     {
-      if (p->token_id == token->type)
+      if (p->is_check_type(parser))
       {
         is_single_value = true;
         break;
@@ -335,64 +335,76 @@ AST_value_stack* get_single_value(Parser* parser, AST* ast, bool is_minus)
   orora_value_type* p = value_type_list;
   do
   {
-    if (token->type == p->token_id)
-      return p->parser_get_new_ast_value_stack(token, is_minus);
+    if (p->is_check_type(parser))
+      return p->parser_get_new_ast_value_stack(parser, is_minus);
     p = p->next;
   } while (p);
 
   return (void*) 0;
 }
 
-AST* parser_get_new_int_ast(AST* ast, Token* token)
+AST* parser_get_new_int_ast(AST* ast, Parser* parser)
 {
+  Token* token = parser->token;
+
   AST* new_ast_node =
     init_ast(AST_INT, ast, token);
-  new_ast_node->value.int_v = init_ast_int(token);
+  new_ast_node->value.int_v = init_ast_int(parser);
 
   return new_ast_node;
 }
 
-AST* parser_get_new_float_ast(AST* ast, Token* token)
+AST* parser_get_new_float_ast(AST* ast, Parser* parser)
 {
+  Token* token = parser->token;
+
   AST* new_ast_node =
     init_ast(AST_FLOAT, ast, token);
-  new_ast_node->value.float_v = init_ast_float(token);
+  new_ast_node->value.float_v = init_ast_float(parser);
 
   return new_ast_node;
 }
 
-AST* parser_get_new_string_ast(AST* ast, Token* token)
+AST* parser_get_new_string_ast(AST* ast, Parser* parser)
 {
+  Token* token = parser->token;
+
   AST* new_ast_node =
     init_ast(AST_STRING, ast, token);
-  new_ast_node->value.string_v = init_ast_string(token);
+  new_ast_node->value.string_v = init_ast_string(parser);
 
   return new_ast_node;
 }
 
-AST* parser_get_new_null_ast(AST* ast, Token* token)
+AST* parser_get_new_null_ast(AST* ast, Parser* parser)
 {
+  Token* token = parser->token;
+
   AST* new_ast_node = 
     init_ast(AST_NULL, ast, token);
 
   return new_ast_node;
 }
 
-AST* parser_get_new_bool_ast(AST* ast, Token* token)
+AST* parser_get_new_bool_ast(AST* ast, Parser* parser)
 {
+  Token* token = parser->token;
+
   AST* new_ast_node =
     init_ast(AST_BOOL, ast, token);
-  new_ast_node->value.bool_v = init_ast_bool(token);
+  new_ast_node->value.bool_v = init_ast_bool(parser);
 
   return new_ast_node;
 }
 
 AST_value_stack* parser_get_new_int_ast_value_stack
-  (Token* token, bool is_minus)
+  (Parser* parser, bool is_minus)
 {
+  Token* token = parser->token;
+
   AST_value_stack* new =
     init_ast_value_stack(AST_VALUE_INT, token);
-  AST_int* new_value = init_ast_int(token);
+  AST_int* new_value = init_ast_int(parser);
   if (is_minus)
     new_value->value = 0 - new_value->value;
   new->value.int_v = new_value;
@@ -401,11 +413,13 @@ AST_value_stack* parser_get_new_int_ast_value_stack
 }
 
 AST_value_stack* parser_get_new_float_ast_value_stack
-  (Token* token, bool is_minus)
+  (Parser* parser, bool is_minus)
 {
+  Token* token = parser->token;
+
   AST_value_stack* new =
     init_ast_value_stack(AST_VALUE_FLOAT, token);
-  AST_float* new_value = init_ast_float(token);
+  AST_float* new_value = init_ast_float(parser);
   if (is_minus)
     new_value->value = 0 - new_value->value;
   new->value.float_v = new_value;
@@ -414,8 +428,10 @@ AST_value_stack* parser_get_new_float_ast_value_stack
 }
 
 AST_value_stack* parser_get_new_string_ast_value_stack
-  (Token* token, bool is_minus)
+  (Parser* parser, bool is_minus)
 {
+  Token* token = parser->token;
+
   if (is_minus)
   {
     printf("에러, string에는 -연산이 불가함\n");
@@ -423,14 +439,16 @@ AST_value_stack* parser_get_new_string_ast_value_stack
   }
   AST_value_stack* new =
     init_ast_value_stack(AST_VALUE_STRING, token);
-  new->value.string_v = init_ast_string(token);
+  new->value.string_v = init_ast_string(parser);
 
   return new;
 }
 
 AST_value_stack* parser_get_new_null_ast_value_stack
-  (Token* token, bool is_minus)
+  (Parser* parser, bool is_minus)
 {
+  Token* token = parser->token;
+
   if (is_minus)
   {
     printf("에러, null에는 -연산이 불가함\n");
@@ -443,16 +461,63 @@ AST_value_stack* parser_get_new_null_ast_value_stack
 }
 
 AST_value_stack* parser_get_new_bool_ast_value_stack
-  (Token* token, bool is_minus)
+  (Parser* parser, bool is_minus)
 {
+  Token* token = parser->token;
+
   AST_value_stack* new =
     init_ast_value_stack(AST_VALUE_BOOL, token);
-  AST_bool* new_value = init_ast_bool(token);
+  AST_bool* new_value = init_ast_bool(parser);
   if (is_minus)
     new_value->value = !new_value->value;
   new->value.bool_v = new_value;
 
   return new;
+}
+
+bool is_string_ast(Parser* parser)
+{
+  Token* token = parser->token;
+
+  if (token->type == TOKEN_STRING)
+    return true;
+  return false;
+}
+
+bool is_float_ast(Parser* parser)
+{
+  Token* token = parser->token;
+
+  if (token->type == TOKEN_FLOAT)
+    return true;
+  return false;
+}
+
+bool is_int_ast(Parser* parser)
+{
+  Token* token = parser->token;
+
+  if (token->type == TOKEN_INT)
+    return true;
+  return false;
+}
+
+bool is_null_ast(Parser* parser)
+{
+  Token* token = parser->token;
+
+  if (token->type == TOKEN_NULL)
+    return true;
+  return false;
+}
+
+bool is_bool_ast(Parser* parser)
+{
+  Token* token = parser->token;
+
+  if (token->type == TOKEN_BOOL)
+    return true;
+  return false;
 }
 
 AST_value_stack* parser_pop_value(AST_value* value)

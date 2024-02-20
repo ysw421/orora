@@ -117,6 +117,13 @@ typedef struct ast_bool_t
   bool value;
 } AST_bool;
 
+typedef struct ast_matrix_t
+{
+  int row_size;
+  int col_size;
+  struct ast_t** value;
+} AST_matrix;
+
 typedef struct ast_value_stack_t
 {
   enum
@@ -197,6 +204,7 @@ typedef struct ast_t
     AST_CONTINUE,       // 13:
     AST_RETURN,         // 14:
     AST_BOOL,           // 15:
+    AST_MATRIX,         // 16:
     AST_NOOP = 99       // 99: Similar with NULL
   } type;
 
@@ -211,6 +219,7 @@ typedef struct ast_t
                                 //        Because it is a type's name...
     struct ast_float_t* float_v;
     struct ast_bool_t* bool_v;
+    struct ast_matirx_t* matrix_v;
     struct ast_value_t* value_v;
     struct ast_while_t* while_v;
     struct ast_if_t* if_v;
@@ -248,20 +257,20 @@ AST_value_stack* init_ast_value_stack(int type, Token* token);
 AST_value* init_ast_value();
 AST_variable* init_ast_variable(char* name, size_t length);
 AST_function* init_ast_function(char* name, size_t length);
-AST_string* init_ast_string(Token* token);
-AST_int* init_ast_int(Token* token);
-AST_float* init_ast_float(Token* token);
-AST_bool* init_ast_bool(Token* token);
+
+AST_string* init_ast_string(Parser* parser);
+AST_int* init_ast_int(Parser* parser);
+AST_float* init_ast_float(Parser* parser);
+AST_bool* init_ast_bool(Parser* parser);
 
 AST_compound* ast_compound_add(AST_compound* compound, AST* ast);
 
 typedef struct orora_value_type_t
 {
   struct orora_value_type_t* next;
-  char* name;
-  int token_id;
-  AST* (*parser_get_new_ast)(AST*, Token*);
-  AST_value_stack* (*parser_get_new_ast_value_stack)(Token*, bool);
+  AST* (*parser_get_new_ast)(AST*, Parser*);
+  AST_value_stack* (*parser_get_new_ast_value_stack)(Parser*, bool);
+  bool (*is_check_type)(Parser* parser);
   int ast_type_id;
   int env_variable_type_id;
   int ast_value_type_id;
@@ -273,9 +282,10 @@ typedef struct orora_value_type_t
 
 orora_value_type* push_value_type_list
   (
-   orora_value_type** head, char* name, int token_id,
-   AST* (*parser_get_new_ast)(AST*, Token*),
-   AST_value_stack* (*parser_get_new_ast_value_stack)(Token*, bool),
+   orora_value_type** head, 
+   AST* (*parser_get_new_ast)(AST*, Parser*),
+   AST_value_stack* (*parser_get_new_ast_value_stack)(Parser*, bool),
+   bool (*is_check_type)(Parser* parser),
    int ast_type_id,
    int env_variable_type_id,
    int ast_value_type_id,
