@@ -2,6 +2,7 @@ exec = orora.out
 sources = $(wildcard src/*.c src/*/*.c src/*/*/*.c )
 objects = $(sources:.c=.o)
 flags = -g -Wall -lm -ldl -fPIC -rdynamic #-fsanitize=address
+#flags = -g -Wall -lm -ldl -fPIC -rdynamic -fsanitize=address
 
 # ./configure --prefix = /usr/local/orora
 

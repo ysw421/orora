@@ -4,32 +4,6 @@
 #include <stddef.h>
 #include "./Parser/Ast/ast.h"
 
-typedef struct env_function_t
-{
-  char* name;
-  int length;
-
-  struct ast_t** args;
-  int args_size;
-
-  struct ast_t* code;
-
-//   enum
-//   {
-//     ENV_FUNCTION_TYPE_SINGLE,  // f(x)=3x+2
-//     ENV_FUNCTION_TYPE_DEFAULT,
-//     ENV_FUNCTION_TYPE_NULL = 99
-//   } type;
-
-  struct env_function_t* next;
-} Env_function;
-
-typedef struct env_value_list_t
-{
-  struct ast_value_t* value;
-  struct env_value_list_t* next;
-} Env_value_list;
-
 typedef struct env_variable_t
 {
   char* name;
@@ -59,6 +33,25 @@ typedef struct env_variable_t
 
   struct env_variable_t* next;
 } Env_variable;
+
+typedef struct env_function_t
+{
+  char* name;
+  int length;
+
+  struct ast_t** args;
+  int args_size;
+
+  struct ast_t* code;
+
+  struct env_function_t* next;
+} Env_function;
+
+typedef struct env_value_list_t
+{
+  struct ast_value_t* value;
+  struct env_value_list_t* next;
+} Env_value_list;
 
 typedef struct env_t
 {

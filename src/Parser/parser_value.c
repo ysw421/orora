@@ -694,7 +694,8 @@ AST_value* parser_push_value(AST_value* value, AST_value_stack* node)
   value->size ++;
   AST_value_stack* snode = value->stack;
   value->stack = node;
-  value->stack->next = snode;
+  if (snode)
+    value->stack->next = snode;
 
   return value;
 }

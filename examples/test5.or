@@ -7,11 +7,11 @@ a:=3
 \begin{if}{1}
   print("condition 1\n")
 
-  \begin{while}{a + 10}
+  \begin{while}{a + 2}
     a:=a-1
 
     b:=4
-    \begin{while}{b + 10}
+    \begin{while}{b + 3}
       b:=b-1
       print("hello ", a, " ", b, " ", h(f(a), g(3b + 2)), "\n")
     \end{while}

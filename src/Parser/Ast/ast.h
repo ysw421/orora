@@ -47,7 +47,7 @@ typedef struct ast_variable_t
 {
   enum
   {
-    AST_VARIABLE_DEFINE,
+    AST_VARIABLE_DEFINE = 1,
     AST_VARIABLE_SATISFY,
     AST_VARIABLE_VALUE,
     AST_VARIABLE_NULL = 99
@@ -69,7 +69,7 @@ typedef struct ast_function_t
 
   enum
   {
-    AST_FUNCTION_DEFINE,
+    AST_FUNCTION_DEFINE = 1,
     AST_FUNCTION_VALUE,
     AST_FUNCTION_NULL = 99
   } ast_type;
@@ -128,7 +128,7 @@ typedef struct ast_value_stack_t
 {
   enum
   {
-    AST_VALUE_VARIABLE,
+    AST_VALUE_VARIABLE = 1,
     AST_VALUE_FUNCTION,
     AST_VALUE_INT,
     AST_VALUE_FLOAT,
@@ -194,7 +194,7 @@ typedef struct ast_t
     // 'AST_STRING' vs 'TOKEN_STRING'
     //  -> AST          -> Token
     // ==============================
-    AST_COMPOUND,       // 00: struct ast_t**
+    AST_COMPOUND = 1,   // 00: struct ast_t**
     AST_VARIABLE,       // 01:
     AST_FUNCTION,       // 02:
     AST_STRING,         // 03:

@@ -774,10 +774,20 @@ Env_variable* visitor_variable_satisfy(Envs* envs, AST_variable* ast_variable)
 AST_value_stack* get_deep_copy_ast_value_stack
 (AST_value_stack* ast_value_stack)
 {
+//   if (!ast_value_stack
+//       || !ast_value_stack->type
+//       || !ast_value_stack->next
+//      )
+//     return (void*) 0;
+
   AST_value_stack* new_value_stack = malloc(sizeof(AST_value));
-  new_value_stack->type = ast_value_stack->type;
+  if (ast_value_stack->type)
+    new_value_stack->type = ast_value_stack->type;
   new_value_stack->value = ast_value_stack->value;
-  new_value_stack->next = ast_value_stack->next;
+  if (ast_value_stack->next)
+    new_value_stack->next = ast_value_stack->next;
+  else
+    new_value_stack->next = (void*) 0;
 
 //   new_value_stack->col = ast_value_stack->col;
 //   new_value_stack->col_first = ast_value_stack->col_first;
@@ -2180,7 +2190,11 @@ GET_VISITOR_ENV* visitor_run_if(Envs* envs, AST_if* ast_if)
 
   AST* condition = ast_if->condition;
 
-  if (is_true(visitor_get_value_from_ast(envs, condition)))
+  AST_value_stack* check_condition = 
+    visitor_get_value_from_ast(envs, condition);
+  bool is_condition = is_true(check_condition);
+  free(check_condition);
+  if (is_condition)
   {
     Envs* new_envs = visitor_merge_envs(envs);
 

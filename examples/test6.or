@@ -1,8 +1,14 @@
-a := 2 + 1
-\begin{if}{1}
-  a := a + 1
-\end{if}
-print(a)
+%a := 2 + 1
+%\begin{if}{1}
+%  a := a + 1
+%\end{if}
+%print(a)
+
+b:=4
+\begin{while}{b + 4}
+  b:=b-1
+  print("hello ", b, "\n")
+\end{while}
 
 %f(z, x, y:=2) := 3x
 %print(f(3, 2))

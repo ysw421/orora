@@ -23,14 +23,14 @@ print(f(1))
 
 print(NULL)
 
-a :=  \begin{matrix}
-        1 & 2 & 3 \\
-      \end{matrix}
+%a :=  \begin{matrix}
+%        1 & 2 & 3 \\
+%      \end{matrix}
 
 b := \begin{code}
         return 3
       \end{code}
 print(b)
-print(a)
+%print(a)
 print("QQ\n")
 %        4 & 5 & 6 \\

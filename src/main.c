@@ -110,7 +110,7 @@ int main(int argc, char** argv)
     printf("\n======================\n");
 
 #ifdef DEVELOP_MODE
-    print_ast_tree(ast_tree);
+//     print_ast_tree(ast_tree);
 #endif
 
     free(file);

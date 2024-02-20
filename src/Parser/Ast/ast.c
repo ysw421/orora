@@ -266,8 +266,14 @@ AST_matrix* init_ast_matrix(Parser* parser, bool is_minus)
         break;
       }
 
-      ast_matrix->value = 
-        realloc(ast_matrix->value, row_size * sizeof(struct ast_t*));
+      if (ast_matrix->value)
+      {
+        printf("!!! %d\n", row_size);
+        ast_matrix->value = 
+          realloc(ast_matrix->value, row_size * sizeof(struct ast_t*));
+      }
+      else
+        ast_matrix->value = malloc(row_size * sizeof(struct ast_t*));
       ast_matrix->value[row_size - 1] = 
         new_value_ast->value.compound_v->items[0];
     } while (token 
