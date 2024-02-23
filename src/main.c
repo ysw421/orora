@@ -12,6 +12,7 @@
 #endif
 
 orora_value_type* value_type_list;
+int ORORA_VALUE_TYPE_NUM;
 
 bool init_orora()
 {
@@ -69,6 +70,7 @@ bool init_orora()
      visitor_set_value_Env_variable_from_AST_value_stack_matrix, 
      visitor_set_value_AST_value_stack_from_Env_variable_matrix
     );
+  ORORA_VALUE_TYPE_NUM = 6;
 
   return true;
 }

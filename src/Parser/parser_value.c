@@ -7,9 +7,6 @@ AST_value_stack* get_single_value(Parser* parser, AST* ast, bool is_minus);
 GET_VALUE_ENV* init_get_value_env();
 bool is_operator(int token_id);
 
-// AST* parser_get_value_from_ast
-// (Parser* parser, AST* ast,)
-
 AST* parser_get_value
 (
  Parser** parser_, AST* ast,
@@ -135,7 +132,9 @@ AST* parser_get_value
       }
 
       if (token_type == TOKEN_TYPE_NULL)
+      {
         break;
+      }
       else if (is_last_minus_value2)
       {
         printf("에러, operator 뒤에는 값이 와야함\n");

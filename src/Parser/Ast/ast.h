@@ -194,23 +194,23 @@ typedef struct ast_t
     // 'AST_STRING' vs 'TOKEN_STRING'
     //  -> AST          -> Token
     // ==============================
-    AST_COMPOUND = 1,   // 00: struct ast_t**
-    AST_VARIABLE,       // 01:
-    AST_FUNCTION,       // 02:
-    AST_STRING,         // 03:
-    AST_INT,            // 04:
-    AST_FLOAT,          // 05:
-    AST_VALUE,          // 06:
-    AST_WHILE,          // 07:
-    AST_IF,             // 08:
-    AST_CODE,           // 09:
-    AST_CASES,          // 10:
-    AST_NULL,           // 11:
-    AST_BREAK,          // 12:
-    AST_CONTINUE,       // 13:
-    AST_RETURN,         // 14:
-    AST_BOOL,           // 15:
-    AST_MATRIX,         // 16:
+    AST_COMPOUND = 1,   // 01: struct ast_t**
+    AST_VARIABLE,       // 02:
+    AST_FUNCTION,       // 03:
+    AST_STRING,         // 04:
+    AST_INT,            // 05:
+    AST_FLOAT,          // 06:
+    AST_VALUE,          // 07:
+    AST_WHILE,          // 08:
+    AST_IF,             // 09:
+    AST_CODE,           // 10:
+    AST_CASES,          // 11:
+    AST_NULL,           // 12:
+    AST_BREAK,          // 13:
+    AST_CONTINUE,       // 14:
+    AST_RETURN,         // 15:
+    AST_BOOL,           // 16:
+    AST_MATRIX,         // 17:
     AST_NOOP = 99       // 99: Similar with NULL
   } type;
 

@@ -349,9 +349,10 @@ AST* parser_get_function
     while (token && !(num_of_lpar == 0 && token->type == TOKEN_RPAR))
     {
       GET_COMPOUND_ENV* new_env = init_get_compound_env(compound_env);
-      new_env->is_allow_linebreak = true;
-      new_env->is_in_parentheses = true;
-      new_env->is_usefull_comma = true;
+      new_env->is_size_one = true;
+//       new_env->is_allow_linebreak = true;
+//       new_env->is_in_parentheses = true;
+//       new_env->is_usefull_comma = true;
       AST* new_arg_ast = parser_get_compound(parser, new_env);
       token = parser->token;
 
@@ -390,7 +391,9 @@ AST* parser_get_function
     }
   }
   if (token)
+  {
     parser = parser_advance(parser, TOKEN_RPAR);
+  }
   else
   {
     printf("에러, 괄호가 끝나지 아니함\n");

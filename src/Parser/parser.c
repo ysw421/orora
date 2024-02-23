@@ -143,8 +143,8 @@ Parser* init_parser(Lexer* lexer)
 
   parser->lexer = lexer;
   parser->prev_token = (void*) 0;
-  parser->token = parser->size == 0? (void*) 0 : parser->tokens[0];
-  parser->next_token = parser->size == 1 ? (void*) 0 : parser->tokens[1];
+  parser->token = parser->size == 0 ? (void*) 0 : parser->tokens[0];
+  parser->next_token = parser->size <= 1 ? (void*) 0 : parser->tokens[1];
   parser->row_size = 0;
   parser->row_tokens = malloc(sizeof(Token*));
   parser->row_tokens[0] = malloc(sizeof(Token));
@@ -171,7 +171,7 @@ Parser* parser_set(Parser* parser, size_t pointer)
   parser->token = pointer == parser->size
                           ? (void*) 0
                           : parser->tokens[pointer];
-  parser->next_token = (pointer < parser->size)
+  parser->next_token = (pointer + 1 < parser->size)
                           ? parser->tokens[pointer + 1]
                           : (void*) 0;
 
@@ -194,7 +194,7 @@ Parser* parser_advance(Parser* parser, int type)
   }
 //   free(parser->prev_token);
   parser->prev_token = parser->token;
-  parser->token = parser->next_token;
+  parser->token = parser->next_token ? parser->next_token : (void*) 0;
   parser->pointer ++;
   if (parser->pointer + 2 <= parser->size)
     parser->next_token = parser->tokens[parser->pointer + 1];
@@ -266,11 +266,9 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     {
       case TOKEN_BEGIN:
         Token* s_token = parser->token;
-        char* code = parser_is_begin(parser, 6, 
+        char* code = parser_is_begin(parser, 2, 
                         "while", 
-                        "if", 
-                        "cases", 
-                        "code", "function", "fun"
+                        "if" 
                      );
         if (code)
         {
@@ -306,44 +304,9 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
 
             continue;
           }
-          else if (!strcmp(code, "cases"))
-          {
-            ast_compound_add(
-                  ast->value.compound_v, 
-                  parser_get_cases(
-                      parser, 
-                      ast, 
-                      token, 
-                      s_token,
-                      compound_env
-                    )
-                );
-            token = parser->token;
-
-            continue;
-          }
-          else if (
-                   !strcmp(code, "code") 
-                   || !strcmp(code, "function") 
-                   || !strcmp(code, "fun")
-                  )
-          {
-            ast_compound_add(
-                ast->value.compound_v,
-                parser_get_code(
-                    parser, 
-                    ast, 
-                    token, 
-                    s_token, 
-                    compound_env, 
-                    code
-                  )
-                );
-            token = parser->token;
-
-            continue;
-          }
         }
+        else
+          is_break = false;
         break;
 
       case TOKEN_END:

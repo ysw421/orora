@@ -865,6 +865,31 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
             );
           break;
 
+        case AST_VALUE_MATRIX:
+          AST_matrix* matrix_value = text->value.matrix_v;
+          for (
+               int i = 0; 
+               i < matrix_value->row_size * matrix_value->col_size;
+               i ++
+              )
+          {
+            AST* matrix_each_value = 
+              init_ast(AST_VALUE, (void*) 0, (void*) 0);
+            matrix_each_value->value.value_v = init_ast_value();
+            matrix_each_value->value.value_v->size = 1;
+            matrix_each_value->value.value_v->stack = 
+              visitor_get_value_from_ast(envs, matrix_value->value[i]);
+            free(matrix_value->value[i]);
+            matrix_value->value[i] = 
+              matrix_each_value;
+          }
+          printf("Matrix 특공대!\n");
+          AST_value_stack* new_matrix_value = 
+            init_ast_value_stack(AST_VALUE_MATRIX, (void*) 0);
+          new_matrix_value->value.matrix_v = matrix_value;
+          parser_push_value(stack, new_matrix_value);
+          break;
+
         default:
           parser_push_value(stack, text);
           break;
@@ -1220,108 +1245,153 @@ AST_value_stack* visitor_operator_plus(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-  switch (operand1->type)
+  int op1 = operand1->type;
+  int op2 = operand2->type;
+
+  if (op1 == AST_VALUE_NULL || op2 == AST_VALUE_NULL)
   {
-    case AST_VALUE_NULL:
-      printf("에러, null은 + 연산이 불가함\n");
-      exit(1);
+    printf("에러, null은 + 연산이 불가함\n");
+    exit(1);
+  }
+  else if (op1 == AST_VALUE_STRING || op2 == AST_VALUE_STRING)
+  {
+    printf("에러, string은 + 연산이 불가함\n");
+    exit(1);
+  }
+  switch (op1 + op2 * 100)
+  {
+    case AST_VALUE_INT + AST_VALUE_INT * 100:
+      result->type = AST_VALUE_INT;
+      result->value.int_v = malloc(sizeof(struct ast_int_t));
+      result->value.int_v->value =
+        operand1->value.int_v->value + operand2->value.int_v->value;
       break;
 
-    case AST_VALUE_STRING:
-      printf("에러, string은 + 연산이 불가함\n");
-      exit(1);
+    case AST_VALUE_INT + AST_VALUE_FLOAT * 100:
+    case AST_VALUE_FLOAT + AST_VALUE_INT * 100:
+      result->type = AST_VALUE_FLOAT;
+      result->value.float_v = malloc(sizeof(struct ast_float_t));
+      if (op1 == AST_VALUE_INT)
+        result->value.float_v->value =
+          operand1->value.int_v->value + operand2->value.float_v->value;
+      else
+        result->value.float_v->value =
+          operand1->value.float_v->value + operand2->value.int_v->value;
       break;
 
-    case AST_VALUE_INT:
-      int int_value = operand1->value.int_v->value;
-      switch (operand2->type)
+    case AST_VALUE_INT + AST_VALUE_BOOL * 100:
+    case AST_VALUE_BOOL + AST_VALUE_INT * 100:
+      result->type = AST_VALUE_INT;
+      result->value.int_v = malloc(sizeof(struct ast_int_t));
+      if (op1 == AST_VALUE_INT)
+        result->value.int_v->value =
+          operand1->value.int_v->value + (operand2->value.bool_v->value ? 1 : 0);
+      else
+        result->value.int_v->value =
+          (operand1->value.bool_v->value ? 1 : 0) + operand2->value.int_v->value;
+      break;
+
+    case AST_VALUE_FLOAT + AST_VALUE_FLOAT * 100:
+      result->type = AST_VALUE_FLOAT;
+      result->value.float_v = malloc(sizeof(struct ast_float_t));
+      result->value.float_v->value =
+        operand1->value.float_v->value + operand2->value.float_v->value;
+      break;
+
+    case AST_VALUE_FLOAT + AST_VALUE_BOOL * 100:
+    case AST_VALUE_BOOL + AST_VALUE_FLOAT * 100:
+      result->type = AST_VALUE_FLOAT;
+      result->value.float_v = malloc(sizeof(struct ast_float_t));
+      if (op1 == AST_VALUE_FLOAT)
+        result->value.int_v->value = 
+          operand1->value.float_v->value + (operand2->value.bool_v->value ? 1 : 0);
+      else
+        result->value.int_v->value = 
+          (operand1->value.bool_v->value ? 1 : 0) + operand2->value.float_v->value;
+      break;
+
+    case AST_VALUE_BOOL + AST_VALUE_BOOL * 100:
+      result->type = AST_VALUE_INT;
+      result->value.int_v = malloc(sizeof(struct ast_int_t));
+      result->value.int_v->value =
+        (operand1->value.bool_v->value ? 1 : 0) 
+          + (operand2->value.bool_v->value ? 1 : 0);
+      break;
+
+    case AST_VALUE_MATRIX + AST_VALUE_MATRIX * 100:
+      AST_matrix* matrix_value = operand1->value.matrix_v;
+      if (
+          matrix_value->row_size != operand2->value.matrix_v->row_size
+          || matrix_value->col_size != operand2->value.matrix_v->col_size
+         )
       {
-        case AST_VALUE_INT:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value =
-            int_value + operand2->value.int_v->value;
-          break;
+        printf("에러, 행렬 덧셈시 크기가 같아야 함\n");
+        exit(1);
+      }
 
-        case AST_VALUE_FLOAT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value =
-            int_value + operand2->value.float_v->value;
-          break;
+      int matrix_size = 
+        matrix_value->row_size * matrix_value->col_size;
 
-        case AST_VALUE_BOOL:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value =
-            int_value + (operand2->value.bool_v->value ? 1 : 0);
-          break;
+      result->type = AST_VALUE_MATRIX;
+      result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+      result->value.matrix_v->row_size = matrix_value->row_size;
+      result->value.matrix_v->col_size = matrix_value->col_size;
 
-        default:
-          // ToDo...
-          break;
+      result->value.matrix_v->value = 
+        malloc(matrix_size * sizeof(struct ast_t));
+
+      for (int i = 0; i < matrix_size; i ++)
+      {
+        AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+        new_value->value.value_v = init_ast_value();
+        new_value->value.value_v->size = 1;
+        new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+        visitor_operator_plus(
+            new_value->value.value_v->stack, 
+            matrix_value->value[i]->value.value_v->stack, 
+            operand2->value.matrix_v->value[i]->value.value_v->stack
+          );
+        result->value.matrix_v->value[i] = new_value;
       }
       break;
 
-    case AST_VALUE_FLOAT:
-      float float_value = operand1->value.float_v->value;
-      switch (operand2->type)
+    case AST_VALUE_MATRIX + AST_VALUE_INT * 100:
+    case AST_VALUE_INT + AST_VALUE_MATRIX * 100:
+    case AST_VALUE_MATRIX + AST_VALUE_FLOAT * 100:
+    case AST_VALUE_FLOAT + AST_VALUE_MATRIX * 100:
+    case AST_VALUE_BOOL + AST_VALUE_MATRIX * 100:
+    case AST_VALUE_MATRIX + AST_VALUE_BOOL * 100:
+      matrix_value = 
+        op1 == AST_VALUE_MATRIX ?
+          operand1->value.matrix_v
+          : operand2->value.matrix_v;
+      matrix_size = 
+        matrix_value->row_size * matrix_value->col_size;
+
+      result->type = AST_VALUE_MATRIX;
+      result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+      result->value.matrix_v->row_size = matrix_value->row_size;
+      result->value.matrix_v->col_size = matrix_value->col_size;
+
+      result->value.matrix_v->value = 
+        malloc(matrix_size * sizeof(struct ast_t));
+
+      for (int i = 0; i < matrix_size; i ++)
       {
-        case AST_VALUE_INT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value =
-            float_value + operand2->value.int_v->value;
-          break;
-
-        case AST_VALUE_FLOAT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value =
-            float_value + operand2->value.float_v->value;
-          break;
-
-        case AST_VALUE_BOOL:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.int_v->value =
-            float_value + (operand2->value.bool_v->value ? 1 : 0);
-          break;
-
-        default:
-          // ToDo...
-          break;
-      }
-      break;
-
-    case AST_VALUE_BOOL:
-      int bool_value = operand1->value.bool_v->value ? 1 : 0;
-      switch (operand2->type)
-      {
-        case AST_VALUE_BOOL:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value =
-            bool_value + (operand2->value.bool_v->value ? 1 : 0);
-          break;
-
-        case AST_VALUE_INT:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value = 
-            bool_value + operand2->value.int_v->value;
-          break;
-
-        case AST_VALUE_FLOAT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value = 
-            bool_value + operand2->value.float_v->value;
-          break;
-
-        default:
-          // ToDo...
-          break;
+        AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+        new_value->value.value_v = init_ast_value();
+        new_value->value.value_v->size = 1;
+        new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+        visitor_operator_plus(
+            new_value->value.value_v->stack, 
+            op1 == AST_VALUE_MATRIX ? 
+              matrix_value->value[i]->value.value_v->stack
+              : operand1, 
+            op2 == AST_VALUE_MATRIX ? 
+              matrix_value->value[i]->value.value_v->stack
+              : operand2
+          );
+        result->value.matrix_v->value[i] = new_value;
       }
       break;
 
@@ -1338,108 +1408,153 @@ AST_value_stack* visitor_operator_minus(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-  switch (operand1->type)
+  int op1 = operand1->type;
+  int op2 = operand2->type;
+
+  if (op1 == AST_VALUE_NULL || op2 == AST_VALUE_NULL)
   {
-    case AST_VALUE_NULL:
-      printf("에러, null은 - 연산이 불가함\n");
-      exit(1);
+    printf("에러, null은 + 연산이 불가함\n");
+    exit(1);
+  }
+  else if (op1 == AST_VALUE_STRING || op2 == AST_VALUE_STRING)
+  {
+    printf("에러, string은 + 연산이 불가함\n");
+    exit(1);
+  }
+  switch (op1 + op2 * 100)
+  {
+    case AST_VALUE_INT + AST_VALUE_INT * 100:
+      result->type = AST_VALUE_INT;
+      result->value.int_v = malloc(sizeof(struct ast_int_t));
+      result->value.int_v->value =
+        operand1->value.int_v->value - operand2->value.int_v->value;
       break;
 
-    case AST_VALUE_STRING:
-      printf("에러, string은 - 연산이 불가함\n");
-      exit(1);
+    case AST_VALUE_INT + AST_VALUE_FLOAT * 100:
+    case AST_VALUE_FLOAT + AST_VALUE_INT * 100:
+      result->type = AST_VALUE_FLOAT;
+      result->value.float_v = malloc(sizeof(struct ast_float_t));
+      if (op1 == AST_VALUE_INT)
+        result->value.float_v->value =
+          operand1->value.int_v->value - operand2->value.float_v->value;
+      else
+        result->value.float_v->value =
+          operand1->value.float_v->value - operand2->value.int_v->value;
       break;
 
-    case AST_VALUE_INT:
-      int int_value = operand1->value.int_v->value;
-      switch (operand2->type)
+    case AST_VALUE_INT + AST_VALUE_BOOL * 100:
+    case AST_VALUE_BOOL + AST_VALUE_INT * 100:
+      result->type = AST_VALUE_INT;
+      result->value.int_v = malloc(sizeof(struct ast_int_t));
+      if (op1 == AST_VALUE_INT)
+        result->value.int_v->value =
+          operand1->value.int_v->value - (operand2->value.bool_v->value ? 1 : 0);
+      else
+        result->value.int_v->value =
+          (operand1->value.bool_v->value ? 1 : 0) - operand2->value.int_v->value;
+      break;
+
+    case AST_VALUE_FLOAT + AST_VALUE_FLOAT * 100:
+      result->type = AST_VALUE_FLOAT;
+      result->value.float_v = malloc(sizeof(struct ast_float_t));
+      result->value.float_v->value =
+        operand1->value.float_v->value - operand2->value.float_v->value;
+      break;
+
+    case AST_VALUE_FLOAT + AST_VALUE_BOOL * 100:
+    case AST_VALUE_BOOL + AST_VALUE_FLOAT * 100:
+      result->type = AST_VALUE_FLOAT;
+      result->value.float_v = malloc(sizeof(struct ast_float_t));
+      if (op1 == AST_VALUE_FLOAT)
+        result->value.int_v->value = 
+          operand1->value.float_v->value - (operand2->value.bool_v->value ? 1 : 0);
+      else
+        result->value.int_v->value = 
+          (operand1->value.bool_v->value ? 1 : 0) - operand2->value.float_v->value;
+      break;
+
+    case AST_VALUE_BOOL + AST_VALUE_BOOL * 100:
+      result->type = AST_VALUE_INT;
+      result->value.int_v = malloc(sizeof(struct ast_int_t));
+      result->value.int_v->value =
+        (operand1->value.bool_v->value ? 1 : 0) 
+          - (operand2->value.bool_v->value ? 1 : 0);
+      break;
+
+    case AST_VALUE_MATRIX + AST_VALUE_MATRIX * 100:
+      AST_matrix* matrix_value = operand1->value.matrix_v;
+      if (
+          matrix_value->row_size != operand2->value.matrix_v->row_size
+          || matrix_value->col_size != operand2->value.matrix_v->col_size
+         )
       {
-        case AST_VALUE_INT:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value =
-            int_value - operand2->value.int_v->value;
-          break;
+        printf("에러, 행렬 덧셈시 크기가 같아야 함\n");
+        exit(1);
+      }
 
-        case AST_VALUE_FLOAT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value =
-            int_value - operand2->value.float_v->value;
-          break;
+      int matrix_size = 
+        matrix_value->row_size * matrix_value->col_size;
 
-        case AST_VALUE_BOOL:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value =
-            int_value - (operand2->value.bool_v->value ? 1 : 0);
-          break;
+      result->type = AST_VALUE_MATRIX;
+      result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+      result->value.matrix_v->row_size = matrix_value->row_size;
+      result->value.matrix_v->col_size = matrix_value->col_size;
 
-        default:
-          // ToDo...
-          break;
+      result->value.matrix_v->value = 
+        malloc(matrix_size * sizeof(struct ast_t));
+
+      for (int i = 0; i < matrix_size; i ++)
+      {
+        AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+        new_value->value.value_v = init_ast_value();
+        new_value->value.value_v->size = 1;
+        new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+        visitor_operator_minus(
+            new_value->value.value_v->stack, 
+            matrix_value->value[i]->value.value_v->stack, 
+            operand2->value.matrix_v->value[i]->value.value_v->stack
+          );
+        result->value.matrix_v->value[i] = new_value;
       }
       break;
 
-    case AST_VALUE_FLOAT:
-      float float_value = operand1->value.float_v->value;
-      switch (operand2->type)
+    case AST_VALUE_MATRIX + AST_VALUE_INT * 100:
+    case AST_VALUE_INT + AST_VALUE_MATRIX * 100:
+    case AST_VALUE_MATRIX + AST_VALUE_FLOAT * 100:
+    case AST_VALUE_FLOAT + AST_VALUE_MATRIX * 100:
+    case AST_VALUE_BOOL + AST_VALUE_MATRIX * 100:
+    case AST_VALUE_MATRIX + AST_VALUE_BOOL * 100:
+      matrix_value = 
+        op1 == AST_VALUE_MATRIX ?
+          operand1->value.matrix_v
+          : operand2->value.matrix_v;
+      matrix_size = 
+        matrix_value->row_size * matrix_value->col_size;
+
+      result->type = AST_VALUE_MATRIX;
+      result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+      result->value.matrix_v->row_size = matrix_value->row_size;
+      result->value.matrix_v->col_size = matrix_value->col_size;
+
+      result->value.matrix_v->value = 
+        malloc(matrix_size * sizeof(struct ast_t));
+
+      for (int i = 0; i < matrix_size; i ++)
       {
-        case AST_VALUE_INT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value =
-            float_value - operand2->value.int_v->value;
-          break;
-
-        case AST_VALUE_FLOAT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value =
-            float_value - operand2->value.float_v->value;
-          break;
-
-        case AST_VALUE_BOOL:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.int_v->value =
-            float_value - (operand2->value.bool_v->value ? 1 : 0);
-          break;
-
-        default:
-          // ToDo...
-          break;
-      }
-      break;
-
-    case AST_VALUE_BOOL:
-      int bool_value = operand1->value.bool_v->value ? 1 : 0;
-      switch (operand2->type)
-      {
-        case AST_VALUE_BOOL:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value =
-            bool_value - (operand2->value.bool_v->value ? 1 : 0);
-          break;
-
-        case AST_VALUE_INT:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value = 
-            bool_value - operand2->value.int_v->value;
-          break;
-
-        case AST_VALUE_FLOAT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value = 
-            bool_value - operand2->value.float_v->value;
-          break;
-
-        default:
-          // ToDo...
-          break;
+        AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+        new_value->value.value_v = init_ast_value();
+        new_value->value.value_v->size = 1;
+        new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+        visitor_operator_minus(
+            new_value->value.value_v->stack, 
+            op1 == AST_VALUE_MATRIX ? 
+              matrix_value->value[i]->value.value_v->stack
+              : operand1, 
+            op2 == AST_VALUE_MATRIX ? 
+              matrix_value->value[i]->value.value_v->stack
+              : operand2
+          );
+        result->value.matrix_v->value[i] = new_value;
       }
       break;
 
@@ -1448,7 +1563,7 @@ AST_value_stack* visitor_operator_minus(AST_value_stack* result,
       exit(1);
       break;
   }
-    
+
   return result;
 }
 
@@ -1456,134 +1571,170 @@ AST_value_stack* visitor_operator_product(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-  switch (operand1->type)
+  int op1 = operand1->type;
+  int op2 = operand2->type;
+
+  if (op1 == AST_VALUE_NULL || op2 == AST_VALUE_NULL)
   {
-    case AST_VALUE_NULL:
-      printf("에러, null은 + 연산이 불가함\n");
-      exit(1);
+    printf("에러, null은 + 연산이 불가함\n");
+    exit(1);
+  }
+  switch (op1 + op2 * 100)
+  {
+    case AST_VALUE_STRING + AST_VALUE_STRING * 100:
+      result->type = AST_VALUE_STRING;
+      AST_string* string_v = malloc(sizeof(struct ast_string_t));
+      string_v->value_length =
+        operand1->value.string_v->value_length +
+        operand2->value.string_v->value_length;
+      string_v->real_value =
+        malloc((string_v->value_length - 3) * sizeof(char));
+      string_v->real_value[0] = '\0';
+
+      strcat(string_v->real_value, operand1->value.string_v->real_value);
+      strcat(string_v->real_value, operand2->value.string_v->real_value);
+
+      string_v->value =
+        malloc((string_v->value_length - 1) * sizeof(char));
+      string_v->value[0] = '\0';
+      strcat(string_v->value, "\"");
+      strcat(string_v->value, string_v->real_value);
+      strcat(string_v->value, "\"");
+      result->value.string_v = string_v;
       break;
 
-    case AST_VALUE_STRING:
-      switch (operand2->type)
+    case AST_VALUE_INT + AST_VALUE_INT * 100:
+      result->type = AST_VALUE_INT;
+      result->value.int_v = malloc(sizeof(struct ast_int_t));
+      result->value.int_v->value =
+        operand1->value.int_v->value * operand2->value.int_v->value;
+      break;
+
+    case AST_VALUE_INT + AST_VALUE_FLOAT * 100:
+    case AST_VALUE_FLOAT + AST_VALUE_INT * 100:
+      result->type = AST_VALUE_FLOAT;
+      result->value.float_v = malloc(sizeof(struct ast_float_t));
+      if (op1 == AST_VALUE_INT)
+        result->value.float_v->value =
+          operand1->value.int_v->value * operand2->value.float_v->value;
+      else
+        result->value.float_v->value =
+          operand1->value.float_v->value * operand2->value.int_v->value;
+      break;
+
+    case AST_VALUE_INT + AST_VALUE_BOOL * 100:
+    case AST_VALUE_BOOL + AST_VALUE_INT * 100:
+      result->type = AST_VALUE_INT;
+      result->value.int_v = malloc(sizeof(struct ast_int_t));
+      if (op1 == AST_VALUE_INT)
+        result->value.int_v->value =
+          operand1->value.int_v->value * (operand2->value.bool_v->value ? 1 : 0);
+      else
+        result->value.int_v->value =
+          (operand1->value.bool_v->value ? 1 : 0) * operand2->value.int_v->value;
+      break;
+
+    case AST_VALUE_FLOAT + AST_VALUE_FLOAT * 100:
+      result->type = AST_VALUE_FLOAT;
+      result->value.float_v = malloc(sizeof(struct ast_float_t));
+      result->value.float_v->value =
+        operand1->value.float_v->value * operand2->value.float_v->value;
+      break;
+
+    case AST_VALUE_FLOAT + AST_VALUE_BOOL * 100:
+    case AST_VALUE_BOOL + AST_VALUE_FLOAT * 100:
+      result->type = AST_VALUE_FLOAT;
+      result->value.float_v = malloc(sizeof(struct ast_float_t));
+      if (op1 == AST_VALUE_FLOAT)
+        result->value.int_v->value = 
+          operand1->value.float_v->value * (operand2->value.bool_v->value ? 1 : 0);
+      else
+        result->value.int_v->value = 
+          (operand1->value.bool_v->value ? 1 : 0) * operand2->value.float_v->value;
+      break;
+
+    case AST_VALUE_BOOL + AST_VALUE_BOOL * 100:
+      result->type = AST_VALUE_INT;
+      result->value.int_v = malloc(sizeof(struct ast_int_t));
+      result->value.int_v->value =
+        (operand1->value.bool_v->value ? 1 : 0) 
+          * (operand2->value.bool_v->value ? 1 : 0);
+      break;
+
+    case AST_VALUE_MATRIX + AST_VALUE_MATRIX * 100:
+      AST_matrix* matrix_value = operand1->value.matrix_v;
+      if (
+          matrix_value->row_size != operand2->value.matrix_v->row_size
+          || matrix_value->col_size != operand2->value.matrix_v->col_size
+         )
       {
-        case AST_VALUE_STRING:
-          result->type = AST_VALUE_STRING;
-          AST_string* string_v = malloc(sizeof(struct ast_string_t));
-          string_v->value_length =
-            operand1->value.string_v->value_length +
-            operand2->value.string_v->value_length;
-          string_v->real_value =
-            malloc((string_v->value_length - 3) * sizeof(char));
-          string_v->real_value[0] = '\0';
+        printf("에러, 행렬 덧셈시 크기가 같아야 함\n");
+        exit(1);
+      }
 
-          strcat(string_v->real_value, operand1->value.string_v->real_value);
-          strcat(string_v->real_value, operand2->value.string_v->real_value);
+      int matrix_size = 
+        matrix_value->row_size * matrix_value->col_size;
 
-          string_v->value =
-            malloc((string_v->value_length - 1) * sizeof(char));
-          string_v->value[0] = '\0';
-          strcat(string_v->value, "\"");
-          strcat(string_v->value, string_v->real_value);
-          strcat(string_v->value, "\"");
-          result->value.string_v = string_v;
-          break;
+      result->type = AST_VALUE_MATRIX;
+      result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+      result->value.matrix_v->row_size = matrix_value->row_size;
+      result->value.matrix_v->col_size = matrix_value->col_size;
 
-        default:
-          // ToDo...
-          break;
+      result->value.matrix_v->value = 
+        malloc(matrix_size * sizeof(struct ast_t));
+
+      for (int i = 0; i < matrix_size; i ++)
+      {
+        AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+        new_value->value.value_v = init_ast_value();
+        new_value->value.value_v->size = 1;
+        new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+        visitor_operator_product(
+            new_value->value.value_v->stack, 
+            matrix_value->value[i]->value.value_v->stack, 
+            operand2->value.matrix_v->value[i]->value.value_v->stack
+          );
+        result->value.matrix_v->value[i] = new_value;
       }
       break;
 
-    case AST_VALUE_INT:
-      int int_value = operand1->value.int_v->value;
-      switch (operand2->type)
+    case AST_VALUE_MATRIX + AST_VALUE_INT * 100:
+    case AST_VALUE_INT + AST_VALUE_MATRIX * 100:
+    case AST_VALUE_MATRIX + AST_VALUE_FLOAT * 100:
+    case AST_VALUE_FLOAT + AST_VALUE_MATRIX * 100:
+    case AST_VALUE_BOOL + AST_VALUE_MATRIX * 100:
+    case AST_VALUE_MATRIX + AST_VALUE_BOOL * 100:
+      matrix_value = 
+        op1 == AST_VALUE_MATRIX ?
+          operand1->value.matrix_v
+          : operand2->value.matrix_v;
+      matrix_size = 
+        matrix_value->row_size * matrix_value->col_size;
+
+      result->type = AST_VALUE_MATRIX;
+      result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+      result->value.matrix_v->row_size = matrix_value->row_size;
+      result->value.matrix_v->col_size = matrix_value->col_size;
+
+      result->value.matrix_v->value = 
+        malloc(matrix_size * sizeof(struct ast_t));
+
+      for (int i = 0; i < matrix_size; i ++)
       {
-        case AST_VALUE_INT:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value =
-            int_value * operand2->value.int_v->value;
-          break;
-
-        case AST_VALUE_FLOAT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value =
-            int_value * operand2->value.float_v->value;
-          break;
-
-        case AST_VALUE_BOOL:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value =
-            int_value * (operand2->value.bool_v->value ? 1 : 0);
-          break;
-
-        default:
-          // ToDo...
-          break;
-      }
-      break;
-
-    case AST_VALUE_FLOAT:
-      float float_value = operand1->value.float_v->value;
-      switch (operand2->type)
-      {
-        case AST_VALUE_INT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value =
-            float_value * operand2->value.int_v->value;
-          break;
-
-        case AST_VALUE_FLOAT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value =
-            float_value * operand2->value.float_v->value;
-          break;
-
-        case AST_VALUE_BOOL:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.int_v->value =
-            float_value * (operand2->value.bool_v->value ? 1 : 0);
-          break;
-
-        default:
-          // ToDo...
-          break;
-      }
-      break;
-
-    case AST_VALUE_BOOL:
-      int bool_value = operand1->value.bool_v->value ? 1 : 0;
-      switch (operand2->type)
-      {
-        case AST_VALUE_BOOL:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value =
-            bool_value * (operand2->value.bool_v->value ? 1 : 0);
-          break;
-
-        case AST_VALUE_INT:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value = 
-            bool_value * operand2->value.int_v->value;
-          break;
-
-        case AST_VALUE_FLOAT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value = 
-            bool_value * operand2->value.float_v->value;
-          break;
-
-        default:
-          // ToDo...
-          break;
+        AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+        new_value->value.value_v = init_ast_value();
+        new_value->value.value_v->size = 1;
+        new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+        visitor_operator_product(
+            new_value->value.value_v->stack, 
+            op1 == AST_VALUE_MATRIX ? 
+              matrix_value->value[i]->value.value_v->stack
+              : operand1, 
+            op2 == AST_VALUE_MATRIX ? 
+              matrix_value->value[i]->value.value_v->stack
+              : operand2
+          );
+        result->value.matrix_v->value[i] = new_value;
       }
       break;
 
@@ -1600,108 +1751,153 @@ AST_value_stack* visitor_operator_div(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-  switch (operand1->type)
+  int op1 = operand1->type;
+  int op2 = operand2->type;
+
+  if (op1 == AST_VALUE_NULL || op2 == AST_VALUE_NULL)
   {
-    case AST_VALUE_NULL:
-      printf("에러, null은 - 연산이 불가함\n");
-      exit(1);
+    printf("에러, null은 + 연산이 불가함\n");
+    exit(1);
+  }
+  else if (op1 == AST_VALUE_STRING || op2 == AST_VALUE_STRING)
+  {
+    printf("에러, string은 + 연산이 불가함\n");
+    exit(1);
+  }
+  switch (op1 + op2 * 100)
+  {
+    case AST_VALUE_INT + AST_VALUE_INT * 100:
+      result->type = AST_VALUE_INT;
+      result->value.int_v = malloc(sizeof(struct ast_int_t));
+      result->value.int_v->value =
+        operand1->value.int_v->value / operand2->value.int_v->value;
       break;
 
-    case AST_VALUE_STRING:
-      printf("에러, string은 - 연산이 불가함\n");
-      exit(1);
+    case AST_VALUE_INT + AST_VALUE_FLOAT * 100:
+    case AST_VALUE_FLOAT + AST_VALUE_INT * 100:
+      result->type = AST_VALUE_FLOAT;
+      result->value.float_v = malloc(sizeof(struct ast_float_t));
+      if (op1 == AST_VALUE_INT)
+        result->value.float_v->value =
+          operand1->value.int_v->value / operand2->value.float_v->value;
+      else
+        result->value.float_v->value =
+          operand1->value.float_v->value / operand2->value.int_v->value;
       break;
 
-    case AST_VALUE_INT:
-      int int_value = operand1->value.int_v->value;
-      switch (operand2->type)
+    case AST_VALUE_INT + AST_VALUE_BOOL * 100:
+    case AST_VALUE_BOOL + AST_VALUE_INT * 100:
+      result->type = AST_VALUE_INT;
+      result->value.int_v = malloc(sizeof(struct ast_int_t));
+      if (op1 == AST_VALUE_INT)
+        result->value.int_v->value =
+          operand1->value.int_v->value / (operand2->value.bool_v->value ? 1 : 0);
+      else
+        result->value.int_v->value =
+          (operand1->value.bool_v->value ? 1 : 0) / operand2->value.int_v->value;
+      break;
+
+    case AST_VALUE_FLOAT + AST_VALUE_FLOAT * 100:
+      result->type = AST_VALUE_FLOAT;
+      result->value.float_v = malloc(sizeof(struct ast_float_t));
+      result->value.float_v->value =
+        operand1->value.float_v->value / operand2->value.float_v->value;
+      break;
+
+    case AST_VALUE_FLOAT + AST_VALUE_BOOL * 100:
+    case AST_VALUE_BOOL + AST_VALUE_FLOAT * 100:
+      result->type = AST_VALUE_FLOAT;
+      result->value.float_v = malloc(sizeof(struct ast_float_t));
+      if (op1 == AST_VALUE_FLOAT)
+        result->value.int_v->value = 
+          operand1->value.float_v->value / (operand2->value.bool_v->value ? 1 : 0);
+      else
+        result->value.int_v->value = 
+          (operand1->value.bool_v->value ? 1 : 0) / operand2->value.float_v->value;
+      break;
+
+    case AST_VALUE_BOOL + AST_VALUE_BOOL * 100:
+      result->type = AST_VALUE_INT;
+      result->value.int_v = malloc(sizeof(struct ast_int_t));
+      result->value.int_v->value =
+        (operand1->value.bool_v->value ? 1 : 0) 
+          / (operand2->value.bool_v->value ? 1 : 0);
+      break;
+
+    case AST_VALUE_MATRIX + AST_VALUE_MATRIX * 100:
+      AST_matrix* matrix_value = operand1->value.matrix_v;
+      if (
+          matrix_value->row_size != operand2->value.matrix_v->row_size
+          || matrix_value->col_size != operand2->value.matrix_v->col_size
+         )
       {
-        case AST_VALUE_INT:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value =
-            int_value / operand2->value.int_v->value;
-          break;
+        printf("에러, 행렬 덧셈시 크기가 같아야 함\n");
+        exit(1);
+      }
 
-        case AST_VALUE_FLOAT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value =
-            int_value / operand2->value.float_v->value;
-          break;
+      int matrix_size = 
+        matrix_value->row_size * matrix_value->col_size;
 
-        case AST_VALUE_BOOL:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value =
-            int_value / (operand2->value.bool_v->value ? 1 : 0);
-          break;
+      result->type = AST_VALUE_MATRIX;
+      result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+      result->value.matrix_v->row_size = matrix_value->row_size;
+      result->value.matrix_v->col_size = matrix_value->col_size;
 
-        default:
-          // ToDo...
-          break;
+      result->value.matrix_v->value = 
+        malloc(matrix_size * sizeof(struct ast_t));
+
+      for (int i = 0; i < matrix_size; i ++)
+      {
+        AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+        new_value->value.value_v = init_ast_value();
+        new_value->value.value_v->size = 1;
+        new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+        visitor_operator_div(
+            new_value->value.value_v->stack, 
+            matrix_value->value[i]->value.value_v->stack, 
+            operand2->value.matrix_v->value[i]->value.value_v->stack
+          );
+        result->value.matrix_v->value[i] = new_value;
       }
       break;
 
-    case AST_VALUE_FLOAT:
-      float float_value = operand1->value.float_v->value;
-      switch (operand2->type)
+    case AST_VALUE_MATRIX + AST_VALUE_INT * 100:
+    case AST_VALUE_INT + AST_VALUE_MATRIX * 100:
+    case AST_VALUE_MATRIX + AST_VALUE_FLOAT * 100:
+    case AST_VALUE_FLOAT + AST_VALUE_MATRIX * 100:
+    case AST_VALUE_BOOL + AST_VALUE_MATRIX * 100:
+    case AST_VALUE_MATRIX + AST_VALUE_BOOL * 100:
+      matrix_value = 
+        op1 == AST_VALUE_MATRIX ?
+          operand1->value.matrix_v
+          : operand2->value.matrix_v;
+      matrix_size = 
+        matrix_value->row_size * matrix_value->col_size;
+
+      result->type = AST_VALUE_MATRIX;
+      result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+      result->value.matrix_v->row_size = matrix_value->row_size;
+      result->value.matrix_v->col_size = matrix_value->col_size;
+
+      result->value.matrix_v->value = 
+        malloc(matrix_size * sizeof(struct ast_t));
+
+      for (int i = 0; i < matrix_size; i ++)
       {
-        case AST_VALUE_INT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value =
-            float_value / operand2->value.int_v->value;
-          break;
-
-        case AST_VALUE_FLOAT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value =
-            float_value / operand2->value.float_v->value;
-          break;
-
-        case AST_VALUE_BOOL:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.int_v->value =
-            float_value / (operand2->value.bool_v->value ? 1 : 0);
-          break;
-
-        default:
-          // ToDo...
-          break;
-      }
-      break;
-
-    case AST_VALUE_BOOL:
-      int bool_value = operand1->value.bool_v->value ? 1 : 0;
-      switch (operand2->type)
-      {
-        case AST_VALUE_BOOL:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value =
-            bool_value / (operand2->value.bool_v->value ? 1 : 0);
-          break;
-
-        case AST_VALUE_INT:
-          result->type = AST_VALUE_INT;
-          result->value.int_v = malloc(sizeof(struct ast_int_t));
-          result->value.int_v->value = 
-            bool_value / operand2->value.int_v->value;
-          break;
-
-        case AST_VALUE_FLOAT:
-          result->type = AST_VALUE_FLOAT;
-          result->value.float_v = malloc(sizeof(struct ast_float_t));
-          result->value.float_v->value = 
-            bool_value / operand2->value.float_v->value;
-          break;
-
-        default:
-          // ToDo...
-          break;
+        AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+        new_value->value.value_v = init_ast_value();
+        new_value->value.value_v->size = 1;
+        new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+        visitor_operator_div(
+            new_value->value.value_v->stack, 
+            op1 == AST_VALUE_MATRIX ? 
+              matrix_value->value[i]->value.value_v->stack
+              : operand1, 
+            op2 == AST_VALUE_MATRIX ? 
+              matrix_value->value[i]->value.value_v->stack
+              : operand2
+          );
+        result->value.matrix_v->value[i] = new_value;
       }
       break;
 
@@ -1790,6 +1986,45 @@ AST_value_stack* visitor_operator_equal(AST_value_stack* result,
               == operand2->value.bool_v->value)
          )
         result_value = true;
+      else
+        result_value = false;
+      break;
+
+    case AST_VALUE_MATRIX:
+      if (
+          operand2->type == AST_VALUE_MATRIX
+          && operand1->value.matrix_v->row_size 
+             == operand2->value.matrix_v->row_size
+          && operand1->value.matrix_v->col_size 
+             == operand2->value.matrix_v->col_size
+         )
+      {
+        int matrix_size = 
+          operand1->value.matrix_v->row_size
+            * operand1->value.matrix_v->col_size;
+
+        bool is_used = false;
+        for (int i = 0; i < matrix_size; i ++)
+        {
+          AST_value_stack* check_value 
+            = malloc(sizeof(AST_value_stack));
+          visitor_operator_equal(
+              check_value, 
+              operand1->value.matrix_v->value[i]->value.value_v->stack, 
+              operand2->value.matrix_v->value[i]->value.value_v->stack
+            );
+          if (!check_value->value.bool_v->value)
+          {
+            free(check_value);
+            is_used = true;
+            result_value = false;
+            break;
+          }
+          free(check_value);
+        }
+        if (!is_used)
+          result_value = true;
+      }
       else
         result_value = false;
       break;

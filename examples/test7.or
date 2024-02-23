@@ -21,16 +21,42 @@ f(x) := \begin{cases}
 
 print(f(1))
 
-print(NULL)
+print(NULL, "\n")
 
-%a :=  \begin{matrix}
-%        1 & 2 & 3 \\
-%      \end{matrix}
+a :=  \begin{matrix}
+        1 & 2 & 3 \\
+        4 & 5 & 6 \\
+      \end{matrix} + 2
 
 b := \begin{code}
         return 3
       \end{code}
 print(b)
-%print(a)
+print(a)
 print("QQ\n")
-%        4 & 5 & 6 \\
+
+q :=  \begin{bmatrix}
+        1 & 2 & 3 \\
+        4 & 5 & 6 \\
+      \end{bmatrix} + \begin{bmatrix}
+                        6 & 5 & 4 \\
+                        3 & 2 & \begin{code}return 1\end{code}
+                      \end{bmatrix}
+print(q+2)
+print(1 + 2)
+print(\begin{code}return 1\end{code}, "\n")
+
+%p :=  \begin{matrix}
+%        2 & \begin{matrix}1 & 2 \\ 3 & 4\end{matrix} & 2 \\ 3 & 4 & 5
+%      \end{matrix}
+
+\begin{if}{1}
+  a:=2
+\end{if}
+
+p :=  \begin{matrix}
+        \begin{matrix}
+          1 & 2
+        \end{matrix} + 2 & 2 \\ 3 & 4
+      \end{matrix}
+print(p)

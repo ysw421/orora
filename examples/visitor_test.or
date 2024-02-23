@@ -1,11 +1,19 @@
-q(x) := \begin{function}
-          print("hello ")
-          return 9
-        \end{function}
+%a := \begin{matrix}
+%        2
+%      \end{matrix}
 
-print(\begin{function}
-          print("hello ")
-          return 9
-        \end{function})
+a := \begin{matrix}
+        \begin{matrix}
+          1 & 2
+        \end{matrix} & 3
+      \end{matrix}
 
-%print(q())
+a := \begin{matrix}
+        1 + 2 & 3
+      \end{matrix}
+
+b := \begin{matrix}
+        1 + 2 & 3
+      \end{matrix}
+
+print(a - b, "\n")

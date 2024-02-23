@@ -225,11 +225,14 @@ AST_matrix* init_ast_matrix(Parser* parser, bool is_minus)
 
   AST_matrix* ast_matrix = 
     (AST_matrix*) malloc(sizeof(struct ast_matrix_t));
+  ast_matrix->row_size = 0;
+  ast_matrix->col_size = 0;
+  ast_matrix->value = (void*) 0;
 
   char* code = parser_is_begin(parser, 3, "matrix", "pmatrix", "bmatrix");
 
   bool is_error = true;
-  int col_size = 0;
+  int col_size = 1;
   int row_size = 0;
 
   if (code)
@@ -239,12 +242,20 @@ AST_matrix* init_ast_matrix(Parser* parser, bool is_minus)
       init_get_compound_env((void*) 0);
     new_env->is_size_one = true;
 
+    bool is_first = true;
     do
     {
-      if (token->type == TOKEN_AMPER)
+      if (is_first)
+        is_first = false;
+      else if(token->type == TOKEN_AMPER)
       {
         parser = parser_advance(parser, TOKEN_AMPER);
         token = parser->token;
+      }
+      else
+      {
+        printf("에러, matrix 설정을 잘못함\n");
+        exit(1);
       }
 
       row_size ++;
@@ -266,14 +277,13 @@ AST_matrix* init_ast_matrix(Parser* parser, bool is_minus)
         break;
       }
 
-      if (ast_matrix->value)
+      if (ast_matrix->value) 
       {
-        printf("!!! %d\n", row_size);
         ast_matrix->value = 
           realloc(ast_matrix->value, row_size * sizeof(struct ast_t*));
-      }
-      else
+      } else {
         ast_matrix->value = malloc(row_size * sizeof(struct ast_t*));
+      }
       ast_matrix->value[row_size - 1] = 
         new_value_ast->value.compound_v->items[0];
     } while (token 
@@ -298,17 +308,76 @@ AST_matrix* init_ast_matrix(Parser* parser, bool is_minus)
       {
         is_error = false;
       }
+      else
+      {
+        bool is_first = true;
+        bool is_get_matrix = false;
+        do
+        {
+          if (is_first)
+            is_first = false;
+          else
+          {
+            parser = parser_advance(parser, TOKEN_DOUBLE_BACKSLASH);
+            token = parser->token;
+
+            if (
+                token 
+                && token->type == TOKEN_END 
+                && parser_is_end(parser, code)
+               )
+            {
+              is_get_matrix = true;
+              is_error = false;
+              break;
+            }
+          }
+          col_size ++;
+
+          ast_matrix->value = 
+            realloc(
+                ast_matrix->value, 
+                col_size * row_size * sizeof(struct ast_t*)
+              );
+          for (int i = 0; i < row_size; i ++)
+          {
+            AST* new_value_ast = 
+              parser_get_compound(parser, new_env);
+            token = parser->token;
+
+            ast_matrix->value[row_size * (col_size - 1) + i] = 
+              new_value_ast->value.compound_v->items[0];
+
+            if (i != row_size - 1)
+            {
+              if (token && token->type == TOKEN_AMPER)
+              {
+                parser = parser_advance(parser, TOKEN_AMPER);
+                token = parser->token;
+              }
+              else
+              {
+                printf("에러, &가 와야함\n");
+                exit(1);
+              }
+            }
+          }
+        } while (token && token->type == TOKEN_DOUBLE_BACKSLASH);
+
+        if (
+            !is_get_matrix 
+            && token 
+            && token->type == TOKEN_END 
+            && parser_is_end(parser, code)
+           )
+        {
+          is_error = false;
+        }
+      }
     }
 
     ast_matrix->row_size = row_size;
     ast_matrix->col_size = col_size;
-
-//     do 
-//     {
-//       do
-//       {
-//       } while ();
-//     } while ();
   }
 
   if (is_error)
@@ -316,8 +385,6 @@ AST_matrix* init_ast_matrix(Parser* parser, bool is_minus)
     printf("에러, matrix 정의가 잘못됨\n");
     exit(1);
   }
-
-  // ToDo...
 
   return ast_matrix;
 }
