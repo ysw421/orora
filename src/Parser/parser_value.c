@@ -36,8 +36,10 @@ AST* parser_get_value
   while (token)
   {
     if (!is_first_turn 
-        && !value_env->is_in_parentheses &&
-        parser->prev_token 
+        && count_of_dearkelly == 0 
+        && count_of_brace == 0 
+        && !value_env->is_in_parentheses 
+        && parser->prev_token 
         && parser->prev_token->col != token->col_first
        )
       break;

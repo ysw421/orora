@@ -774,20 +774,12 @@ Env_variable* visitor_variable_satisfy(Envs* envs, AST_variable* ast_variable)
 AST_value_stack* get_deep_copy_ast_value_stack
 (AST_value_stack* ast_value_stack)
 {
-//   if (!ast_value_stack
-//       || !ast_value_stack->type
-//       || !ast_value_stack->next
-//      )
-//     return (void*) 0;
 
   AST_value_stack* new_value_stack = malloc(sizeof(AST_value));
-  if (ast_value_stack->type)
-    new_value_stack->type = ast_value_stack->type;
+  new_value_stack->type = ast_value_stack->type;
   new_value_stack->value = ast_value_stack->value;
   if (ast_value_stack->next)
     new_value_stack->next = ast_value_stack->next;
-  else
-    new_value_stack->next = (void*) 0;
 
 //   new_value_stack->col = ast_value_stack->col;
 //   new_value_stack->col_first = ast_value_stack->col_first;
@@ -809,12 +801,14 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
   for (int i = max_cnt - 1; i >= 0; i --)
   {
     text_array[i] = get_deep_copy_ast_value_stack(p);
+    
     p = p->next;
   }
 
   int i = 0;
   while (i < max_cnt)
   {
+
     text = text_array[i];
     i ++;
     if (parser_precedence(text->type) == -1)
@@ -883,7 +877,6 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
             matrix_value->value[i] = 
               matrix_each_value;
           }
-          printf("Matrix 특공대!\n");
           AST_value_stack* new_matrix_value = 
             init_ast_value_stack(AST_VALUE_MATRIX, (void*) 0);
           new_matrix_value->value.matrix_v = matrix_value;
@@ -990,7 +983,7 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
       }
 
       parser_push_value(stack, result);
-      free(text);
+//       free(text);
 //       if (!is_operator_use_one_value(get_token_type(text->type))
 //           || text->type == AST_VALUE_MINUS)
 //       {
@@ -1008,7 +1001,9 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
 
   free(text_array);
 
-  return parser_pop_value(stack);
+  AST_value_stack* return_value = parser_pop_value(stack);
+  free(stack);
+  return return_value;
 }
 
 Env_variable* get_deep_copy_env_variable
@@ -1391,8 +1386,12 @@ AST_value_stack* visitor_operator_plus(AST_value_stack* result,
               matrix_value->value[i]->value.value_v->stack
               : operand2
           );
+//         free(matrix_value->value[i]->value.value_v);
         result->value.matrix_v->value[i] = new_value;
       }
+//       free(matrix_value->value);
+//       free(matrix_value);
+//       free(op1 == AST_VALUE_MATRIX ? operand2 : operand1);
       break;
 
     default:

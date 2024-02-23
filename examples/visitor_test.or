@@ -2,18 +2,40 @@
 %        2
 %      \end{matrix}
 
-a := \begin{matrix}
+%a := \begin{matrix}
+%        \begin{matrix}
+%          1 & 2
+%        \end{matrix} & 3
+%      \end{matrix}
+
+%a := \begin{matrix}
+%        1 + 2 & 3
+%      \end{matrix}
+
+%b := \begin{matrix}
+%        1 + 2 & 3
+%      \end{matrix}
+
+%print(a + b, "\n")
+
+i := 0
+\begin{while}{1}
+  i := i + 1
+  \begin{if}{!{i >= 10 || i <= 3}}
+    print(i, "\n")
+  \end{if}
+  \begin{if}{i = 30}
+    break
+  \end{if}
+\end{while}
+
+
+\begin{if}{1}
+\end{if}
+
+p :=  \begin{matrix}
         \begin{matrix}
           1 & 2
-        \end{matrix} & 3
+        \end{matrix} & 2 \\ 3 & 4
       \end{matrix}
 
-a := \begin{matrix}
-        1 + 2 & 3
-      \end{matrix}
-
-b := \begin{matrix}
-        1 + 2 & 3
-      \end{matrix}
-
-print(a - b, "\n")

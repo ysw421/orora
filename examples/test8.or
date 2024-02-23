@@ -15,6 +15,9 @@
 %
 %break
 
+f(x) := \begin{code}
+          return 2x - 1
+        \end{code}
 
 MAX := 10
 i := 0
@@ -33,7 +36,7 @@ i := 0
   \begin{while}{1}
     j := j + 1
     c := c * "*"
-    \begin{if}{i * 2 - 1 = j}
+    \begin{if}{f(i) = j}
       print(c)
       break
     \end{if}
