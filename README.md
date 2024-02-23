@@ -1,4 +1,4 @@
-## ORORA: The programming language similar to math expression.
+## ORORA: the programming language similar to math expression.
 <div align="center">
 ⚠️ This project is Beta version... I'm working hard on it 😊
 </div>
