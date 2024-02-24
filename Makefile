@@ -1,6 +1,7 @@
+include Makefile.build
+
 EXEC = orora
 SOURCES = $(wildcard src/*.c src/*/*.c src/*/*/*.c )
-HEADERS = $(wildcard src/*.h src/*/*.h src/*/*/*.h )
 OBJECTS = $(SOURCES:.c=.o)
 DEPENDENCYS = $(SOURCES:.c=.d)
 FLAGS = -g -I./src

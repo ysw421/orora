@@ -1,3 +1,24 @@
-FILES_SRC = 
+CFILES_SRC	 =	./src/main.c
+CFILES_SRC	+=	./src/file_utils.c
+CFILES_SRC	+=	./src/error_log.c
+CFILES_SRC	+=	./src/env.c
+CFILES_SRC	+=	./src/develop_mode.c
 
-SOURCES = 
+CFILES_LEXER	 =	./src/lexer.c
+CFILES_LEXER	+=	./src/lexer_id.c
+CFILES_LEXER	+=	./src/lexer_number.c
+CFILES_LEXER	+=	./src/lexer_string.c
+CFILES_LEXER	+=	./src/lexer_to_token.c
+CFILES_LEXER	+=	./src/token.c
+
+CFILES_PARSER_AST	=	./src/parser/ast/ast.c
+
+CFILES_PARSER	 =	$(CFILES_PARSER_AST)
+CFILES_PARSER	+=	./src/parser/parser.c
+CFILES_PARSER	+=	./src/parser/parser_id.c
+CFILES_PARSER	+=	./src/parser/parser_value.c
+
+CFILES_VISITOR +=	./src/visitor/visitor.c
+
+SOURCES = $(CFILES_SRC) $(CFILES_LEXER) $(CFILES_PARSER) $(CFILES_VISITOR)
+
