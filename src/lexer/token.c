@@ -20,3 +20,4 @@ Token* init_token
 
   return token;
 }
+

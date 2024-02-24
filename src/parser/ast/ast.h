@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include "../../Lexer/token.h"
+#include "../../lexer/token.h"
 #include "../parser_T.h"
 // #include "../../env.h"
 

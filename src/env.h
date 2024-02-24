@@ -2,7 +2,7 @@
 #define ENV_H
 
 #include <stddef.h>
-#include "./Parser/Ast/ast.h"
+#include "./parser/ast/ast.h"
 
 typedef struct env_variable_t
 {

@@ -151,3 +151,4 @@ Token* lexer_get_token(Lexer* lexer)
   }
   return (void*) 0;
 }
+

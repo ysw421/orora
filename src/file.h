@@ -1,10 +1,12 @@
 #ifndef FILE_H
 #define FILE_H
 
+#include <stdint.h>
+
 typedef struct
 {
   char* contents;
-  unsigned long int length;
+  int64_t length;
 } File;
 
 File* openfile(const char* file_path);

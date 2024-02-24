@@ -1,7 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include "Parser/Ast/ast.h"
+#include "parser/ast/ast.h"
 
 #define EXTENTION ".or"
 

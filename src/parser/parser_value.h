@@ -3,7 +3,7 @@
 
 #include "parser.h"
 #include <stdio.h>
-#include "../Lexer/token.h"
+#include "../lexer/token.h"
 
 typedef struct get_value_env_t
 {

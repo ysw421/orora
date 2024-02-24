@@ -31,3 +31,4 @@ Token* lexer_get_number(Lexer* lexer)
 
   return token;
 }
+

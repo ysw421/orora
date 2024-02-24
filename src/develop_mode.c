@@ -178,7 +178,7 @@ void print_tokens(Lexer* root)
 //   printf("%s\n", lexer_get_token(root)->value);
 }
 
-#include "./Visitor/visitor.h"
+#include "./visitor/visitor.h"
 #include <string.h>
 
 void visitor_print_function_value(AST_value_stack* new_value)

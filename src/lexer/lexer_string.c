@@ -90,3 +90,4 @@ Token* lexer_get_string(Lexer* lexer, char c)
 
   return token;
 }
+

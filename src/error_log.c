@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "main.h"
-#include "Lexer/lexer.h"
+#include "lexer/lexer.h"
 
 void error(char* error_message, Parser* parser)
 {
@@ -221,3 +221,4 @@ void error_prev_token(char* error_message, Parser* parser)
 //                 "에러, %s가 무엇이죠??::type: %d",
 //                 token->value, token->type);
 //             error(error_message, parser, token);
+

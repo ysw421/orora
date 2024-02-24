@@ -1,9 +1,9 @@
 #include "main.h"
 #include "file.h"
-#include "Lexer/lexer.h"
-#include "Parser/parser_value.h"
+#include "lexer/lexer.h"
+#include "parser/parser_value.h"
 #include "env.h"
-#include "Visitor/visitor.h"
+#include "visitor/visitor.h"
 #include <stdio.h>
 #include <stdlib.h>
 

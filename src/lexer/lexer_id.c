@@ -94,3 +94,4 @@ Token* lexer_get_id(Lexer* lexer)
   
   return token;
 }
+
