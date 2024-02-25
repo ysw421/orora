@@ -102,8 +102,7 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
   {
     case AST_VARIABLE:
       AST_variable* ast_variable = ast->value.variable_v;
-      Env_variable* env_variable =
-        visitor_variable(envs, ast_variable);
+      visitor_variable(envs, ast_variable);
       break;
 
     case AST_FUNCTION:
@@ -112,7 +111,6 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
 #endif
 
       AST_function* ast_function = ast->value.function_v;
-      Env_function* env_function;
       switch (ast_function->ast_type)
       {
         case AST_FUNCTION_VALUE:
@@ -163,6 +161,10 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
       get_visitor_env->is_return = 
         visitor_get_value_from_ast(envs, ast->value.return_v->value);
       break;
+
+    default:
+      printf("에러, visitor에 정의되지 않은 AST\n");
+      exit(1);
   }
 
   return get_visitor_env;
@@ -268,6 +270,10 @@ bool is_true(AST_value_stack* value)
     case AST_VALUE_BOOL:
       if (!value->value.bool_v->value)
         return false;
+      break;
+
+    default:
+      return true;
       break;
   }
 
@@ -424,15 +430,11 @@ AST_value_stack* visitor_get_value_from_code
   for (int i = 0; i < ast_code->size; i ++)
   {
     AST* selected_ast = ast_code->items[i];
-    switch (selected_ast->type)
-    {
-      case AST_RETURN:
-        return visitor_get_value_from_ast(
-                  envs, 
-                  selected_ast->value.return_v->value 
-                );
-        break;
-    }
+    if (selected_ast->type == AST_RETURN)
+      return visitor_get_value_from_ast(
+                envs, 
+                selected_ast->value.return_v->value 
+              );
 
     GET_VISITOR_ENV* get_visitor_env = 
       visitor_visit(
@@ -454,13 +456,12 @@ AST_value_stack* visitor_get_value_from_function
   {
     visitor_nondefine_function_error(ast_function);
   }
-  AST_value_stack* new_value_stack;
 
   // Set New Environment: new_envs
   Envs* new_envs =
     visitor_get_envs_from_function(envs, ast_function, env_function);
 
-  return visitor_function_value(envs, ast_function);
+  return visitor_function_value(new_envs, ast_function);
 }
 
 AST_value_stack* visitor_get_value_from_variable
@@ -731,6 +732,10 @@ Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
 
           return env_variable;
           break;
+
+        default:
+          printf("에러, 정의되지 않은 변수의 활용\n");
+          exit(1);
       }
       break;
 
@@ -759,7 +764,6 @@ Env_variable* visitor_variable_satisfy(Envs* envs, AST_variable* ast_variable)
     visitor_nondefine_variable_error(ast_variable);
   }
 
-  size_t s_satisfy_size = get_variable->satisfy_size;
   get_variable->satisfy_size += ast_variable->satisfy_size;
   for (size_t i = 0; i < ast_variable->satisfy_size; i ++)
   {
@@ -980,6 +984,10 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
 
           result->value.bool_v->value = !is_true(operand2);
           break;
+
+        default:
+          printf("에러, 연산자를 추가하지 아니하였음\n");
+          exit(1);
       }
 
       parser_push_value(stack, result);
@@ -1039,8 +1047,6 @@ Env_function* get_deep_copy_env_funtion
 
 Envs* visitor_merge_envs(Envs* envs)
 {
-  Env* new_global_env = init_env();
-
   Envs* new_envs = init_envs(envs, init_env());
 
   return new_envs;
@@ -1141,6 +1147,10 @@ Envs* visitor_get_envs_from_function
               env_variable->type = value_variable->type;
               env_variable->value = value_variable->value;
               break;
+
+            default:
+              printf("에러, 해당 에러는 발생 불가함\n");
+              exit(1);
           }
 
           break;
@@ -1178,6 +1188,10 @@ Envs* visitor_get_envs_from_function
             exit(1);
           }
           break;
+
+        default:
+          printf("에러, 정의되지 아니한 타입\n");
+          exit(1);
       }
 
       Env* local_env = new_envs->local;
@@ -2290,6 +2304,8 @@ AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_int
   new_value_stack->type = AST_VALUE_INT;
   new_value_stack->value.int_v = malloc(sizeof(struct ast_int_t));
   new_value_stack->value.int_v = env_variable->value.int_v;
+
+  return new_value_stack;
 }
 
 AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_float
@@ -2301,6 +2317,8 @@ AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_float
   new_value_stack->type = AST_VALUE_FLOAT;
   new_value_stack->value.float_v = malloc(sizeof(struct ast_float_t));
   new_value_stack->value.float_v = env_variable->value.float_v;
+  
+  return new_value_stack;
 }
 
 AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_string
@@ -2312,6 +2330,8 @@ AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_string
   new_value_stack->type = AST_VALUE_STRING;
   new_value_stack->value.string_v = malloc(sizeof(struct ast_string_t));
   new_value_stack->value.string_v = env_variable->value.string_v;
+  
+  return new_value_stack;
 }
 
 AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_null
@@ -2321,6 +2341,8 @@ AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_null
     return (void*) 0;
 
   new_value_stack->type = AST_VALUE_NULL;
+  
+  return new_value_stack;
 }
 
 AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_bool
@@ -2332,6 +2354,8 @@ AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_bool
   new_value_stack->type = AST_VALUE_BOOL;
   new_value_stack->value.bool_v = malloc(sizeof(struct ast_bool_t));
   new_value_stack->value.bool_v = env_variable->value.bool_v;
+  
+  return new_value_stack;
 }
 
 AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_matrix
@@ -2343,6 +2367,8 @@ AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_matrix
   new_value_stack->type = AST_VALUE_MATRIX;
   new_value_stack->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
   new_value_stack->value.matrix_v = env_variable->value.matrix_v;
+  
+  return new_value_stack;
 }
 
 GET_VISITOR_ENV* visitor_run_while(Envs* envs, AST_while* ast_while)
@@ -2362,17 +2388,15 @@ GET_VISITOR_ENV* visitor_run_while(Envs* envs, AST_while* ast_while)
     for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
     {
       AST* selected_ast = ast_tree->value.compound_v->items[i];
-      bool is_used = false;
+      bool is_used = true;
       switch (selected_ast->type)
       {
         case AST_BREAK:
           get_visitor_env = init_get_visitor_env();
-          is_used = true;
           break;
 
         case AST_CONTINUE:
           get_visitor_env = init_get_visitor_env();
-          is_used = true;
           break;
 
         case AST_RETURN:
@@ -2382,7 +2406,10 @@ GET_VISITOR_ENV* visitor_run_while(Envs* envs, AST_while* ast_while)
                 envs, 
                 selected_ast->value.return_v->value 
               );
-          is_used = true;
+          break;
+
+        default:
+          is_used = false;
           break;
       }
       if (is_used)
@@ -2436,19 +2463,18 @@ GET_VISITOR_ENV* visitor_run_if(Envs* envs, AST_if* ast_if)
     for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
     {
       AST* selected_ast = ast_tree->value.compound_v->items[i];
-      bool is_used = false;
+
+      bool is_used = true;
       switch (selected_ast->type)
       {
         case AST_BREAK:
           get_visitor_env = init_get_visitor_env();
           get_visitor_env->is_break = true;
-          is_used = true;
           break;
 
         case AST_CONTINUE:
           get_visitor_env = init_get_visitor_env();
           get_visitor_env->is_continue = true;
-          is_used = true;
           break;
 
         case AST_RETURN:
@@ -2458,9 +2484,13 @@ GET_VISITOR_ENV* visitor_run_if(Envs* envs, AST_if* ast_if)
                 envs, 
                 selected_ast->value.return_v->value 
               );
-          is_used = true;
+          break;
+
+        default:
+          is_used = false;
           break;
       }
+      
       if (is_used)
         break;
 

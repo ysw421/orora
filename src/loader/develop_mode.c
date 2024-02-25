@@ -8,19 +8,17 @@ void print_function(AST_function* checked_function)
   printf("  ->arguments:\n");
   for (int i = 0; i < checked_function->args_size; i ++)
   {
-    switch (checked_function->args[i]->type)
+    if (checked_function->args[i]->type)
     {
-      case AST_VALUE:
-        printf("    ->");
-        print_value(checked_function->args[i]);
-        printf("\n");
-        break;
-
-      case AST_VARIABLE:
-        printf("    ->");
-        print_variable(checked_function->args[i]->value.variable_v);
-        printf("\n");
-        break;
+      printf("    ->");
+      print_value(checked_function->args[i]);
+      printf("\n");
+    }
+    else if (checked_function->args[i]->type)
+    {
+      printf("    ->");
+      print_variable(checked_function->args[i]->value.variable_v);
+      printf("\n");
     }
   }
   if (checked_function->code)
@@ -99,17 +97,16 @@ void print_variable(AST_variable* node)
         AST* p = node->value;
         do
         {
-          switch (p->type)
+          if (p->type)
           {
-            case AST_VALUE:
-              printf("    ->in variable");
-              print_value(p);
-              printf("\n");
-              break;
-            case AST_VARIABLE:
-              printf("\t->variable: %s\n",
-                      p->value.variable_v->name);
-              break;
+            printf("    ->in variable");
+            print_value(p);
+            printf("\n");
+          }
+          else if (p->type)
+          {
+            printf("\t->variable: %s\n",
+                    p->value.variable_v->name);
           }
           if (p->type != AST_VARIABLE)
             break;
@@ -150,10 +147,10 @@ void print_ast_tree(AST* ast_tree)
         print_variable(checked_ast_tree->value.variable_v);
         break;
 
-//       default:
-//         printf("에러, 테스트 용 출력에 적용 안됨\n");
-//         exit(1);
-//         break;
+      default:
+        printf("에러, 테스트 용 출력에 적용 안됨\n");
+        exit(1);
+        break;
     }
   }
 }
@@ -235,6 +232,11 @@ void visitor_print_function_value(AST_value_stack* new_value)
         printf("]");
       }
       printf("]");
+      break;
+
+    default:
+      printf("에러, 정의되지 않은 출력\n");
+      exit(1);
       break;
   }
 }
@@ -356,6 +358,11 @@ void visitor_print_function(Envs* envs, AST* ast)
               );
 
           visitor_print_function_value(new_value);
+          break;
+
+        default:
+          printf("에러, 정의되지 않은 출력\n");
+          exit(1);
           break;
       }
     }

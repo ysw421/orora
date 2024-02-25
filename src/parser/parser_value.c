@@ -433,8 +433,6 @@ AST* parser_get_value
 
 AST_value_stack* get_single_value(Parser* parser, AST* ast, bool is_minus)
 {
-  Token* token = parser->token;
-
   orora_value_type* p = value_type_list;
   do
   {
@@ -654,8 +652,6 @@ bool is_bool_ast(Parser* parser)
 
 bool is_matrix_ast(Parser* parser)
 {
-  Token* token = parser->token;
-
   size_t pointer = parser->pointer;
   char* code = parser_is_begin(parser, 3, "matrix", "pmatrix", "bmatrix");
 

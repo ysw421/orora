@@ -4,7 +4,7 @@ EXEC = orora
 OBJECTS = $(SOURCES:.c=.o)
 DEPENDENCYS = $(SOURCES:.c=.d)
 
-FLAGS = -g -I./src
+FLAGS = -g -Wall -I./src
 #FLAGS = -g -Wall -lm -ldl -fPIC -rdynamic -fsanitize=address
 
 # ./configure --prefix = /usr/local/orora

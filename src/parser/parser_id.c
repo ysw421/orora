@@ -32,6 +32,10 @@ AST* parser_parse_variable
         return new_ast;
       }
       break;
+
+    default:
+      return parser_set_variable_value(parser, ast, last_token);
+      break;
   }
   // End variable
 
@@ -53,93 +57,92 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
     return new_ast_node;
   }
 
-  switch (token->type)
+  if (token->type == TOKEN_DEFINE)
   {
-    case TOKEN_DEFINE:
-      if (parser->prev_token->col == token->col_first)
+    if (parser->prev_token->col == token->col_first)
+    {
+      parser = parser_advance(parser, TOKEN_DEFINE);
+
+      // Check arguments
+      char** s_arg_variaable_name = malloc(sizeof(char*));
+      int check_arg_num = 0;
+      for (int i = 0; i < fa->args_size; i ++)
       {
-        parser = parser_advance(parser, TOKEN_DEFINE);
-
-        // Check arguments
-        char** s_arg_variaable_name = malloc(sizeof(char*));
-        int check_arg_num = 0;
-        for (int i = 0; i < fa->args_size; i ++)
+        if (fa->args[i]->type == AST_VARIABLE)
         {
-          if (fa->args[i]->type == AST_VARIABLE)
+          char* variable_name =
+            fa->args[i]->value.variable_v->name;
+          for (int j = 0; j < check_arg_num; j ++)
           {
-            char* variable_name =
-              fa->args[i]->value.variable_v->name;
-            for (int j = 0; j < check_arg_num; j ++)
+            if (!strcmp(s_arg_variaable_name[j], variable_name))
             {
-              if (!strcmp(s_arg_variaable_name[j], variable_name))
-              {
-                printf("에러, 함수의 argument 이름이 중복됨\n");
-                exit(1);
-              }
+              printf("에러, 함수의 argument 이름이 중복됨\n");
+              exit(1);
             }
-
-            check_arg_num ++;
-            s_arg_variaable_name =
-              realloc(s_arg_variaable_name,
-                  check_arg_num * sizeof(char*));
-            s_arg_variaable_name[check_arg_num - 1] = variable_name;
           }
-          else
-          {
-            int required =
-              snprintf(NULL, 0, "에러, 함수 %s의 정의를 위해 argument는 변수여야함",
-                  fa->name);
-            char* error_message = malloc((required + 1) * sizeof(char));
-            snprintf(error_message, required + 1,
-                "에러, 함수 %s의 정의를 위해 argument는 변수여야함",
-                fa->name);
-            error(error_message, parser);
-          }
-        }
-        token = parser->token;
-        // -------------------
 
-        if (!token)
-        {
-          printf("에러, ':=' 사용에 목적이 없음.");
-          exit(1);
-        }
-        if (parser->prev_token->col != token->col_first)
-        {
-          printf("에러, ':=' 뒤에는 값이 와야함.");
-          exit(1);
-        }
-
-        AST* value_node =
-            parser_get_value(
-                &parser, 
-                ast, 
-                token, 
-                init_get_value_env(), 
-                compound_env
-              );
-        token = parser->prev_token;
-
-        if (value_node)
-        {
-          // e.g.
-          // f(x) := 5x + 3
-          
-          // e.g.
-          // f(x) := \begin{function}
-          //           print("hello\n")
-          //         \end{function}
-
-          AST_function* new_ast_function = new_ast_node->value.function_v;
-
-//           new_ast_function->code = malloc(sizeof(AST));
-
-          new_ast_function->code = value_node;
+          check_arg_num ++;
+          s_arg_variaable_name =
+            realloc(s_arg_variaable_name,
+                check_arg_num * sizeof(char*));
+          s_arg_variaable_name[check_arg_num - 1] = variable_name;
         }
         else
         {
-          printf("에러, ':=' 뒤에는 값이 와야함2.");
-          exit(1);
+          int required =
+            snprintf(NULL, 0, "에러, 함수 %s의 정의를 위해 argument는 변수여야함",
+                fa->name);
+          char* error_message = malloc((required + 1) * sizeof(char));
+          snprintf(error_message, required + 1,
+              "에러, 함수 %s의 정의를 위해 argument는 변수여야함",
+              fa->name);
+          error(error_message, parser);
+        }
+      }
+      token = parser->token;
+      // -------------------
+
+      if (!token)
+      {
+        printf("에러, ':=' 사용에 목적이 없음.");
+        exit(1);
+      }
+      if (parser->prev_token->col != token->col_first)
+      {
+        printf("에러, ':=' 뒤에는 값이 와야함.");
+        exit(1);
+      }
+
+      AST* value_node =
+          parser_get_value(
+              &parser, 
+              ast, 
+              token, 
+              init_get_value_env(), 
+              compound_env
+            );
+      token = parser->prev_token;
+
+      if (value_node)
+      {
+        // e.g.
+        // f(x) := 5x + 3
+        
+        // e.g.
+        // f(x) := \begin{function}
+        //           print("hello\n")
+        //         \end{function}
+
+        AST_function* new_ast_function = new_ast_node->value.function_v;
+
+//           new_ast_function->code = malloc(sizeof(AST));
+
+        new_ast_function->code = value_node;
+      }
+      else
+      {
+        printf("에러, ':=' 뒤에는 값이 와야함2.");
+        exit(1);
 //           // e.g.
 //           // f(x) := \begin{function}
 //           //           print("hello\n")
@@ -200,11 +203,10 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
 //             printf("에러, ':=' 뒤에는 값이 와야함2.");
 //             exit(1);
 //           }
-        }
-        new_ast_node->value.function_v->ast_type = AST_FUNCTION_DEFINE;
-        return new_ast_node;
       }
-      break;
+      new_ast_node->value.function_v->ast_type = AST_FUNCTION_DEFINE;
+      return new_ast_node;
+    }
   }
 
   new_ast_node->value.function_v->ast_type = AST_FUNCTION_VALUE;

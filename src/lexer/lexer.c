@@ -18,7 +18,7 @@ Lexer* update_first_row(Lexer* lexer)
   return lexer;
 }
 
-Lexer* init_lexer(char* contents, unsigned long int* length)
+Lexer* init_lexer(char* contents, off_t* length)
 {
   Lexer* lexer = (Lexer*) malloc(sizeof(Lexer));
   lexer->pointer = 0;

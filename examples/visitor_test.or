@@ -39,3 +39,9 @@ p :=  \begin{matrix}
         \end{matrix} & 2 \\ 3 & 4
       \end{matrix}
 
+
+f(x) := \begin{code}
+          qqqq := 2
+        \end{code}
+
+print(qqqq)

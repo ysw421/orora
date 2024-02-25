@@ -1,9 +1,10 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include "lexer/lexer_T.h"
 #include <stdbool.h>
+#include "lexer/lexer_T.h"
 #include "lexer/token.h"
+#include "os/os.h"
 
 #define IS_LEXER_CONTENTS_END(lexer)\
         (lexer->c == '\0'\
@@ -16,7 +17,7 @@
 #define IS_NUMBER_CHAR(c) (c >= '0' && c <= '9')
  
 /* In lexer.c */
-Lexer* init_lexer(char* contents, unsigned long int* length);
+Lexer* init_lexer(char* contents, off_t* length);
 Token* lexer_get_token(Lexer* lexer);
 void lexer_advance_by_token(Lexer* lexer, unsigned int length);
 bool lexer_advance(Lexer* lexer);

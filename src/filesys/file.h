@@ -2,11 +2,12 @@
 #define FILE_H
 
 #include <stdint.h>
+#include "os/os.h"
 
 typedef struct
 {
   char* contents;
-  int64_t length;
+  off_t length;
 } File;
 
 File* openfile(const char* file_path);
