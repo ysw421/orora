@@ -2,10 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-File* openfile(const char* file_path)
+File* file_open(const char* file_path)
 {
-  File* file = (void*) 0;
-
   FILE* f = fopen(file_path, "rb");
   if (!f)
   {
@@ -13,7 +11,7 @@ File* openfile(const char* file_path)
     exit(2);
   }
 
-  file = (File*) malloc(sizeof(File));
+  File* file = (File*) malloc(sizeof(File));
 
   fseek(f, 0, SEEK_END);
   file->length = ftell(f);

@@ -88,13 +88,14 @@ int main(int argc, char** argv)
 
   if (argc == 2)
   {
-    File* file = openfile(argv[1]);
+    File* file = file_open(argv[1]);
 
 #ifdef DEVELOP_MODE
 //     print_file(file);
 #endif
 
     Lexer* root = init_lexer(file->contents, &file->length);
+    free(file);
 
 #ifdef DEVELOP_MODE
 //     print_tokens(root);
@@ -115,7 +116,6 @@ int main(int argc, char** argv)
 //     print_ast_tree(ast_tree);
 #endif
 
-    free(file);
     free(root);
     free(parser);
     free(ast_tree);

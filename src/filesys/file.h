@@ -10,6 +10,6 @@ typedef struct
   off_t length;
 } File;
 
-File* openfile(const char* file_path);
+File* file_open(const char* file_path);
 
 #endif

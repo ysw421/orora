@@ -4,8 +4,7 @@ EXEC = orora
 OBJECTS = $(SOURCES:.c=.o)
 DEPENDENCYS = $(SOURCES:.c=.d)
 
-FLAGS = -g -Wall -I./src
-#FLAGS = -g -Wall -lm -ldl -fPIC -rdynamic -fsanitize=address
+FLAGS = -g -Wall -lm -ldl -fPIC -rdynamic -I./src
 
 # ./configure --prefix = /usr/local/orora
 
@@ -23,6 +22,7 @@ $(MKBUILD_SUBDIRS):
 	mkdir -p $(join $(BUILD_FOLDER_PATH),$@)
 
 $(EXEC): $(OBJECTS)
+#	$(CC) -o $(join $(BUILD_FOLDER_PATH),$(notdir $@)) $(wildcard $(BUILD_LIB_PATH)*.o) -fsanitize=address -lasan
 	$(CC) -o $(join $(BUILD_FOLDER_PATH),$(notdir $@)) $(wildcard $(BUILD_LIB_PATH)*.o)
 
 %.o: %.c

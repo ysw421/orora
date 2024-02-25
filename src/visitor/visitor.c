@@ -163,8 +163,7 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
       break;
 
     default:
-      printf("에러, visitor에 정의되지 않은 AST\n");
-      exit(1);
+      return get_visitor_env;
   }
 
   return get_visitor_env;
