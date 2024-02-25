@@ -4,3 +4,4 @@ orora.exe
 **/.o
 *.d
 **/.d
+./build
