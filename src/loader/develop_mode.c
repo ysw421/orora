@@ -1,6 +1,6 @@
 #ifdef DEVELOP_MODE
 
-#include "main.h"
+#include "loader/main.h"
 
 void print_function(AST_function* checked_function)
 {
@@ -178,7 +178,7 @@ void print_tokens(Lexer* root)
 //   printf("%s\n", lexer_get_token(root)->value);
 }
 
-#include "./visitor/visitor.h"
+#include "visitor/visitor.h"
 #include <string.h>
 
 void visitor_print_function_value(AST_value_stack* new_value)

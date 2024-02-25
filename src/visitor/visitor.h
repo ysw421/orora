@@ -1,8 +1,8 @@
 #ifndef VISITOR_H
 #define VISITOR_H
 
-#include "../parser/ast/ast.h"
-#include "../env.h"
+#include "parser/ast/ast.h"
+#include "loader/env.h"
 
 typedef struct get_visitor_env_t
 {

@@ -1,14 +1,14 @@
-#include "main.h"
-#include "file.h"
+#include "loader/main.h"
+#include "filesys/file.h"
 #include "lexer/lexer.h"
 #include "parser/parser_value.h"
-#include "env.h"
+#include "loader/env.h"
 #include "visitor/visitor.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 #ifdef DEVELOP_MODE
-#include "develop_mode.c"
+#include "loader/develop_mode.c"
 #endif
 
 orora_value_type* value_type_list;

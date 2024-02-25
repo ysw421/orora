@@ -3,8 +3,8 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include "../../lexer/token.h"
-#include "../parser_T.h"
+#include "lexer/token.h"
+#include "parser/parser_T.h"
 // #include "../../env.h"
 
 typedef struct ast_compound_t

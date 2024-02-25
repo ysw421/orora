@@ -6,7 +6,7 @@
 
 // My personal os system....
 // OS: GNU/Linux (Windows WSL)
-// System type: 64-bit / x64 based
+// System type: x86_64
 
 #include <stdint.h>
 

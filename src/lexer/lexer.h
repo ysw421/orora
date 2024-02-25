@@ -1,9 +1,9 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include "lexer_T.h"
-#include "stdbool.h"
-#include "token.h"
+#include "lexer/lexer_T.h"
+#include <stdbool.h>
+#include "lexer/token.h"
 
 #define IS_LEXER_CONTENTS_END(lexer)\
         (lexer->c == '\0'\

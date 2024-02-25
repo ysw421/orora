@@ -1,4 +1,4 @@
-#include "token.h"
+#include "lexer/token.h"
 #include <stdlib.h>
 #include <string.h>
 

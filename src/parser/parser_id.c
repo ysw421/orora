@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
-#include "parser_id.h"
-#include "../main.h"
+#include "parser/parser_id.h"
+#include "loader/main.h"
 
 AST* parser_set_variable_value(Parser* parser, AST* ast, Token* last_token);
 AST* parser_set_function(Parser* parser, AST* ast, Token* last_token);

@@ -1,10 +1,10 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "../env.h"
-#include "ast/ast.h"
-#include "parser_T.h"
-#include "../lexer/lexer.h"
+#include "loader/env.h"
+#include "parser/ast/ast.h"
+#include "parser/parser_T.h"
+#include "lexer/lexer.h"
 
 typedef struct get_compound_env_t
 {

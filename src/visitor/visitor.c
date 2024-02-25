@@ -1,7 +1,7 @@
 #include <string.h>
-#include "visitor.h"
-#include "../main.h"
-#include "../parser/parser_value.h"
+#include "visitor/visitor.h"
+#include "loader/main.h"
+#include "parser/parser_value.h"
 
 #ifdef DEVELOP_MODE
 #include <stdlib.h>

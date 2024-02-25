@@ -1,8 +1,8 @@
-#include "parser_id.h"
+#include "parser/parser_id.h"
 #include <stdlib.h>
 #include <stdarg.h>
-#include "../main.h"
-#include "string.h"
+#include "loader/main.h"
+#include <string.h>
 
 AST* parser_get_satisfy
 (Parser* parser, AST* ast, GET_COMPOUND_ENV* compound_env);

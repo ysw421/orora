@@ -1,5 +1,5 @@
-#include "parser_id.h"
-#include "../main.h"
+#include "parser/parser_id.h"
+#include "loader/main.h"
 #include <stdlib.h>
 #include <string.h>
 

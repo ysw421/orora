@@ -1,9 +1,9 @@
 #ifndef PARSER_VALUE_H
 #define PARSER_VALUE_H
 
-#include "parser.h"
+#include "parser/parser.h"
 #include <stdio.h>
-#include "../lexer/token.h"
+#include "lexer/token.h"
 
 typedef struct get_value_env_t
 {
