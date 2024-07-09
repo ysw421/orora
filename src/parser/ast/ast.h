@@ -24,6 +24,14 @@ typedef struct ast_while_t
   struct ast_t* code;
 } AST_while;
 
+typedef struct ast_for_t
+{
+  struct ast_t* init;
+  struct ast_t* condition;
+  struct ast_t* update;
+  struct ast_t* code;
+} AST_for;
+
 typedef struct ast_if_t
 {
   struct ast_t* condition;
@@ -211,6 +219,7 @@ typedef struct ast_t
     AST_RETURN,         // 15:
     AST_BOOL,           // 16:
     AST_MATRIX,         // 17:
+    AST_FOR,            // 18:
     AST_NOOP = 99       // 99: Similar with NULL
   } type;
 
@@ -228,6 +237,7 @@ typedef struct ast_t
     struct ast_matrix_t* matrix_v;
     struct ast_value_t* value_v;
     struct ast_while_t* while_v;
+    struct ast_for_t* for_v;
     struct ast_if_t* if_v;
     struct ast_code_t* code_v;
     struct ast_cases_t* cases_v;
@@ -256,6 +266,7 @@ AST_PARSER* init_ast_parser(AST* ast, Parser* parser);
 AST_compound* init_ast_compound();
 AST_code* init_ast_code();
 AST_while* init_ast_while();
+AST_for* init_ast_for();
 AST_if* init_ast_if();
 AST_cases* init_ast_cases();
 AST_return* init_ast_return();

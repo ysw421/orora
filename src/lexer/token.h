@@ -49,6 +49,7 @@ typedef struct
     TOKEN_OR,                 // 37: ||, \lor
     TOKEN_AND,                // 38: &&, \land
     TOKEN_NEG,                // 39: !, \neg
+    TOKEN_TEXT,               // 40: \text
     TOKEN_NOOP                // 99:
   } type;
 

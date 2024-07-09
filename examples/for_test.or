@@ -1,0 +1,11 @@
+a := 0
+
+\begin{while}{a < 3}
+  print(a)
+  a := a + 1
+\end{while}
+
+print("\n===============\n")
+\begin{for}{i := 1}{i < 10}{i := i + 1}
+  print("@@@@@", i, "\n")
+\end{for}

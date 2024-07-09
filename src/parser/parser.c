@@ -8,11 +8,18 @@ AST* parser_get_satisfy
 (Parser* parser, AST* ast, GET_COMPOUND_ENV* compound_env);
 AST* parser_get_return
 (Parser* parser, AST* ast, GET_COMPOUND_ENV* compound_env);
+AST* parser_get_condition(Parser* parser);
 AST* parser_get_condition_and_code
 (Parser* parser, AST* ast, Token* token,
  Token* s_token, char* code,
  AST* new_ast_node, GET_COMPOUND_ENV* compound_env);
+AST* parser_get_for_condition_and_code
+(Parser* parser, AST* ast, Token* token,
+ Token* s_token, AST* new_ast_node, GET_COMPOUND_ENV* compound_env);
 AST* parser_get_while
+(Parser* parser, AST* ast, Token* token, 
+ Token* s_token, GET_COMPOUND_ENV* compound_env);
+AST* parser_get_for
 (Parser* parser, AST* ast, Token* token, 
  Token* s_token, GET_COMPOUND_ENV* compound_env);
 AST* parser_get_if
@@ -266,9 +273,10 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     {
       case TOKEN_BEGIN:
         Token* s_token = parser->token;
-        char* code = parser_is_begin(parser, 2, 
+        char* code = parser_is_begin(parser, 3, 
                         "while", 
-                        "if" 
+                        "if",
+                        "for"
                      );
         if (code)
         {
@@ -277,6 +285,22 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
             ast_compound_add(
                   ast->value.compound_v, 
                   parser_get_while(
+                      parser, 
+                      ast, 
+                      token, 
+                      s_token,
+                      compound_env
+                    )
+                );
+            token = parser->token;
+
+            continue;
+          }
+          else if (!strcmp(code, "for"))
+          {
+            ast_compound_add(
+                  ast->value.compound_v, 
+                  parser_get_for(
                       parser, 
                       ast, 
                       token, 
@@ -504,18 +528,17 @@ AST* parser_parse(Parser* parser)
   return ast;
 }
 
-AST* parser_get_condition_and_code
-(Parser* parser, AST* ast, Token* token,
- Token* s_token, char* code,
- AST* new_ast_node, GET_COMPOUND_ENV* compound_env)
+AST* parser_get_condition
+(Parser* parser)
 {
   bool is_error = true;
+  AST* new_condition_ast = (void*) 0;
 
-  token = parser->token;
+  Token* token = parser->token;
   if (token
       && token->type == TOKEN_LBRACE
       && parser->prev_token->col == token->col_first
-       )
+     )
   {
     parser = parser_advance(parser, TOKEN_LBRACE);
     token = parser->token;
@@ -524,43 +547,68 @@ AST* parser_get_condition_and_code
     new_env->is_allow_linebreak = true;
     new_env->is_in_braces = true;
 
-    AST* new_conditon_ast = 
+    new_condition_ast = 
       parser_get_compound(parser, new_env);
     token = parser->token;
 
     if (
-        new_conditon_ast 
-        && new_conditon_ast->type == AST_COMPOUND
-        && new_conditon_ast->value.compound_v->size == 1
+        new_condition_ast 
+        && new_condition_ast->type == AST_COMPOUND
+        && new_condition_ast->value.compound_v->size == 1
         && token 
         && token->type == TOKEN_RBRACE
        )
     {
-      new_ast_node->value.while_v->condition = 
-        new_conditon_ast->value.compound_v->items[0];
       parser = parser_advance(parser, TOKEN_RBRACE);
+      is_error = false;
+    }
+  }
+  
+  if (is_error)
+  {
+    free(new_condition_ast);
+    return (void*) 0;
+  }
+  else
+    return new_condition_ast;
+}
 
-      GET_COMPOUND_ENV* get_while_code_env = 
-        init_get_compound_env(compound_env);
-      get_while_code_env->is_usefull_end = code;
-      if (!strcmp(code, "while"))
+AST* parser_get_condition_and_code
+(Parser* parser, AST* ast, Token* token,
+ Token* s_token, char* code,
+ AST* new_ast_node, GET_COMPOUND_ENV* compound_env)
+{
+  bool is_error = true;
+
+  token = parser->token;
+
+  AST* new_condition_ast = parser_get_condition(parser);
+
+  if (new_condition_ast)
+  {
+    new_ast_node->value.while_v->condition = 
+        new_condition_ast->value.compound_v->items[0];
+
+    GET_COMPOUND_ENV* get_while_code_env = 
+      init_get_compound_env(compound_env);
+    get_while_code_env->is_usefull_end = code;
+    if (!strcmp(code, "while"))
+    {
+      get_while_code_env->is_usefull_break = true;
+      get_while_code_env->is_usefull_continue = true;
+    }
+
+    new_ast_node->value.while_v->code =
+      parser_get_compound(parser, get_while_code_env);
+
+    if (parser->prev_token->type == TOKEN_RBRACE)
+    {
+      size_t pointer = parser->pointer;
+      parser = parser_set(parser, parser->pointer - 4);
+      if (parser_is_end(parser, code))
       {
-        get_while_code_env->is_usefull_break = true;
-        get_while_code_env->is_usefull_continue = true;
-      }
-
-      new_ast_node->value.while_v->code =
-        parser_get_compound(parser, get_while_code_env);
-
-      if (parser->prev_token->type == TOKEN_RBRACE)
-      {
-        size_t pointer = parser->pointer;
-        parser = parser_set(parser, parser->pointer - 4);
-        if (parser_is_end(parser, code))
-        {
-          is_error = false;
-          parser = parser_set(parser, pointer);
-        }
+        is_error = false;
+        parser = parser_set(parser, pointer);
       }
     }
   }
@@ -568,6 +616,58 @@ AST* parser_get_condition_and_code
   if (is_error)
   {
     printf("에러, %s문 정의가 잘못됨\n", code);
+    exit(1);
+  }
+
+  return new_ast_node;
+}
+
+AST* parser_get_for_condition_and_code
+(Parser* parser, AST* ast, Token* token,
+ Token* s_token, AST* new_ast_node, GET_COMPOUND_ENV* compound_env)
+{
+  bool is_error = true;
+
+  token = parser->token;
+
+  AST* new_init_ast = parser_get_condition(parser);
+  AST* new_condition_ast = parser_get_condition(parser);
+  AST* new_update_ast = parser_get_condition(parser);
+
+  if (new_init_ast && new_condition_ast && new_update_ast)
+  {
+    new_ast_node->value.for_v->init = 
+      new_init_ast->value.compound_v->items[0];
+    new_ast_node->value.for_v->condition =
+      new_condition_ast->value.compound_v->items[0];
+    new_ast_node->value.for_v->update =
+      new_update_ast->value.compound_v->items[0];
+
+    GET_COMPOUND_ENV* get_for_code_env = 
+      init_get_compound_env(compound_env);
+    get_for_code_env->is_usefull_end = "for";
+
+    get_for_code_env->is_usefull_break = true;
+    get_for_code_env->is_usefull_continue = true;
+
+    new_ast_node->value.for_v->code =
+      parser_get_compound(parser, get_for_code_env);
+
+    if (parser->prev_token->type == TOKEN_RBRACE)
+    {
+      size_t pointer = parser->pointer;
+      parser = parser_set(parser, parser->pointer - 4);
+      if (parser_is_end(parser, "for"))
+      {
+        is_error = false;
+        parser = parser_set(parser, pointer);
+      }
+    }
+  }
+
+  if (is_error)
+  {
+    printf("에러, for문 정의가 잘못됨\n");
     exit(1);
   }
 
@@ -585,6 +685,20 @@ AST* parser_get_while
   return parser_get_condition_and_code(
               parser, ast, token,
               s_token, "while", new_ast_node,
+              compound_env
+          );
+}
+
+AST* parser_get_for
+(Parser* parser, AST* ast, Token* token, 
+ Token* s_token, GET_COMPOUND_ENV* compound_env)
+{
+  AST* new_ast_node = init_ast(AST_FOR, ast, s_token);
+  new_ast_node->value.for_v = init_ast_for();
+
+  return parser_get_for_condition_and_code(
+              parser, ast, token,
+              s_token, new_ast_node,
               compound_env
           );
 }

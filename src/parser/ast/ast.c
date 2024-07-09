@@ -59,6 +59,18 @@ AST_while* init_ast_while()
   return ast_while;
 }
 
+AST_for* init_ast_for()
+{
+  AST_for* ast_for =
+    (AST_for*) malloc(sizeof(struct ast_for_t));
+  ast_for->init = (void*) 0;
+  ast_for->condition = (void*) 0;
+  ast_for->update = (void*) 0;
+  ast_for->code = (void*) 0;
+
+  return ast_for;
+}
+
 AST_if* init_ast_if()
 {
   AST_if* ast_if =

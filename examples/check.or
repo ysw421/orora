@@ -1,0 +1,61 @@
+a := 4
+b := 7
+
+c := d := e := 5
+
+print(3+2*3, '\n')
+print(a+b, '\n')
+
+print(a, "  hello  ", b, "\n")
+print("c: ", c, " d: ", d, " e: ", e, '\n')
+
+q \leftarrow 3
+print("q: ", q, '\n')
+
+aa := true
+bb := false
+print(aa, " ", bb, '\n')
+
+print((3+2)*3, '\n')
+a := 7
+print(3*(a+2), '\n')
+
+f(a, b) := 7a + 2b - 7
+
+q :=  {\begin{bmatrix}
+         1 & 2 & 3 \\
+         4 & 5 & 6 \\
+       \end{bmatrix} 
+       + 
+       \begin{bmatrix}
+         6 & 5 & 4 \\
+         3 & 2 & 8
+       \end{bmatrix}}
+
+f(x) := \begin{cases}
+          31 & x = 1 \\
+          24 & x = 2 \\
+          90 & x = 3 \\
+          88 & otherwise \\
+        \end{cases}
+
+print(f(3), "\n")
+
+a := 1
+print("before satisfy\n")
+satisfy a : a + 2 = 3 || 1
+print("!!!\n")
+a := 2
+print("...\n")
+
+a = 1
+\begin{while}{a < 10}
+  print(a, '\n')
+  a := a + 1
+\end{while}
+
+\begin{if}{a = 10}
+  print("a is 10\n")
+\end{if}
+
+a = null
