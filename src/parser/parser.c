@@ -158,7 +158,7 @@ Parser* init_parser(Lexer* lexer)
 
   if (!parser->token)
   {
-    printf("에러, 파일이 비어있음\n");
+//     printf("에러, 파일이 비어있음\n");
     exit(1);
   }
   return parser;

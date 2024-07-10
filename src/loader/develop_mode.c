@@ -335,16 +335,16 @@ void visitor_print_function(Envs* envs, AST* ast)
         case AST_FUNCTION:
           AST_function* ast_function_arg_function =
             ast_function_arg->value.function_v;
-          Env_function* function =
-            visitor_get_function(envs, ast_function_arg_function);
-          if (!function)
-          {
-            visitor_nondefine_function_error(ast_function_arg_function);
-          }
+//           Env_function* function =
+//             visitor_get_function(envs, ast_function_arg_function);
+//           if (!function)
+//           {
+//             visitor_nondefine_function_error(ast_function_arg_function);
+//           }
 
           new_value =
             visitor_get_value_from_function(envs, 
-                ast_function_arg_function, function);
+                ast_function_arg_function);
 
           visitor_print_function_value(new_value);
           break;

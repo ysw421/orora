@@ -1,11 +1,22 @@
-a := 0
-
-\begin{while}{a < 3}
-  print(a)
-  a := a + 1
-\end{while}
-
 print("\n===============\n")
 \begin{for}{i := 1}{i < 10}{i := i + 1}
-  print("@@@@@", i, "\n")
+  print(i, "\n")
 \end{for}
+print("\n===============\n")
+
+p(a) := \begin{code}
+p(a) := a + 1
+
+b := 21
+print(p(p(b+1)+2), "\n")
+\end{code}
+p(1)
+
+print("\n===============\n")
+
+a(x) := \begin{code}
+  print("qqq ", x+2, "\n")
+  return x
+\end{code}
+
+print("aaa ", a(a(2)+2), "\n")

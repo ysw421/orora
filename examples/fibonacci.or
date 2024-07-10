@@ -1,0 +1,21 @@
+%f(x) := \begin{code}
+%  \begin{if}{x < 2}
+%    return x
+%  \end{if}
+%  return f(x-1) + f(x-2) 
+%\end{code}
+
+f(x) := \begin{cases}
+         x & x < 2 \\
+         f(x-1) + f(x-2) & otherwise \\
+       \end{cases}
+
+%print(f(31))
+
+n := 30
+\begin{for}{i:=0}{i<n}{i:=i+1}
+  print(f(i))
+  \begin{if}{i != 14}
+    print('\n')
+  \end{if}
+\end{for}

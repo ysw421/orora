@@ -50,7 +50,7 @@ void visitor_nondefine_variable_error(AST_variable* ast_variable);
 void visitor_nondefine_function_error(AST_function* ast_function);
 
 AST_value_stack* visitor_get_value_from_function
-(Envs* envs, AST_function* ast_function, Env_function* env_function);
+(Envs* envs, AST_function* ast_function);
 AST_value_stack* visitor_get_value_from_ast
 (Envs* envs, AST* condition);
 #endif
