@@ -4,4 +4,63 @@
 
 f(x) := a+2
 
-print(f(a:=2))
+print(f(a:=2), '\n')
+
+\psi := 5
+print(\psi, '\n\n')
+
+print(\begin{function}
+        print("Hello ")
+        return "siwon"
+      \end{function}, '\n')
+
+a := 1
+
+b := \begin{cases}
+       3 & a = 1 \\
+       2 & a = 2 \\
+       1 & otherwise
+     \end{cases}
+
+\begin{cases}
+  \begin{code}
+    print("The Phantom of the Opera\n")
+  \end{code} & b = 3\\
+  \begin{code}
+    print("Titanic\n")
+  \end{code} & otherwise
+\end{cases}
+
+f(x) := 5x + 3
+g(x, a) := 2x + a
+
+print(f(g(2, 3)), '\n')
+
+f(name) := \begin{function}
+             newName := name
+             \begin{if}{newName = "siwon"}
+               newName := "Siwon"
+             \end{if}
+             return "Hello " * name
+           \end{function}
+print(f('siwon'), '\n')
+
+name := "goorm"
+\begin{if}{name = "goorm"}
+  print("Hello Goorm\n")
+\end{if}
+
+a := 1
+%satisfy a : a > 0, a < 2
+a := 2
+print('satisfy\n')
+
+a := 0
+\begin{while}{a < 10}
+  a := a + 1
+  print(a, ' ')
+\end{while}
+
+\begin{for}{i:=0}{i<10}{i:=i+1}
+  print(i, ' ')
+\end{for}

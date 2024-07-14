@@ -78,6 +78,9 @@ AST_value_stack* visitor_get_value_from_cases
 GET_VISITOR_ENV* visitor_run_while(Envs* envs, AST_while* ast_while);
 GET_VISITOR_ENV* visitor_run_if(Envs* envs, AST_if* ast_if);
 GET_VISITOR_ENV* visitor_run_for(Envs* envs, AST_for* ast_for);
+GET_VISITOR_ENV* visitor_run_code(Envs* envs, AST_compound* ast_code);
+GET_VISITOR_ENV* visitor_run_cases(Envs* envs, AST_cases* ast_cases);
+
 
 AST_value_stack* visitor_get_value_from_code
 (Envs* envs, AST_compound* ast_code);
@@ -149,6 +152,21 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
       AST_for* ast_for = ast->value.for_v;
       get_visitor_env =
         visitor_run_for(envs, ast_for);
+      break;
+
+    case AST_CODE:
+      get_visitor_env = 
+        visitor_run_code(envs, ast->value.code_v->code);
+      break;
+
+    case AST_CASES:
+      get_visitor_env = 
+        visitor_run_cases(envs, ast->value.cases_v);
+      break;
+
+    case AST_VALUE:
+      get_visitor_env->is_return = 
+        visitor_get_value(envs, ast->value.value_v);
       break;
 
     case AST_IF:
@@ -2460,10 +2478,12 @@ GET_VISITOR_ENV* visitor_run_while(Envs* envs, AST_while* ast_while)
       {
         case AST_BREAK:
           get_visitor_env = init_get_visitor_env();
+          is_break = true;
           break;
 
         case AST_CONTINUE:
           get_visitor_env = init_get_visitor_env();
+          is_used = true;
           break;
 
         case AST_RETURN:
@@ -2473,12 +2493,16 @@ GET_VISITOR_ENV* visitor_run_while(Envs* envs, AST_while* ast_while)
                 envs, 
                 selected_ast->value.return_v->value 
               );
+          is_break = true;
           break;
 
         default:
           is_used = false;
           break;
       }
+      if (is_break)
+        break;
+
       if (is_used)
         break;
 
@@ -2539,10 +2563,12 @@ GET_VISITOR_ENV* visitor_run_for(Envs* envs, AST_for* ast_for)
       {
         case AST_BREAK:
           get_visitor_env = init_get_visitor_env();
+          is_break = true;
           break;
 
         case AST_CONTINUE:
           get_visitor_env = init_get_visitor_env();
+          is_used = true;
           break;
 
         case AST_RETURN:
@@ -2552,12 +2578,16 @@ GET_VISITOR_ENV* visitor_run_for(Envs* envs, AST_for* ast_for)
                 envs, 
                 selected_ast->value.return_v->value 
               );
+          is_break = true;
           break;
 
         default:
           is_used = false;
           break;
       }
+      if (is_break)
+        break;
+
       if (is_used)
         break;
 
@@ -2665,3 +2695,34 @@ GET_VISITOR_ENV* visitor_run_if(Envs* envs, AST_if* ast_if)
   return get_visitor_env;
 }
 
+GET_VISITOR_ENV* visitor_run_code(Envs* envs, AST_compound* ast_code)
+{
+  GET_VISITOR_ENV* get_visitor_env = 
+    init_get_visitor_env();
+
+  Envs* new_envs = visitor_merge_envs(envs);
+
+  get_visitor_env->is_return = visitor_get_value_from_code(
+                                  new_envs, 
+                                  ast_code
+                                );
+  free(new_envs);
+
+  return get_visitor_env;
+}
+
+GET_VISITOR_ENV* visitor_run_cases(Envs* envs, AST_cases* ast_cases)
+{
+  GET_VISITOR_ENV* get_visitor_env = 
+    init_get_visitor_env();
+
+  Envs* new_envs = visitor_merge_envs(envs);
+
+  get_visitor_env->is_return = visitor_get_value_from_cases(
+                                  new_envs,
+                                  ast_cases
+                               );
+  free(new_envs);
+
+  return get_visitor_env;
+}
