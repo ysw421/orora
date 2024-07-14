@@ -104,13 +104,10 @@ int main(int argc, char** argv)
     Parser* parser = init_parser(root);
     AST* ast_tree = parser_parse(parser);
 
-    printf("======================\n");
-
     for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
     {
       visitor_visit(root_envs, ast_tree->value.compound_v->items[i]);
     }
-    printf("\n======================\n");
 
 #ifdef DEVELOP_MODE
 //     print_ast_tree(ast_tree);
