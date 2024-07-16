@@ -6,6 +6,7 @@
 #ifdef DEVELOP_MODE
 #include <stdlib.h>
 #include <stdio.h>
+#include "lib/print.h"
 
 const char* visitor_print_function(Envs* envs, AST* ast);
 #endif

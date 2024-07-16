@@ -14,8 +14,8 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include <sys/un.h>
+#include <unistd.h>
 #include "parser/parser_value.h"
 #include "loader/env.h"
 #include "loader/color.h"
@@ -26,7 +26,7 @@
 #define FIFO_NAME "/tmp/orora_fifo"
 #define BUFFER_SIZE 1024
 #define PORT_FILE "/tmp/orora_port.txt"
-#define PORT 8080
+#define SOCKET_PATH "/tmp/orora_socket"
 
 #define DIALOGUE "%sorora> %s", ORORA_COLOR_H, ORORA_COLOR_RESET
 

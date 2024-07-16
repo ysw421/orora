@@ -1,39 +1,44 @@
 #include "server/client.h"
 
-void run_client() {
+void run_client(int write_fd, int read_fd) {
   char input[BUFFER_SIZE];
-  
-  while (1) {
+  char response[BUFFER_SIZE];
+
+  bool is_quit = false;
+  while (1)
+  {
     printf(DIALOGUE);
     fflush(stdout);
-    if (fgets(input, BUFFER_SIZE, stdin) == NULL) {
+    if (fgets(input, BUFFER_SIZE, stdin) == (void*) 0)
+      break;
+
+    if (strcmp(input, "quit\n") == 0)
+    {
+      printf("Quitting...\n");
+      is_quit = true;
       break;
     }
-    
-    if (strcmp(input, "quit\n") == 0) {
+
+    ssize_t num_written = write(write_fd, input, strlen(input));
+    if (num_written == -1)
+    {
+      perror("Write to orora server failed");
       break;
     }
-    
-    int fd = open(FIFO_NAME, O_WRONLY);
-    if (fd == -1) {
-      perror("Failed to open FIFO");
-      continue;
+
+    ssize_t num_read = read(read_fd, response, BUFFER_SIZE - 1);
+    if (num_read >= 0)
+    {
+      response[num_read] = '\0';
+      printf("%s", response);
     }
-    
-    write(fd, input, strlen(input));
-    close(fd);
-    
-    sleep(1);
-    FILE *result_file = fopen(RESULT_FILE, "r");
-    if (result_file != NULL) {
-      char result[BUFFER_SIZE];
-      while (fgets(result, BUFFER_SIZE, result_file) != NULL) {
-        printf("%s", result);
-      }
-      fclose(result_file);
-    } else {
-      printf("Command execution failed\n");
+    else
+    {
+      perror("Read from orora server failed");
+      break;
     }
   }
+  if (!is_quit)
+    printf("\n");
 }
 
