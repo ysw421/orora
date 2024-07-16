@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void visitor_print_function(Envs* envs, AST* ast);
+const char* visitor_print_function(Envs* envs, AST* ast);
 #endif
 
 GET_VISITOR_ENV* init_get_visitor_env();

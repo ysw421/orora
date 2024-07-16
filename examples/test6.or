@@ -1,18 +1,2 @@
-f(a, b) := a + y
-
-print(f(x := 1, y := 2))
-
-
-\begin{for}{i:=1}{i<10}{i:=i+1}
-  print(i)
-  break
-\end{for}
-
-print('\n')
-
-a := 1
-print(\begin{while}{a<10}
-  a := a + 1
-  return a
-  print(a)
-\end{while})
+a := 5 + 3
+b := a + 2

@@ -2,6 +2,8 @@
 #define MAIN_H
 
 #include "parser/ast/ast.h"
+#include "server/daemon.h"
+#include "server/client.h"
 
 #define EXTENTION ".or"
 

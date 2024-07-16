@@ -3,7 +3,6 @@ CFILES_FILESYS	 =	src/filesys/file_utils.c
 CFILES_LOADER	 =	src/loader/main.c
 CFILES_LOADER	+=	src/loader/error_log.c
 CFILES_LOADER	+=	src/loader/env.c
-CFILES_LOADER	+=	src/loader/develop_mode.c
 
 CFILES_LEXER	 =	src/lexer/lexer.c
 CFILES_LEXER	+=	src/lexer/lexer_id.c
@@ -19,7 +18,12 @@ CFILES_PARSER	+=	src/parser/parser.c
 CFILES_PARSER	+=	src/parser/parser_id.c
 CFILES_PARSER	+=	src/parser/parser_value.c
 
+CFILES_SERVER += src/server/daemon.c
+CFILES_SERVER += src/server/client.c
+
 CFILES_VISITOR +=	src/visitor/visitor.c
 
-SOURCES = $(CFILES_FILESYS) $(CFILES_LOADER) $(CFILES_LEXER) $(CFILES_PARSER) $(CFILES_VISITOR)
+CFILES_DEVELOP	 =	src/develop/develop_mode.c
+
+SOURCES = $(CFILES_FILESYS) $(CFILES_LOADER) $(CFILES_LEXER) $(CFILES_PARSER) $(CFILES_SERVER) $(CFILES_VISITOR) $(CFILES_DEVELOP)
 

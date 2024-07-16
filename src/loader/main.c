@@ -3,12 +3,18 @@
 #include "lexer/lexer.h"
 #include "parser/parser_value.h"
 #include "loader/env.h"
+#include "loader/color.h"
 #include "visitor/visitor.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <termios.h>
+#include <unistd.h>
+#include <signal.h>
+#include <string.h>
+#include <netdb.h>
 
 #ifdef DEVELOP_MODE
-#include "loader/develop_mode.c"
+#include "develop/develop_mode.h"
 #endif
 
 orora_value_type* value_type_list;
@@ -75,6 +81,16 @@ bool init_orora()
   return true;
 }
 
+void handle_sigint(int sig) {
+  fprintf(stderr, "\n");
+  fprintf(stderr, DIALOGUE);
+}
+
+void handle_sigterm(int sig) {
+  fprintf(stderr, "\n");
+  exit(0);
+}
+
 int main(int argc, char** argv)
 {
   if (!init_orora())
@@ -104,10 +120,15 @@ int main(int argc, char** argv)
     Parser* parser = init_parser(root);
     AST* ast_tree = parser_parse(parser);
 
+#ifdef DEVELOP_MODE
+//     print_ast_tree(ast_tree);
+#endif
+
     for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
     {
       visitor_visit(root_envs, ast_tree->value.compound_v->items[i]);
     }
+    printf("\n");
 
 #ifdef DEVELOP_MODE
 //     print_ast_tree(ast_tree);
@@ -117,9 +138,62 @@ int main(int argc, char** argv)
     free(parser);
     free(ast_tree);
   }
+  else if (argc == 1)
+  {
+#ifndef INTERPRETER_MODE
+#define INTERPRETER_MODE
+    printf("%sOrora Programming Language%s\n", ORORA_COLOR_H, ORORA_COLOR_RESET);
+    printf("Version 0.0.1\n"
+        "(C) 2023 Orora Project\n\n");
+
+//     enable_raw_mode();
+//     signal(SIGCHLD, SIG_IGN);
+//     signal(SIGTSTP, SIG_IGN);
+//     signal(SIGTTOU, SIG_IGN);
+//     signal(SIGTTIN, SIG_IGN);
+//     signal(SIGINT, sigint_handler);
+//     signal(SIGHUP, SIG_IGN);
+
+    signal(SIGINT, handle_sigint);
+    signal(SIGTERM, handle_sigterm);
+    fflush(stdout);
+
+    FILE *pid_file = fopen(PID_FILE, "r");
+    if (pid_file) {
+      pid_t daemon_pid;
+      fscanf(pid_file, "%d", &daemon_pid);
+      fclose(pid_file);
+
+      if (kill(daemon_pid, 0) == 0) {
+        printf("Orora PID: %d\n", daemon_pid);
+      } else {
+        goto start_daemon;
+      }
+    } else {
+      start_daemon:
+      mkfifo(FIFO_NAME, 0666);
+      
+      pid_t pid = fork();
+      if (pid < 0) {
+        perror("Fork failed");
+        exit(EXIT_FAILURE);
+      }
+      if (pid == 0) {
+        run_daemon();
+        exit(0);
+      } else {
+        printf("Orora PID: %d\n", pid);
+        sleep(1);
+      }
+    }
+    
+    run_client();
+#endif
+  }
 
   free(global_env);
   free(root_envs);
+
   return 0;
 }
 
