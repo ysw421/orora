@@ -15,8 +15,8 @@ void print_variable(AST_variable* node);
 void print_ast_tree(AST* ast_tree);
 void print_file(File* file);
 void print_tokens(Lexer* root);
-const char* visitor_print_function_value(AST_value_stack* new_value);
-void visitor_print_function_variable(Env_variable* new_value);
-const char* visitor_print_function(Envs* envs, AST* ast);
+// const char* visitor_print_function_value(AST_value_stack* new_value);
+// void visitor_print_function_variable(Env_variable* new_value);
+// const char* visitor_print_function(Envs* envs, AST* ast);
 
 #endif

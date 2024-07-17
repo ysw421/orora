@@ -1,25 +1,11 @@
 #include "server/daemon.h"
 #include "lib/print.h"
+#include "utilities/utils.h"
 
 volatile sig_atomic_t running = 1;
 
 void handle_signal(int sig) {
     running = 0;
-}
-
-const char* const_strcat(const char* str1, const char* str2)
-{
-  size_t len1 = strlen(str1);
-  size_t len2 = strlen(str2);
-  
-  char* result = (char*) malloc(len1 + len2 + 1);
-  if (!result)
-      return NULL;
-  
-  strcpy(result, str1);
-  strcat(result, str2);
-  
-  return result;
 }
 
 void run_daemon() {
@@ -47,7 +33,7 @@ void run_daemon() {
       AST* ast_tree = parser_parse(parser);
       
       const char* result = (void*) 0;
-      AST_value_stack* new_value = visitor_visit(root_envs, ast_tree->value.compound_v->items[0])->is_return;
+      AST_value_stack* new_value = visitor_visit(root_envs, ast_tree->value.compound_v->items[0])->output;
       if (new_value)
       {
         result = visitor_print_function_value(new_value);

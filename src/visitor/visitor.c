@@ -2,14 +2,14 @@
 #include "visitor/visitor.h"
 #include "loader/main.h"
 #include "parser/parser_value.h"
+#include "loader/error_log.h"
+#include "utilities/utils.h"
 
-#ifdef DEVELOP_MODE
 #include <stdlib.h>
 #include <stdio.h>
 #include "lib/print.h"
 
 const char* visitor_print_function(Envs* envs, AST* ast);
-#endif
 
 GET_VISITOR_ENV* init_get_visitor_env();
 orora_value_type* get_single_value_type(int ast_type);
@@ -94,6 +94,7 @@ GET_VISITOR_ENV* init_get_visitor_env()
   new_env->is_break = false;
   new_env->is_continue = false;
   new_env->is_return = (void*) 0;
+  new_env->output = (void*) 0;
 
   return new_env;
 }
@@ -107,7 +108,11 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
   {
     case AST_VARIABLE:
       AST_variable* ast_variable = ast->value.variable_v;
-      visitor_variable(envs, ast_variable);
+      Env_variable* env_variable = visitor_variable(envs, ast_variable);
+
+      if (INTERACTIVE_MODE && ast_variable->ast_type == AST_VARIABLE_VALUE)
+        get_visitor_env->output = 
+          visitor_get_value_from_variable(envs, env_variable);
       break;
 
     case AST_FUNCTION:
@@ -123,7 +128,11 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
           if (strcmp(ast_function->name, "print"))
           {
 #endif
-          visitor_get_value_from_function(envs, ast_function);
+          if (INTERACTIVE_MODE)
+            get_visitor_env->output =
+              visitor_get_value_from_function(envs, ast_function);
+          else
+            visitor_get_value_from_function(envs, ast_function);
 //           visitor_function_value(envs, ast_function);
 #ifdef DEVELOP_MODE
           }
@@ -158,15 +167,22 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
     case AST_CODE:
       get_visitor_env = 
         visitor_run_code(envs, ast->value.code_v->code);
+      if (INTERACTIVE_MODE)
+        get_visitor_env->output = get_visitor_env->is_return;
       break;
 
     case AST_CASES:
       get_visitor_env = 
         visitor_run_cases(envs, ast->value.cases_v);
+      if (INTERACTIVE_MODE)
+        get_visitor_env->output = get_visitor_env->is_return;
       break;
 
     case AST_VALUE:
-      get_visitor_env->is_return = 
+      if (INTERACTIVE_MODE)
+        get_visitor_env->output = 
+          visitor_get_value(envs, ast->value.value_v);
+      else 
         visitor_get_value(envs, ast->value.value_v);
       break;
 
@@ -309,8 +325,11 @@ bool is_true(AST_value_stack* value)
 
 void visitor_nondefine_variable_error(AST_variable* ast_variable)
 {
-  printf("에러, 정의되지 않은 변수: %s\n", ast_variable->name);
-  exit(1);
+//   printf("에러, 정의되지 않은 변수: %s\n", ast_variable->name);
+//   exit(1);
+  const char* error_log = "에러 정의되지 않은 변수: ";
+  error_log = const_strcat(error_log, ast_variable->name);
+  orora_error(error_log, (void*) 0);
 }
 
 void visitor_nondefine_function_error(AST_function* ast_function)

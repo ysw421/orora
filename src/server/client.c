@@ -1,6 +1,11 @@
 #include "server/client.h"
 
-void run_client(int write_fd, int read_fd) {
+void run_client(int write_fd, int read_fd)
+{
+  printf("%sOrora Programming Language%s\n", ORORA_COLOR_H, ORORA_COLOR_RESET);
+  printf("Version 0.0.1\n"
+      "(C) 2023 Orora Project\n\n");
+
   char input[BUFFER_SIZE];
   char response[BUFFER_SIZE];
 
@@ -12,7 +17,7 @@ void run_client(int write_fd, int read_fd) {
     if (fgets(input, BUFFER_SIZE, stdin) == (void*) 0)
       break;
 
-    if (strcmp(input, "quit\n") == 0)
+    if (strcmp(input, "exit\n") == 0)
     {
       printf("Quitting...\n");
       is_quit = true;

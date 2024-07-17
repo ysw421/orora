@@ -5,6 +5,7 @@
 #include "loader/env.h"
 #include "loader/color.h"
 #include "visitor/visitor.h"
+#include "loader/config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
@@ -21,14 +22,22 @@ orora_value_type* value_type_list;
 int ORORA_VALUE_TYPE_NUM;
 bool init_orora();
 
-void handle_sigint(int sig) {
+void handle_sigint(int sig)
+{
   fprintf(stderr, "\n");
   fprintf(stderr, DIALOGUE);
 }
 
-void handle_sigterm(int sig) {
+void handle_sigterm(int sig)
+{
   fprintf(stderr, "\n");
-  exit(0);
+}
+
+bool INTERACTIVE_MODE = 0;
+
+void change_interactive_mode(bool mode)
+{
+  INTERACTIVE_MODE = mode;
 }
 
 int main(int argc, char** argv)
@@ -78,14 +87,11 @@ int main(int argc, char** argv)
   }
   else if (argc == 1)
   {
-#ifndef INTERPRETER_MODE
-#define INTERPRETER_MODE
-    printf("%sOrora Programming Language%s\n", ORORA_COLOR_H, ORORA_COLOR_RESET);
-    printf("Version 0.0.1\n"
-        "(C) 2023 Orora Project\n\n");
+    change_interactive_mode(1);
 
     signal(SIGINT, handle_sigint);
     signal(SIGTERM, handle_sigterm);
+    fflush(stdout);
 
     int to_daemon[2];
     int from_daemon[2];
@@ -120,7 +126,7 @@ int main(int argc, char** argv)
         close(to_daemon[0]);
         close(from_daemon[1]);
 
-        printf("Orora PID: %d\n", pid);
+//         printf("Orora PID: %d\n", pid);
         sleep(1);
 
         run_client(to_daemon[1], from_daemon[0]);
@@ -135,7 +141,6 @@ int main(int argc, char** argv)
 //     signal(SIGTTIN, SIG_IGN);
 //     signal(SIGINT, sigint_handler);
 //     signal(SIGHUP, SIG_IGN);
-#endif
   }
 
   free(global_env);

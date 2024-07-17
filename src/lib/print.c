@@ -1,31 +1,6 @@
-#include "lib/print.h"
 #include "develop/develop_mode.h"
-
-const char* float_to_string(float value)
-{
-  char* buffer = (char*) malloc(32 * sizeof(char));
-  if (buffer == NULL)
-    return NULL;
-  
-  snprintf(buffer, 32, "%f", value);
-
-  return buffer;
-}
-
-const char* concatenate_strings(const char* str1, const char* str2)
-{
-  size_t len1 = strlen(str1);
-  size_t len2 = strlen(str2);
-  
-  char* result = (char*) malloc(len1 + len2 + 1);
-  if (!result)
-      return NULL;
-  
-  strcpy(result, str1);
-  strcat(result, str2);
-  
-  return result;
-}
+#include "utilities/utils.h"
+#include "lib/print.h"
 
 const char* visitor_print_function_value(AST_value_stack* new_value)
 {
@@ -72,7 +47,7 @@ const char* visitor_print_function_value(AST_value_stack* new_value)
           j ++ 
           )
       {
-        result = concatenate_strings(result, "[");
+        result = const_strcat(result, "[");
         for (
             int i = 0; 
             i < ast_matrix->row_size;
@@ -82,13 +57,13 @@ const char* visitor_print_function_value(AST_value_stack* new_value)
           AST_value_stack* new_value2 = 
             ast_matrix->value[j * ast_matrix->row_size + i]
               ->value.value_v->stack;
-          result = concatenate_strings(result, visitor_print_function_value(new_value2));
+          result = const_strcat(result, visitor_print_function_value(new_value2));
           if (i != ast_matrix->row_size - 1)
-            result = concatenate_strings(result, ", ");
+            result = const_strcat(result, ", ");
         }
-        result = concatenate_strings(result, "]");
+        result = const_strcat(result, "]");
       }
-      result = concatenate_strings(result, "]");
+      result = const_strcat(result, "]");
       return result;
 //       printf("[");
 //       for (

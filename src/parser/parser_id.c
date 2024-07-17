@@ -2,6 +2,7 @@
 #include <string.h>
 #include "parser/parser_id.h"
 #include "loader/main.h"
+#include "loader/error_log.h"
 
 AST* parser_set_variable_value(Parser* parser, AST* ast, Token* last_token);
 AST* parser_set_function(Parser* parser, AST* ast, Token* last_token);
@@ -221,8 +222,9 @@ AST* parser_value_define
 
   if (!token)
   {
-    printf("에러, ':=' 사용에 목적이 없음.");
-    exit(1);
+    orora_error("에러, ':=' 사용에 목적이 없음.", parser);
+//     printf("에러, ':=' 사용에 목적이 없음.");
+//     exit(1);
   }
 
   // Check value
