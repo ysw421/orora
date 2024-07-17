@@ -25,3 +25,8 @@ const char* float_to_string(float value)
 
   return buffer;
 }
+
+size_t orora_write(const char* message, const char* code)
+{
+  return write(STDOUT_FILENO, const_strcat(code, message), strlen(message) + 3);
+}

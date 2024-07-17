@@ -31,17 +31,37 @@ void run_client(int write_fd, int read_fd)
       break;
     }
 
-    ssize_t num_read = read(read_fd, response, BUFFER_SIZE - 1);
-    if (num_read >= 0)
+    ssize_t num_read;
+    response[0] = '\0';
+
+    bool is_error = false;
+    while (strncmp(response, CODE_SUCCESS, 3))
     {
-      response[num_read] = '\0';
-      printf("%s", response);
+      num_read = read(read_fd, response, BUFFER_SIZE - 1);
+      if (num_read >= 0)
+      {
+        response[num_read] = '\0';
+        size_t response_len = strlen(response);
+        if (response_len < 3)
+        {
+          perror("Read from orora server failed");
+          is_error = true;
+          break;
+        }
+
+        memmove(response, response + 3, strlen(response) - 2);
+        printf("%s", response);
+        break;
+      }
+      else
+      {
+        perror("Read from orora server failed");
+        is_error = true;
+        break;
+      }
     }
-    else
-    {
-      perror("Read from orora server failed");
+    if (is_error)
       break;
-    }
   }
   if (!is_quit)
     printf("\n");

@@ -123,7 +123,7 @@ const char* orora_error(const char* error_message, Parser* parser)
   {
 //     printf("hello\n");
 //     exit(1);
-    write(STDOUT_FILENO, error_message, strlen(error_message));
+    orora_write(error_message, CODE_ERROR);
   }
   else
   {

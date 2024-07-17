@@ -38,7 +38,7 @@ void run_daemon() {
       {
         result = visitor_print_function_value(new_value);
         result = const_strcat(result, "\n");
-        size_t num_written = write(STDOUT_FILENO, result, strlen(result));
+        size_t num_written = orora_write(result, CODE_SUCCESS);
         if (num_written == -1)
         {
           syslog(LOG_ERR, "Write error: %s", strerror(errno));
@@ -47,7 +47,7 @@ void run_daemon() {
       }
       else
       {
-        write(STDOUT_FILENO, "", 1);
+        orora_write("", CODE_ERROR);
       }
       fflush(stdout);
 
