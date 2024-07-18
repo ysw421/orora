@@ -1,5 +1,9 @@
 #include "loader/error_log.h"
 #include "utilities/utils.h"
+#include "server/daemon.h"
+#include <syslog.h>
+
+extern jmp_buf interactive_mode_buf;
 
 const char* get_error_line(Parser* parser, Token* saved_token)
 {
@@ -123,7 +127,9 @@ const char* orora_error(const char* error_message, Parser* parser)
   {
 //     printf("hello\n");
 //     exit(1);
-    orora_write(error_message, CODE_ERROR);
+    orora_write(error_message, ORORA_STATUS_ERROR);
+    syslog(LOG_ERR, "Error: %s", error_message);
+    longjmp(interactive_mode_buf, 1);
   }
   else
   {

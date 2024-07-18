@@ -18,6 +18,58 @@
 #include "develop/develop_mode.h"
 #endif
 
+#define MAX_RETRY 5
+#define START_PORT 8080
+
+int ORORA_PORT;
+
+int create_and_bind_socket(int *port)
+{
+  int server_socket, opt = 1;
+  struct sockaddr_in server_addr;
+
+  for (int i = 0; i < MAX_RETRY; i++)
+  {
+    server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_socket == -1)
+    {
+      perror("Socket creation failed");
+      continue;
+    }
+
+    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+    {
+      perror("setsockopt(SO_REUSEADDR) failed");
+      close(server_socket);
+      continue;
+    }
+
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(*port);
+
+    if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+    {
+      if (errno == EADDRINUSE)
+      {
+        printf("Port %d is already in use. Trying next port.\n", *port);
+        (*port)++;
+        close(server_socket);
+        continue;
+      }
+      else {
+        perror("Bind failed");
+        close(server_socket);
+        return -1;
+      }
+    }
+
+    return server_socket;
+  }
+  printf("Failed to find an available port after %d attempts.\n", MAX_RETRY);
+  return -1;
+}
+
 orora_value_type* value_type_list;
 int ORORA_VALUE_TYPE_NUM;
 bool init_orora();
@@ -93,54 +145,49 @@ int main(int argc, char** argv)
     signal(SIGTERM, handle_sigterm);
     fflush(stdout);
 
-    int to_daemon[2];
-    int from_daemon[2];
+    int port = START_PORT;
+    int server_socket = create_and_bind_socket(&port);
+    if (server_socket == -1)
+      exit(EXIT_FAILURE);
 
-    if (pipe(to_daemon) == -1 || pipe(from_daemon) == -1) {
-        perror("Pipe creation failed");
-        exit(EXIT_FAILURE);
+    if (listen(server_socket, 1) < 0)
+    {
+      perror("Listen failed");
+      exit(EXIT_FAILURE);
     }
 
     pid_t pid = fork();
     if (pid < 0)
     {
-        perror("Fork failed");
-        exit(EXIT_FAILURE);
+      perror("Fork failed");
+      exit(EXIT_FAILURE);
     }
     else if (pid == 0)
     {
-        close(to_daemon[1]);
-        close(from_daemon[0]);
-        
-        dup2(to_daemon[0], STDIN_FILENO);
-        dup2(from_daemon[1], STDOUT_FILENO);
-        
-        close(to_daemon[0]);
-        close(from_daemon[1]);
-        
-        run_daemon();
-        exit(0);
+      struct sockaddr_in client_addr;
+      socklen_t client_len = sizeof(client_addr);
+      int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_len);
+      if (client_socket < 0)
+      {
+        perror("Accept failed");
+        exit(EXIT_FAILURE);
+      }
+
+      dup2(client_socket, STDIN_FILENO);
+      dup2(client_socket, STDOUT_FILENO);
+      
+      close(server_socket);
+      close(client_socket);
+      
+      run_daemon();
+      exit(0);
     }
     else
     {
-        close(to_daemon[0]);
-        close(from_daemon[1]);
-
-//         printf("Orora PID: %d\n", pid);
-        sleep(1);
-
-        run_client(to_daemon[1], from_daemon[0]);
-
-        close(to_daemon[1]);
-        close(from_daemon[0]);
+      close(server_socket);
+      ORORA_PORT = port;
+      run_client(port);
     }
-
-//     signal(SIGCHLD, SIG_IGN);
-//     signal(SIGTSTP, SIG_IGN);
-//     signal(SIGTTOU, SIG_IGN);
-//     signal(SIGTTIN, SIG_IGN);
-//     signal(SIGINT, sigint_handler);
-//     signal(SIGHUP, SIG_IGN);
   }
 
   free(global_env);

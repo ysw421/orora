@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "lib/print.h"
 
-const char* visitor_print_function(Envs* envs, AST* ast);
+void visitor_print_function(Envs* envs, AST* ast);
 
 GET_VISITOR_ENV* init_get_visitor_env();
 orora_value_type* get_single_value_type(int ast_type);

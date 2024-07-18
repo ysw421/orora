@@ -4,6 +4,8 @@
 #include "parser/ast/ast.h"
 #include "server/daemon.h"
 #include "server/client.h"
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 #define EXTENTION ".or"
 

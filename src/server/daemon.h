@@ -18,7 +18,11 @@
 #include "loader/env.h"
 #include "loader/color.h"
 #include "visitor/visitor.h"
-#include "server/code.h"
+#include "server/status.h"
+#include <setjmp.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #define PID_FILE "/tmp/orora_daemon.pid"
 #define RESULT_FILE "/tmp/orora_result.txt"
