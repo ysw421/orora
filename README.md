@@ -3,6 +3,10 @@
 ⚠️ This project is Beta version... I'm working hard on it 😊
 </div>
 
+### How to install
+```shell
+sudo install.sh
+```
 
 #### Goal of this programming language
 The grammar of ORORA should be similar to the math expression from $\LaTeX$. For example, this beta version can run the code like :
