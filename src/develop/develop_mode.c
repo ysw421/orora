@@ -3,26 +3,26 @@
 
 void print_function(AST_function* checked_function)
 {
-  printf("function: %s\n", checked_function->name);
-  printf("  ->arguments:\n");
+  fprintf(stderr, "function: %s\n", checked_function->name);
+  fprintf(stderr, "  ->arguments:\n");
   for (int i = 0; i < checked_function->args_size; i ++)
   {
     if (checked_function->args[i]->type)
     {
-      printf("    ->");
+      fprintf(stderr, "    ->");
       print_value(checked_function->args[i]);
-      printf("\n");
+      fprintf(stderr, "\n");
     }
     else if (checked_function->args[i]->type)
     {
-      printf("    ->");
+      fprintf(stderr, "    ->");
       print_variable(checked_function->args[i]->value.variable_v);
-      printf("\n");
+      fprintf(stderr, "\n");
     }
   }
   if (checked_function->code)
   {
-    printf("  ->code:\n");
+    fprintf(stderr, "  ->code:\n");
     AST* ast = init_ast(AST_COMPOUND, (void*) 0, (void*) 0);
     ast->value.compound_v = init_ast_compound();
     ast->value.compound_v->size = 1;
@@ -34,7 +34,7 @@ void print_function(AST_function* checked_function)
 void print_value(AST* ast)
 {
   AST_value* checked = ast->value.value_v;
-  printf("value: ->size: %ld\n", checked->size);
+  fprintf(stderr, "value: ->type: %d\n", checked->type);
   struct ast_value_stack_t* stack = checked->stack;
   
   for (int i = 0; i < checked->size; i ++)
@@ -42,38 +42,38 @@ void print_value(AST* ast)
     switch (stack->type)
     {
       case AST_VALUE_INT:
-        printf("\t->int: %d\n", stack->value.int_v->value);
+        fprintf(stderr, "\t->int: %d\n", stack->value.int_v->value);
         break;
       case AST_VALUE_FLOAT:
-        printf("\t->float: %f\n", stack->value.float_v->value);
+        fprintf(stderr, "\t->float: %f\n", stack->value.float_v->value);
         break;
       case AST_VALUE_STRING:
-        printf("\t->string: %s\n", stack->value.string_v->real_value);
+        fprintf(stderr, "\t->string: %s\n", stack->value.string_v->real_value);
         break;
       case AST_VALUE_PLUS:
-        printf("\t->+\n");
+        fprintf(stderr, "\t->+\n");
         break;
       case AST_VALUE_MINUS:
-        printf("\t->-\n");
+        fprintf(stderr, "\t->-\n");
         break;
       case AST_VALUE_PRODUCT:
-        printf("\t->*\n");
+        fprintf(stderr, "\t->*\n");
         break;
       case AST_VALUE_DIV:
-        printf("\t->/\n");
+        fprintf(stderr, "\t->/\n");
         break;
       case AST_VALUE_VARIABLE:
-        printf("    ->");
+        fprintf(stderr, "    ->");
         print_variable(stack->value.variable_v);
-        printf("\n");
+        fprintf(stderr, "\n");
         break;
       case AST_VALUE_FUNCTION:
-        printf("    ->");
+        fprintf(stderr, "    ->");
         print_function(stack->value.function_v);
-        printf("\n");
+        fprintf(stderr, "\n");
         break;
       default:
-        printf("\t->unkwon type: %d\n", stack->type);
+        fprintf(stderr, "\t->unkwon type: %d\n", stack->type);
         break;
     }
 
@@ -83,13 +83,13 @@ void print_value(AST* ast)
  
 void print_variable(AST_variable* node)
 {
-  printf("variable: %s\n", node->name);
+  fprintf(stderr, "variable: %s\n", node->name);
   if (node->value)
   {
     switch (node->value->type)
     {
       case AST_VALUE:
-        printf("    ->in variable");
+        fprintf(stderr, "    ->in variable");
         print_value(node->value);
         break;
       case AST_VARIABLE:
@@ -98,13 +98,13 @@ void print_variable(AST_variable* node)
         {
           if (p->type)
           {
-            printf("    ->in variable");
+            fprintf(stderr, "    ->in variable");
             print_value(p);
-            printf("\n");
+            fprintf(stderr, "\n");
           }
           else if (p->type)
           {
-            printf("\t->variable: %s\n",
+            fprintf(stderr, "\t->variable: %s\n",
                     p->value.variable_v->name);
           }
           if (p->type != AST_VARIABLE)
@@ -117,10 +117,10 @@ void print_variable(AST_variable* node)
   }
   if (node->satisfy_size)
   {
-    printf("    ->satisfy\n");
+    fprintf(stderr, "    ->satisfy\n");
     for (int i = 0; i < node->satisfy_size; i ++)
     {
-      printf("    ->condition: ");
+      fprintf(stderr, "    ->condition: ");
       print_value(node->satisfy[i]);
     }
   }
@@ -147,7 +147,7 @@ void print_ast_tree(AST* ast_tree)
         break;
 
       default:
-        printf("에러, 테스트 용 출력에 적용 안됨\n");
+        fprintf(stderr, "에러, 테스트 용 출력에 적용 안됨\n");
         exit(1);
         break;
     }
@@ -158,9 +158,9 @@ void print_file(File* file)
 {
   for (int i = 0; i < file->length; i ++)
   {
-    printf("%c\n", file->contents[i]);
+    fprintf(stderr, "%c\n", file->contents[i]);
     if (file->contents[i] == '\0')
-      printf("=================\n");
+      fprintf(stderr, "=================\n");
   }
 }
 
@@ -168,9 +168,6 @@ void print_tokens(Lexer* root)
 {
   Token* token = (void*) 0;
   while ((token = lexer_get_token(root)) != (void*) 0)
-    printf(
-        "value: %s\t\t type: %d\n",
-        token->value, token->type);
-//   printf("%s\n", lexer_get_token(root)->value);
+    fprintf(stderr, "value: %s\t\t type: %d\n", token->value, token->type);
 }
 
