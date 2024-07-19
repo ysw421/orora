@@ -11,6 +11,42 @@ void handle_signal(int sig)
     running = 0;
 }
 
+bool is_end_interactive_line(Lexer* lexer)
+{
+  Token* token = (void*) 0;
+  int lpar = 0;
+  int rpar = 0;
+  int lbrace = 0;
+  int rbrace = 0;
+  int lsqb = 0;
+  int rsqb = 0;
+  int begin = 0;
+  int end = 0;
+
+  while ((token = lexer_get_token(root)) != (void*) 0)
+  {
+    if (token->type == TOKEN_LPAREN)
+      lpar ++;
+    else if (token->type == TOKEN_RPAREN)
+      rpar ++;
+    else if (token->type == TOKEN_LBRACE)
+      lbrace ++;
+    else if (token->type == TOKEN_RBRACE)
+      rbrace ++;
+    else if (token->type == TOKEN_LSQB)
+      lsqb ++;
+    else if (token->type == TOKEN_RSQB)
+      rsqb ++;
+    else if (token->type == TOKEN_BEGIN)
+      begin ++;
+    else if (token->type == TOKEN_END)
+      end ++;
+  }
+  if (lpar == rpar && lbrace == rbrace && lsqb == rsqb && begin == end)
+    return true;
+  return false;
+}
+
 void run_daemon()
 {
   signal(SIGTERM, handle_signal);
@@ -33,6 +69,8 @@ void run_daemon()
       *len_p = (off_t) num_read;
       
       Lexer* root = init_lexer(buffer, len_p);
+#include "develop/develop_mode.h"
+      print_tokens(root);
       Parser* parser = init_parser(root);
       AST* ast_tree = parser_parse(parser);
       
@@ -41,47 +79,13 @@ void run_daemon()
         AST_value_stack* new_value = visitor_visit(root_envs, ast_tree->value.compound_v->items[0])->output;
         if (new_value)
         {
-          visitor_print_function_value(new_value);
+          if (!(new_value->type == AST_VALUE_NULL && ast_tree->value.compound_v->items[0]->type == AST_FUNCTION))
+            visitor_print_function_value(new_value);
           orora_write("\n", ORORA_STATUS_SUCCESS);
         }
         else
           orora_write("", ORORA_STATUS_SUCCESS);
-//         if (new_value)
-//         {
-//           result = visitor_print_function_value(new_value);
-//           result = const_strcat(result, "\n");
-//           size_t num_written = orora_write(result, ORORA_STATUS_SUCCESS);
-//           if (num_written == -1)
-//           {
-//             syslog(LOG_ERR, "Write error: %s", strerror(errno));
-//             break;
-//           }
-//           syslog(LOG_NOTICE, "Response sent: %s", result);
-//         }
-//         else
-//         {
-//           orora_write("", ORORA_STATUS_SUCCESS);
-//           syslog(LOG_NOTICE, "Response sent: (empty)");
-//         }
       }
-//         if (new_value)
-//         {
-//           result = visitor_print_function_value(new_value);
-//           result = const_strcat(result, "\n");
-//           size_t num_written = orora_write(result, CODE_SUCCESS);
-//           if (num_written == -1)
-//           {
-//             syslog(LOG_ERR, "Write error: %s", strerror(errno));
-//             break;
-//           }
-//           syslog(LOG_NOTICE, "Response sent: %s", result);
-//         }
-//         else
-//         {
-//           orora_write("", CODE_SUCCESS);
-//           syslog(LOG_NOTICE, "Response sent: (empty)");
-//         }
-//       }
       else
       {
         orora_write("", ORORA_STATUS_SUCCESS);
@@ -101,68 +105,3 @@ void run_daemon()
   syslog(LOG_NOTICE, "Orora exiting");
 }
 
-// void run_daemon()
-// {
-//   signal(SIGTERM, handle_signal);
-//   signal(SIGINT, handle_signal);
-// 
-//   char buffer[BUFFER_SIZE];
-// 
-//   Envs* global_env = init_envs((void*) 0, init_env());
-//   Envs* root_envs = init_envs(global_env, init_env());
-// 
-//   while (running)
-//   {
-//     ssize_t num_read = read(STDIN_FILENO, buffer, BUFFER_SIZE - 1);
-//     if (num_read > 0)
-//     {
-//       buffer[num_read] = '\0';
-//       syslog(LOG_NOTICE, "Received command: %s", buffer);
-// 
-//       off_t* len_p = (off_t*) malloc(sizeof(off_t));
-//       *len_p = (off_t) num_read;
-//       
-//       Lexer* root = init_lexer(buffer, len_p);
-//       Parser* parser = init_parser(root);
-//       AST* ast_tree = parser_parse(parser);
-//       
-//       const char* result = (void*) 0;
-//       if (setjmp(interactive_mode_buf) == 0)
-//       {
-//         AST_value_stack* new_value = visitor_visit(root_envs, ast_tree->value.compound_v->items[0])->output;
-//         if (new_value)
-//         {
-//           result = visitor_print_function_value(new_value);
-//           result = const_strcat(result, "\n");
-//           size_t num_written = orora_write(result, CODE_SUCCESS);
-//           if (num_written == -1)
-//           {
-//             syslog(LOG_ERR, "Write error: %s", strerror(errno));
-//             break;
-//           }
-//           syslog(LOG_NOTICE, "Response sent: %s", result);
-//         }
-//         else
-//         {
-//           orora_write("", CODE_SUCCESS);
-//           syslog(LOG_NOTICE, "Response sent: (empty)");
-//         }
-//       }
-//       else
-//       {
-//         orora_write("", CODE_SUCCESS);
-//       }
-//     }
-//     else if (num_read == 0)
-//     {
-//       syslog(LOG_NOTICE, "Parent closed pipe, exiting");
-//       break;
-//     }
-//     else
-//     {
-//       syslog(LOG_ERR, "Read error: %s", strerror(errno));
-//       break;
-//     }
-//   }
-//   syslog(LOG_NOTICE, "Orora exiting");
-// }
