@@ -116,39 +116,43 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
       break;
 
     case AST_FUNCTION:
-#ifdef DEVELOP_MODE
-      visitor_print_function(envs, ast);
-#endif
-
-      AST_function* ast_function = ast->value.function_v;
-      switch (ast_function->ast_type)
+      if (!strcmp(ast->value.function_v->name, "print"))
       {
-        case AST_FUNCTION_VALUE:
+        visitor_print_function(envs, ast);
+        get_visitor_env->output = init_ast_value_stack(AST_VALUE_NULL, (void*) 0);
+      }
+      else
+      {
+        AST_function* ast_function = ast->value.function_v;
+        switch (ast_function->ast_type)
+        {
+          case AST_FUNCTION_VALUE:
 #ifdef DEVELOP_MODE
-          if (strcmp(ast_function->name, "print"))
-          {
+            if (strcmp(ast_function->name, "print"))
+            {
 #endif
-          if (INTERACTIVE_MODE)
-            get_visitor_env->output =
+            if (INTERACTIVE_MODE)
+              get_visitor_env->output =
+                visitor_get_value_from_function(envs, ast_function);
+            else
               visitor_get_value_from_function(envs, ast_function);
-          else
-            visitor_get_value_from_function(envs, ast_function);
-//           visitor_function_value(envs, ast_function);
+  //           visitor_function_value(envs, ast_function);
 #ifdef DEVELOP_MODE
-          }
+            }
 #endif
-          break;
+            break;
 
-        case AST_FUNCTION_DEFINE:
-          visitor_function_define(envs, ast_function);
-          break;
+          case AST_FUNCTION_DEFINE:
+            visitor_function_define(envs, ast_function);
+            break;
 
-        default:
+          default:
 #ifdef DEVELOP_MODE
-          printf("내가 ast function 설정 잘못함...\n");
-          exit(1);
+            printf("내가 ast function 설정 잘못함...\n");
+            exit(1);
 #endif
-          break;
+            break;
+        }
       }
       break;
 

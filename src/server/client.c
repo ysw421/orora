@@ -56,6 +56,11 @@ void run_client(int port)
     char *input = readline(prompt);
     if (input == (void*) 0)
         continue;
+    else if (!strcmp(input, "exit()\n"))
+    {
+      printf("Quitting...\n");
+      exit(0);
+    }
     if (*input)
         add_history(input);
 //     printf(DIALOGUE);
