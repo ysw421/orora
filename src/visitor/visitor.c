@@ -511,10 +511,18 @@ AST_value_stack* visitor_get_value_from_function
 //     visitor_get_envs_from_function(envs, ast_function, env_function);
 
 //   return visitor_function_value(envs, ast_function);
+
   Env_function* env_function =
     visitor_get_function(envs, ast_function);
   if (!env_function)
   {
+    if (!strcmp(ast_function->name, "print"))
+    {
+      AST* ast = init_ast(AST_FUNCTION, (void*) 0, (void*) 0);
+      ast->value.function_v = ast_function;
+      visitor_print_function(envs, ast);
+      return init_ast_value_stack(AST_VALUE_NULL, (void*) 0);
+    }
     visitor_nondefine_function_error(ast_function);
   }
 

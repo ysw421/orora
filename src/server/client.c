@@ -8,7 +8,11 @@
 #include <string.h>
 #include <stdlib.h>
 
-// #define BUFFER_SIZE 1024
+int custom_tab_insert(int count, int key)
+{
+  rl_insert_text("\t");
+  return 0;
+}
 
 void set_nonblocking(int sock)
 {
@@ -39,7 +43,7 @@ void run_client(int port)
 
   if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
   {
-    printf("\nConnection Failed \n");
+    printf("\nORORA Server Connection Failed \n");
     return;
   }
 
@@ -49,11 +53,25 @@ void run_client(int port)
   printf("Version 0.0.1\n"
     "(C) 2023 Orora Project\n\n");
 
+  rl_initialize();
+  rl_bind_key('\t', custom_tab_insert);
+
+  bool is_success_received = false;
+  bool is_more_line = false;
+  int right_space = 0;
+
   char* prompt = (char*) const_strcat(const_strcat(ORORA_COLOR_H, ORORA_PROMPT), ORORA_COLOR_RESET);
   while (1)
   {
-//     char *input = readline(DIALOGUE);
-    char *input = readline(prompt);
+    char* input;
+    if (is_more_line)
+    {
+      input = readline("        ");
+//       for (int i = 0; i < right_space; i++)
+//         fprintf(stderr, "\t");
+    }
+    else
+      input = readline(prompt);
     if (input == (void*) 0)
         continue;
     else if (!strcmp(input, "exit()\n"))
@@ -76,9 +94,10 @@ void run_client(int port)
       break;
     }
 
-    bool success_received = false;
+    is_success_received = false;
+    is_more_line = false;
     int count = -1;
-    while (!success_received)
+    while (!is_success_received && !is_more_line)
     {
       count++;
       MessageHeader header;
@@ -140,14 +159,21 @@ void run_client(int port)
 
       if (status == ORORA_STATUS_SUCCESS)
       {
-        success_received = true;
+        is_success_received = true;
         if (strlen(response) == 0 && count > 0)
-          printf("\n");
+          fprintf(stderr, "\n");
         else
-          printf("%s", response);
+          fprintf(stderr, "%s", response);
+      }
+      else if (status == ORORA_STATUS_MORE)
+      {
+        is_more_line = true;
+        right_space = atoi(response);
+        if (right_space < 0)
+          right_space = 0;
       }
       else
-        printf("%s", response);
+        fprintf(stderr, "%s", response);
 
       free(response);
     }

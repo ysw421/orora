@@ -34,7 +34,7 @@ void print_function(AST_function* checked_function)
 void print_value(AST* ast)
 {
   AST_value* checked = ast->value.value_v;
-  fprintf(stderr, "value: ->type: %d\n", checked->type);
+  fprintf(stderr, "value: ->size: %ld\n", checked->size);
   struct ast_value_stack_t* stack = checked->stack;
   
   for (int i = 0; i < checked->size; i ++)

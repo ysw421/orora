@@ -11,8 +11,10 @@ void handle_signal(int sig)
     running = 0;
 }
 
-bool is_end_interactive_line(Lexer* lexer)
+int is_end_interactive_line(Lexer* root)
 {
+  Lexer* lexer = malloc(sizeof(Lexer));
+  memcpy(lexer, root, sizeof(Lexer));
   Token* token = (void*) 0;
   int lpar = 0;
   int rpar = 0;
@@ -23,11 +25,11 @@ bool is_end_interactive_line(Lexer* lexer)
   int begin = 0;
   int end = 0;
 
-  while ((token = lexer_get_token(root)) != (void*) 0)
+  while ((token = lexer_get_token(lexer)) != (void*) 0)
   {
-    if (token->type == TOKEN_LPAREN)
+    if (token->type == TOKEN_LPAR)
       lpar ++;
-    else if (token->type == TOKEN_RPAREN)
+    else if (token->type == TOKEN_RPAR)
       rpar ++;
     else if (token->type == TOKEN_LBRACE)
       lbrace ++;
@@ -42,9 +44,10 @@ bool is_end_interactive_line(Lexer* lexer)
     else if (token->type == TOKEN_END)
       end ++;
   }
+  free(lexer);
   if (lpar == rpar && lbrace == rbrace && lsqb == rsqb && begin == end)
-    return true;
-  return false;
+    return 0;
+  return lpar - rpar + lbrace - rbrace + lsqb - rsqb + begin - end;
 }
 
 void run_daemon()
@@ -57,49 +60,93 @@ void run_daemon()
   Envs* global_env = init_envs((void*) 0, init_env());
   Envs* root_envs = init_envs(global_env, init_env());
 
+  char* input = (char*) 0;
+  size_t len_input = 0;
+  bool is_first_line = true;
+
   while (running)
   {
     ssize_t num_read = read(STDIN_FILENO, buffer, BUFFER_SIZE - 1);
-    if (num_read > 0)
+    if (num_read <= 0)
     {
-      buffer[num_read] = '\0';
-      syslog(LOG_NOTICE, "Received command: %s", buffer);
-
-      off_t* len_p = (off_t*) malloc(sizeof(off_t));
-      *len_p = (off_t) num_read;
-      
-      Lexer* root = init_lexer(buffer, len_p);
-#include "develop/develop_mode.h"
-      print_tokens(root);
-      Parser* parser = init_parser(root);
-      AST* ast_tree = parser_parse(parser);
-      
-      if (setjmp(interactive_mode_buf) == 0)
-      {
-        AST_value_stack* new_value = visitor_visit(root_envs, ast_tree->value.compound_v->items[0])->output;
-        if (new_value)
-        {
-          if (!(new_value->type == AST_VALUE_NULL && ast_tree->value.compound_v->items[0]->type == AST_FUNCTION))
-            visitor_print_function_value(new_value);
-          orora_write("\n", ORORA_STATUS_SUCCESS);
-        }
-        else
-          orora_write("", ORORA_STATUS_SUCCESS);
-      }
+      if (num_read == 0)
+        syslog(LOG_NOTICE, "Parent closed pipe, exiting");
       else
-      {
-        orora_write("", ORORA_STATUS_SUCCESS);
-      }
-    }
-    else if (num_read == 0)
-    {
-      syslog(LOG_NOTICE, "Parent closed pipe, exiting");
+        syslog(LOG_ERR, "Read error: %s", strerror(errno));
       break;
+    }
+
+    if (is_first_line)
+    {
+      input = malloc(num_read + 1);
+      if (input == NULL)
+      {
+        syslog(LOG_ERR, "Memory allocation failed");
+        break;
+      }
+      memcpy(input, buffer, num_read);
+      len_input = num_read;
+      input[len_input] = '\0';
+      is_first_line = false;
     }
     else
     {
-      syslog(LOG_ERR, "Read error: %s", strerror(errno));
-      break;
+      char *temp = realloc(input, len_input + num_read + 1);
+      if (temp == NULL)
+      {
+        syslog(LOG_ERR, "Memory reallocation failed");
+        free(input);
+        break;
+      }
+      input = temp;
+      memcpy(input + len_input, buffer, num_read);
+      len_input += num_read;
+      input[len_input] = '\0';
+    }
+
+    char last_char = input[len_input];
+    input[len_input] = '\0';
+    syslog(LOG_NOTICE, "Received command: %s", input);
+
+    off_t* len_p = (off_t*) malloc(sizeof(off_t));
+    *len_p = (off_t) len_input;
+    
+    Lexer* root = init_lexer(input, len_p);
+    int right_space = is_end_interactive_line(root);
+    if (right_space == 0)
+    {
+      is_first_line = true;
+    }
+    else
+    {
+      input[len_input] = last_char;
+      orora_write(int_to_string(right_space), ORORA_STATUS_MORE);
+//       orora_write("", ORORA_STATUS_SUCCESS);
+      continue;
+    }
+// #include "develop/develop_mode.h"
+//     print_tokens(root);
+    Parser* parser = init_parser(root);
+    AST* ast_tree = parser_parse(parser);
+    
+    if (setjmp(interactive_mode_buf) == 0)
+    {
+      AST* ast = ast_tree->value.compound_v->items[0];
+      AST_value_stack* new_value = visitor_visit(root_envs, ast)->output;
+      if (new_value)
+      {
+        if (new_value->type != AST_VALUE_NULL || !(ast->type == AST_FUNCTION
+              || ast->type == AST_CODE
+              || (ast->type == AST_VALUE && ast->value.value_v->stack->type == AST_VALUE_CODE)))
+          visitor_print_function_value(new_value);
+        orora_write("\n", ORORA_STATUS_SUCCESS);
+      }
+      else
+        orora_write("", ORORA_STATUS_SUCCESS);
+    }
+    else
+    {
+      orora_write("", ORORA_STATUS_SUCCESS);
     }
   }
   syslog(LOG_NOTICE, "Orora exiting");
