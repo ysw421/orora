@@ -1,10 +1,15 @@
 #!/bin/bash
 
-echo "This script will install necessary dependencies. You may be prompted for your password."
+echo "This script will check dependencies, install if necessary, and build the project."
 
 # Function to check if a command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
+}
+
+# Function to check if readline is installed
+readline_installed() {
+    pkg-config --exists readline
 }
 
 # Detect the package manager
@@ -25,37 +30,42 @@ else
     exit 1
 fi
 
-# Update package lists
-echo "Updating package lists..."
-if [ "$PKG_MANAGER" = "apt-get" ]; then
-    sudo apt-get update
-elif [ "$PKG_MANAGER" = "pacman" ]; then
-    sudo pacman -Sy
-elif [ "$PKG_MANAGER" = "zypper" ]; then
-    sudo zypper refresh
-fi
-
-# Install readline development package
-echo "Installing readline development package..."
-if [ "$PKG_MANAGER" = "apt-get" ]; then
-    sudo apt-get install -y "$READLINE_PKG"
-elif [ "$PKG_MANAGER" = "yum" ]; then
-    sudo yum install -y "$READLINE_PKG"
-elif [ "$PKG_MANAGER" = "pacman" ]; then
-    sudo pacman -S --noconfirm "$READLINE_PKG"
-elif [ "$PKG_MANAGER" = "zypper" ]; then
-    sudo zypper install -y "$READLINE_PKG"
-fi
-
-# Check if installation was successful
-if command_exists pkg-config && pkg-config --exists readline; then
-    echo "Readline development package installed successfully."
+# Check if readline is already installed
+if readline_installed; then
+    echo "Readline development package is already installed."
 else
-    echo "Failed to install readline development package. Please install it manually."
-    exit 1
-fi
+    echo "Readline development package is not installed. Installing..."
 
-echo "All dependencies installed successfully."
+    # Update package lists
+    echo "Updating package lists..."
+    if [ "$PKG_MANAGER" = "apt-get" ]; then
+        sudo apt-get update
+    elif [ "$PKG_MANAGER" = "pacman" ]; then
+        sudo pacman -Sy
+    elif [ "$PKG_MANAGER" = "zypper" ]; then
+        sudo zypper refresh
+    fi
+
+    # Install readline development package
+    echo "Installing readline development package..."
+    if [ "$PKG_MANAGER" = "apt-get" ]; then
+        sudo apt-get install -y "$READLINE_PKG"
+    elif [ "$PKG_MANAGER" = "yum" ]; then
+        sudo yum install -y "$READLINE_PKG"
+    elif [ "$PKG_MANAGER" = "pacman" ]; then
+        sudo pacman -S --noconfirm "$READLINE_PKG"
+    elif [ "$PKG_MANAGER" = "zypper" ]; then
+        sudo zypper install -y "$READLINE_PKG"
+    fi
+
+    # Check if installation was successful
+    if readline_installed; then
+        echo "Readline development package installed successfully."
+    else
+        echo "Failed to install readline development package. Please install it manually."
+        exit 1
+    fi
+fi
 
 # Build the project
 echo "Building the project..."
