@@ -1,11 +1,14 @@
 #include "server/client.h"
+#include "utilities/utils.h"
+#include <readline/readline.h>
+#include <readline/history.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
 
-#define BUFFER_SIZE 1024
+// #define BUFFER_SIZE 1024
 
 void set_nonblocking(int sock)
 {
@@ -17,7 +20,7 @@ void run_client(int port)
 {
   int sock = 0;
   struct sockaddr_in serv_addr;
-  char input[BUFFER_SIZE];
+//   char input[BUFFER_SIZE];
 
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
   {
@@ -45,17 +48,26 @@ void run_client(int port)
   printf("%sOrora Programming Language%s\n", ORORA_COLOR_H, ORORA_COLOR_RESET);
   printf("Version 0.0.1\n"
     "(C) 2023 Orora Project\n\n");
+
+  char* prompt = (char*) const_strcat(const_strcat(ORORA_COLOR_H, ORORA_PROMPT), ORORA_COLOR_RESET);
   while (1)
   {
-    printf(DIALOGUE);
-    fflush(stdout);
-    if (fgets(input, BUFFER_SIZE, stdin) == NULL)
-      break;
+//     char *input = readline(DIALOGUE);
+    char *input = readline(prompt);
+    if (input == (void*) 0)
+        continue;
+    if (*input)
+        add_history(input);
+//     printf(DIALOGUE);
+//     fflush(stdout);
+//     if (fgets(input, BUFFER_SIZE, stdin) == (void*) 0)
+//       continue;
 
     ssize_t num_written = send(sock, input, strlen(input), 0);
     if (num_written == -1)
     {
       perror("Write to orora server failed");
+      free(input);
       break;
     }
 
@@ -134,8 +146,10 @@ void run_client(int port)
 
       free(response);
     }
+    free(input);
   }
 
+  rl_clear_history();
   close(sock);
 }
 
