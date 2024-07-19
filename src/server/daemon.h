@@ -31,7 +31,7 @@
 #define PORT_FILE "/tmp/orora_port.txt"
 #define SOCKET_PATH "/tmp/orora_socket"
 
-#define ORORA_PROMPT "&orora> "
+#define ORORA_PROMPT "orora>> "
 #define DIALOGUE "%s%s%s", ORORA_COLOR_H, ORORA_PROMPT, ORORA_COLOR_RESET
 
 int read_port_from_file();

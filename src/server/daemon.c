@@ -8,7 +8,7 @@ volatile sig_atomic_t running = 1;
 
 void handle_signal(int sig)
 {
-    running = 0;
+  running = 0;
 }
 
 int is_end_interactive_line(Lexer* root)

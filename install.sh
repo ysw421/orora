@@ -1,13 +1,11 @@
 #!/bin/bash
 
-echo "This script will check dependencies, install if necessary, and build the project."
+echo "This shell file will check dependencies, install if necessary, and build ORORA."
 
-# Function to check if a command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Function to check if readline is installed
 readline_installed() {
     pkg-config --exists readline
 }
@@ -26,17 +24,15 @@ elif command_exists zypper; then
     PKG_MANAGER="zypper"
     READLINE_PKG="readline-devel"
 else
-    echo "Unsupported package manager. Please install readline development package manually."
+    echo "Unsupported package manager. Please install readline."
     exit 1
 fi
 
-# Check if readline is already installed
 if readline_installed; then
     echo "Readline development package is already installed."
 else
     echo "Readline development package is not installed. Installing..."
 
-    # Update package lists
     echo "Updating package lists..."
     if [ "$PKG_MANAGER" = "apt-get" ]; then
         sudo apt-get update
@@ -46,7 +42,6 @@ else
         sudo zypper refresh
     fi
 
-    # Install readline development package
     echo "Installing readline development package..."
     if [ "$PKG_MANAGER" = "apt-get" ]; then
         sudo apt-get install -y "$READLINE_PKG"
@@ -58,16 +53,14 @@ else
         sudo zypper install -y "$READLINE_PKG"
     fi
 
-    # Check if installation was successful
     if readline_installed; then
         echo "Readline development package installed successfully."
     else
-        echo "Failed to install readline development package. Please install it manually."
+        echo "Failed to install readline development package."
         exit 1
     fi
 fi
 
-# Build the project
 echo "Building the project..."
 make clean
 make
@@ -79,4 +72,19 @@ else
     exit 1
 fi
 
-echo "Installation and build process completed."
+# Install orora system-wide
+echo "Installing orora system-wide..."
+sudo mv build/orora /usr/local/bin/
+if [ $? -ne 0 ]; then
+    echo "Failed to install orora. Please check your permissions."
+    exit 1
+fi
+
+echo "orora has been installed successfully."
+echo "You can now run 'orora' from any directory."
+
+# Optional: Set up man page or help documentation
+# sudo cp orora.1 /usr/local/share/man/man1/
+# sudo mandb
+
+echo "Installation process completed."
