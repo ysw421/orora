@@ -119,6 +119,7 @@ void run_daemon()
     {
       free(lexer_null_checker);
       orora_write("", ORORA_STATUS_SUCCESS);
+      is_first_line = true;
       continue;
     }
     free(lexer_null_checker);
