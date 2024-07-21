@@ -77,12 +77,13 @@ bool init_orora();
 void handle_sigint(int sig)
 {
   fprintf(stderr, "\n");
-  fprintf(stderr, DIALOGUE);
+//   fprintf(stderr, DIALOGUE);
 }
 
 void handle_sigterm(int sig)
 {
   fprintf(stderr, "\n");
+  exit(0);
 }
 
 bool INTERACTIVE_MODE = 0;
@@ -141,8 +142,8 @@ int main(int argc, char** argv)
   {
     change_interactive_mode(1);
 
-    signal(SIGINT, handle_sigint);
-    signal(SIGTERM, handle_sigterm);
+//     signal(SIGINT, handle_sigint);
+//     signal(SIGTERM, handle_sigterm);
     fflush(stdout);
 
     int port = START_PORT;

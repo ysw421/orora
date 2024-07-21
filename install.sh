@@ -1,6 +1,7 @@
 #!/bin/bash
 
-echo "This shell file will check dependencies, install if necessary, and build ORORA."
+sudo echo "This shell file will check dependencies, install if necessary, and build ORORA."
+
 
 command_exists() {
     command -v "$1" >/dev/null 2>&1
@@ -80,11 +81,10 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "orora has been installed successfully."
+echo "orora has been installed successfully!"
 echo "You can now run 'orora' from any directory."
 
 # Optional: Set up man page or help documentation
 # sudo cp orora.1 /usr/local/share/man/man1/
 # sudo mandb
 
-echo "Installation process completed."

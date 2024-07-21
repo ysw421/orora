@@ -52,8 +52,8 @@ int is_end_interactive_line(Lexer* root)
 
 void run_daemon()
 {
-  signal(SIGTERM, handle_signal);
-  signal(SIGINT, handle_signal);
+//   signal(SIGTERM, handle_signal);
+//   signal(SIGINT, handle_signal);
 
   char buffer[BUFFER_SIZE];
 
@@ -79,7 +79,7 @@ void run_daemon()
     if (is_first_line)
     {
       input = malloc(num_read + 1);
-      if (input == NULL)
+      if (input == (void*) 0)
       {
         syslog(LOG_ERR, "Memory allocation failed");
         break;
@@ -92,7 +92,7 @@ void run_daemon()
     else
     {
       char *temp = realloc(input, len_input + num_read + 1);
-      if (temp == NULL)
+      if (temp == (void*) 0)
       {
         syslog(LOG_ERR, "Memory reallocation failed");
         free(input);
@@ -112,6 +112,20 @@ void run_daemon()
     *len_p = (off_t) len_input;
     
     Lexer* root = init_lexer(input, len_p);
+
+    Lexer* lexer_null_checker = malloc(sizeof(Lexer));
+    memcpy(lexer_null_checker, root, sizeof(Lexer));
+    if (lexer_get_token(lexer_null_checker) == (void*) 0)
+    {
+      free(lexer_null_checker);
+      orora_write("", ORORA_STATUS_SUCCESS);
+      continue;
+    }
+    free(lexer_null_checker);
+
+// #include "develop/develop_mode.h"
+//     printf("root_size: %d\n", root->size);
+//     print_tokens(root);
     int right_space = is_end_interactive_line(root);
     if (right_space == 0)
     {
@@ -137,7 +151,13 @@ void run_daemon()
       {
         if (new_value->type != AST_VALUE_NULL || !(ast->type == AST_FUNCTION
               || ast->type == AST_CODE
-              || (ast->type == AST_VALUE && ast->value.value_v->stack->type == AST_VALUE_CODE)))
+              || ast->type == AST_FOR
+              || ast->type == AST_WHILE
+              || ast->type == AST_CASES
+              || (ast->type == AST_VALUE && (ast->value.value_v->stack->type == AST_VALUE_CODE)
+                )
+              )
+            )
           visitor_print_function_value(new_value);
         orora_write("\n", ORORA_STATUS_SUCCESS);
       }

@@ -111,7 +111,6 @@ void run_client(int port)
         }
         else if (n == 0)
         {
-          printf("Server disconnected\n");
           return;
         }
         else if (errno != EAGAIN && errno != EWOULDBLOCK)
@@ -141,7 +140,6 @@ void run_client(int port)
         }
         else if (n == 0)
         {
-          printf("Server disconnected\n");
           free(response);
           return;
         }
