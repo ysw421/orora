@@ -52,6 +52,7 @@ void run_client(int port)
   printf("%sOrora Programming Language%s\n", ORORA_COLOR_H, ORORA_COLOR_RESET);
   printf("Version 0.0.1\n"
     "(C) 2023 Orora Project\n\n");
+  printf("Type 'exit' to quit\n\n");
 
   rl_initialize();
   rl_bind_key('\t', custom_tab_insert);
@@ -74,7 +75,7 @@ void run_client(int port)
       input = readline(prompt);
     if (input == (void*) 0)
         continue;
-    else if (!strcmp(input, "exit()\n"))
+    else if (!strcmp(input, "exit\n"))
     {
       printf("Quitting...\n");
       exit(0);
