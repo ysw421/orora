@@ -13,6 +13,7 @@
 #include <signal.h>
 #include <string.h>
 #include <netdb.h>
+#include <getopt.h>
 
 #ifdef DEVELOP_MODE
 #include "develop/develop_mode.h"
@@ -20,8 +21,20 @@
 
 #define MAX_RETRY 5
 #define START_PORT 8080
+#define MAX_VERSION_LENGTH 20
 
 int ORORA_PORT;
+
+extern char* get_version();
+void print_version();
+
+void print_usage(const char* program_name)
+{
+  printf("Usage: %s [OPTION] [FILE]\n", program_name);
+  printf("Options:\n");
+  printf("  -v, --version     Display version information\n");
+  printf("  -h, --help        Display this help message\n");
+}
 
 int create_and_bind_socket(int *port)
 {
@@ -104,8 +117,40 @@ int main(int argc, char** argv)
   Envs* root_envs = init_envs(global_env, init_env());
 #endif
 
+  int opt;
+  static struct option long_options[] = {
+      {"version", no_argument, 0, 'v'},
+      {"help", no_argument, 0, 'h'},
+      {0, 0, 0, 0}
+  };
+
+  while ((opt = getopt_long(argc, argv, "vh", long_options, NULL)) != -1)
+  {
+    switch (opt)
+    {
+      case 'v':
+        print_version();
+        return 0;
+      case 'h':
+        print_usage(argv[0]);
+        return 0;
+      default:
+        print_usage(argv[0]);
+        return 1;
+    }
+  }
+
+  if (!init_orora())
+      return 1;
+
   if (argc == 2)
   {
+#ifndef GLOBAL_ENV_DEFINE
+#define GLOBAL_ENV_DEFINE
+    Envs* global_env = init_envs((void*) 0, init_env());
+    Envs* root_envs = init_envs(global_env, init_env());
+#endif
+
     File* file = file_open(argv[1]);
 
 #ifdef DEVELOP_MODE
@@ -257,4 +302,38 @@ bool init_orora()
   ORORA_VALUE_TYPE_NUM = 6;
 
   return true;
+}
+
+void print_version() {
+    printf("%sOrora Programming Language%s version %s\n", ORORA_COLOR_H, ORORA_COLOR_RESET, get_version());
+    printf("(C) 2023 Orora Project\n");
+}
+
+char* get_version()
+{
+  static char version[MAX_VERSION_LENGTH] = {0};
+  
+  if (version[0] == '\0')
+  {
+    FILE* version_file = fopen("VERSION", "r");
+    if (version_file == (void*) 0)
+    {
+      fprintf(stderr, "Error: Could not open VERSION file\n");
+      return "Unknown";
+    }
+
+    if (fgets(version, MAX_VERSION_LENGTH, version_file) == (void*) 0)
+    {
+      fprintf(stderr, "Error: Could not read VERSION file\n");
+      fclose(version_file);
+      return "Unknown";
+    }
+
+    fclose(version_file);
+
+    char* newline = strchr(version, '\n');
+    if (newline) *newline = '\0';
+  }
+
+  return version;
 }
