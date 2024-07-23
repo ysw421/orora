@@ -1,5 +1,6 @@
 #include "parser/parser_id.h"
 #include "loader/main.h"
+#include "loader/error_log.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -139,8 +140,9 @@ AST* parser_get_value
       }
       else if (is_last_minus_value2)
       {
-        printf("에러, operator 뒤에는 값이 와야함\n");
-        exit(1);
+        orora_error("에러, -연산자 다음에는 값이 와야함", (void*) 0);
+//         printf("에러, operator 뒤에는 값이 와야함\n");
+//         exit(1);
       }
 
       bool is_continue = false;
@@ -162,8 +164,9 @@ AST* parser_get_value
           }
           else if (is_last_value)
           {
-            printf("에러, 값 전에 operator가 와야함\n");
-            exit(1);
+            orora_error("에러, 값 전에 operator가 와야함", (void*) 0);
+//             printf("에러, 값 전에 operator가 와야함\n");
+//             exit(1);
           }
           
           AST* function_ast = parser_get_function(
@@ -322,8 +325,9 @@ AST* parser_get_value
             AST_value_stack* new;
             if (is_last_minus_value2)
             {
-              printf("에러, begin은 -연산이 불가함\n");
-              exit(1);
+              orora_error("에러, begin은 -연산이 불가함", (void*) 0);
+//               printf("에러, begin은 -연산이 불가함\n");
+//               exit(1);
             }
 
             if (!strcmp(code, "cases"))
@@ -365,8 +369,9 @@ AST* parser_get_value
           {
             if (!is_last_value && !is_operator_use_one_value(token->type))
             {
-              printf("에러, operator는 값 다음에 와야 함\n");
-              exit(1);
+              orora_error("에러, operator는 값 다음에 와야 함", (void*) 0);
+//               printf("에러, operator는 값 다음에 와야 함\n");
+//               exit(1);
             }
             while (stack->size
                 && parser_precedence(stack->stack->type)
@@ -408,18 +413,21 @@ AST* parser_get_value
   // Warning! possibility error
   if (!is_first_turn && !is_last_value)
   {
-    printf("에러, operator 다음에는 값이 와야함\n");
-    exit(1);
+    orora_error("에러, operator 다음에는 값이 와야함", (void*) 0);
+//     printf("에러, operator 다음에는 값이 와야함\n");
+//     exit(1);
   }
   else if(count_of_dearkelly)
   {
-    printf("에러, (가 끝나지 아니함\n");
-    exit(1);
+    orora_error("에러, (가 끝나지 아니함", (void*) 0);
+//     printf("에러, (가 끝나지 아니함\n");
+//     exit(1);
   }
   else if(count_of_brace)
   {
-    printf("에러, {가 끝나지 아니함\n");
-    exit(1);
+    orora_error("에러, {가 끝나지 아니함", (void*) 0);
+//     printf("에러, {가 끝나지 아니함\n");
+//     exit(1);
   }
 
 //   free(value_env);
@@ -548,8 +556,9 @@ AST_value_stack* parser_get_new_string_ast_value_stack
 
   if (is_minus)
   {
-    printf("에러, string에는 -연산이 불가함\n");
-    exit(1);
+    orora_error("에러, string에는 -연산이 불가함", (void*) 0);
+//     printf("에러, string에는 -연산이 불가함\n");
+//     exit(1);
   }
   AST_value_stack* new =
     init_ast_value_stack(AST_VALUE_STRING, token);
@@ -565,8 +574,9 @@ AST_value_stack* parser_get_new_null_ast_value_stack
 
   if (is_minus)
   {
-    printf("에러, null에는 -연산이 불가함\n");
-    exit(1);
+    orora_error("에러, null에는 -연산이 불가함", (void*) 0);
+//     printf("에러, null에는 -연산이 불가함\n");
+//     exit(1);
   }
   AST_value_stack* new = 
     init_ast_value_stack(AST_VALUE_NULL, token);
@@ -676,8 +686,9 @@ AST_value_stack* parser_pop_value(AST_value* value)
 //               "에러, %s가 무엇이죠??::type: %d",
 //               token->value, token->type);
 //     error(error_message, parser, token);
-    printf("에러, 삭제 불가함");
-    exit(1);
+    orora_error("에러, 삭제 불가함", (void*) 0);
+//     printf("에러, 삭제 불가함");
+//     exit(1);
   }
   value->size --;
   AST_value_stack* snode = value->stack;

@@ -1,4 +1,5 @@
 #include "lexer/lexer.h"
+#include "loader/error_log.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -61,8 +62,9 @@ bool lexer_advance(Lexer* lexer)
 {
   if (IS_LEXER_CONTENTS_END(lexer))
   {
-    printf("에러, lexer.c=>lexer_advance\n");
-    exit(1);
+    orora_error("에러, lexer.c=>lexer_advance", (void*) 0);
+//     printf("에러, lexer.c=>lexer_advance\n");
+//     exit(1);
 //     return false;
   }
 

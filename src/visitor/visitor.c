@@ -113,6 +113,8 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
       if (INTERACTIVE_MODE && ast_variable->ast_type == AST_VARIABLE_VALUE)
         get_visitor_env->output = 
           visitor_get_value_from_variable(envs, env_variable);
+      else
+        visitor_get_value_from_variable(envs, env_variable);
       break;
 
     case AST_FUNCTION:
@@ -120,6 +122,7 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
       {
         visitor_print_function(envs, ast);
         get_visitor_env->output = init_ast_value_stack(AST_VALUE_NULL, (void*) 0);
+        break;
       }
       else
       {
@@ -127,19 +130,12 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
         switch (ast_function->ast_type)
         {
           case AST_FUNCTION_VALUE:
-#ifdef DEVELOP_MODE
-            if (strcmp(ast_function->name, "print"))
-            {
-#endif
             if (INTERACTIVE_MODE)
               get_visitor_env->output =
                 visitor_get_value_from_function(envs, ast_function);
             else
               visitor_get_value_from_function(envs, ast_function);
   //           visitor_function_value(envs, ast_function);
-#ifdef DEVELOP_MODE
-            }
-#endif
             break;
 
           case AST_FUNCTION_DEFINE:
@@ -148,7 +144,7 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
 
           default:
 #ifdef DEVELOP_MODE
-            printf("내가 ast function 설정 잘못함...\n");
+            printf("에러,내가 ast function 설정 잘못함...\n");
             exit(1);
 #endif
             break;
@@ -184,8 +180,10 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
 
     case AST_VALUE:
       if (INTERACTIVE_MODE)
+      {
         get_visitor_env->output = 
           visitor_get_value(envs, ast->value.value_v);
+      }
       else 
         visitor_get_value(envs, ast->value.value_v);
       break;
@@ -338,8 +336,11 @@ void visitor_nondefine_variable_error(AST_variable* ast_variable)
 
 void visitor_nondefine_function_error(AST_function* ast_function)
 {
-  printf("에러, 정의되지 않은 함수: %s\n", ast_function->name);
-  exit(1);
+  const char* error_log = "에러 정의되지 않은 함수: ";
+  error_log = const_strcat(error_log, ast_function->name);
+  orora_error(error_log, (void*) 0);
+//   printf("에러, 정의되지 않은 함수: %s\n", ast_function->name);
+//   exit(1);
 }
 
 Env_function* visitor_get_function(Envs* envs, AST_function* ast_function)
@@ -440,8 +441,11 @@ AST_value_stack* visitor_get_value_from_ast
       break;
 
     default:
-      printf("에러, while문의 조건이 잘못됨: %d\n", condition->type);
-      exit(1);
+      const char* error_message = "에러, while문의 조건이 잘못됨: ";
+      error_message = const_strcat(error_message, int_to_string(condition->type));
+      orora_error(error_message, (void*) 0);
+//       printf("에러, while문의 조건이 잘못됨: %d\n", condition->type);
+//       exit(1);
       break;
   }
 
@@ -560,8 +564,9 @@ AST_value_stack* visitor_get_value_from_variable
         (new_value_stack, env_variable);
   else
   {
-    printf("에러, 변수에 저장하는 것은 값이어야함\n");
-    exit(1);
+    orora_error("에러, 변수에 저장하는 것은 값이어야함", (void*) 0);
+//     printf("에러, 변수에 저장하는 것은 값이어야함\n");
+//     exit(1);
   }
 
   return new_value_stack;
@@ -674,8 +679,9 @@ Env_variable* visitor_variable_define_from_value
     }
     else
     {
-      printf("에러, 변수에는 값을 저장해야함\n");
-      exit(1);
+      orora_error("에러, 변수에는 값을 저장해야함", (void*) 0);
+//       printf("에러, 변수에는 값을 저장해야함\n");
+//       exit(1);
     }
   }
   else
@@ -711,8 +717,9 @@ Env_variable* visitor_variable_define_from_value
           (env_variable, new_value);
     else
     {
-      printf("에러, 변수에 저장하는 것은 값이어야함\n");
-      exit(1);
+      orora_error("에러, 변수에 저장하는 것은 값이어야함", (void*) 0);
+//       printf("에러, 변수에 저장하는 것은 값이어야함\n");
+//       exit(1);
     }
 
     if (!is_defined_variable)
@@ -807,8 +814,9 @@ Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable)
           break;
 
         default:
-          printf("에러, 정의되지 않은 변수의 활용\n");
-          exit(1);
+          orora_error("에러, 변수에 저장하는 것은 값이어야함", (void*) 0);
+//           printf("에러, 정의되지 않은 변수의 활용\n");
+//           exit(1);
       }
       break;
 
@@ -1076,8 +1084,9 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
 
   if (stack->size != 1)
   {
-    printf("에러, 연산 불가함\n");
-    exit(1);
+    orora_error("에러, 연산 불가함", (void*) 0);
+//     printf("에러, 연산 불가함\n");
+//     exit(1);
   }
 
   free(text_array);
@@ -1133,8 +1142,9 @@ Envs* visitor_get_envs_from_function
   // Get value from arguments...
   if (ast_function->args_size > env_function->args_size)
   {
-    printf("에러, 함수의 매개변수 개수가 다름\n");
-    exit(1);
+    orora_error("에러, 함수의 매개변수 개수가 다름", (void*) 0);
+//     printf("에러, 함수의 매개변수 개수가 다름\n");
+//     exit(1);
   }
 
   for (int i = 0; i < env_function->args_size; i ++)
@@ -1175,8 +1185,9 @@ Envs* visitor_get_envs_from_function
             break;
 
           default:
-            printf("에러, 해당 에러는 발생 불가함\n");
-            exit(1);
+            orora_error("에러, 해당 에러는 발생 불가함", (void*) 0);
+//             printf("에러, 해당 에러는 발생 불가함\n");
+//             exit(1);
         }
       }
       else
@@ -1326,8 +1337,9 @@ Envs* visitor_get_envs_from_function
       }
       else
       {
-        printf("에러, 함수의 매개변수 개수가 다름\n");
-        exit(1);
+        orora_error("에러, 함수의 매개변수 개수가 다름", (void*) 0);
+//         printf("에러, 함수의 매개변수 개수가 다름\n");
+//         exit(1);
       }
     }
   }
@@ -1359,8 +1371,9 @@ AST_value_stack* get_variable_from_Env_variable(Envs* envs, AST_value_stack* ast
         (new_value_stack, env_variable);
   else
   {
-    printf("에러, 변수에 저장하는 것은 값이어야함\n");
-    exit(1);
+    orora_error("에러, 변수에 저장하는 것은 값이어야함", (void*) 0);
+//     printf("에러, 변수에 저장하는 것은 값이어야함\n");
+//     exit(1);
   }
 
   return new_value_stack;
@@ -1376,13 +1389,15 @@ AST_value_stack* visitor_operator_plus(AST_value_stack* result,
 
   if (op1 == AST_VALUE_NULL || op2 == AST_VALUE_NULL)
   {
-    printf("에러, null은 + 연산이 불가함\n");
-    exit(1);
+    orora_error("에러, null은 + 연산이 불가함", (void*) 0);
+//     printf("에러, null은 + 연산이 불가함\n");
+//     exit(1);
   }
   else if (op1 == AST_VALUE_STRING || op2 == AST_VALUE_STRING)
   {
-    printf("에러, string은 + 연산이 불가함\n");
-    exit(1);
+    orora_error("에러, string은 + 연산이 불가함", (void*) 0);
+//     printf("에러, string은 + 연산이 불가함\n");
+//     exit(1);
   }
   switch (op1 + op2 * 100)
   {
@@ -1451,8 +1466,9 @@ AST_value_stack* visitor_operator_plus(AST_value_stack* result,
           || matrix_value->col_size != operand2->value.matrix_v->col_size
          )
       {
-        printf("에러, 행렬 덧셈시 크기가 같아야 함\n");
-        exit(1);
+        orora_error("에러, 행렬 덧셈시 크기가 같아야 함", (void*) 0);
+//         printf("에러, 행렬 덧셈시 크기가 같아야 함\n");
+//         exit(1);
       }
 
       int matrix_size = 
@@ -1526,8 +1542,9 @@ AST_value_stack* visitor_operator_plus(AST_value_stack* result,
       break;
 
     default:
-      printf("에러, 정의되지 않은 연산\n");
-      exit(1);
+      orora_error("에러, 정의되지 않은 연산", (void*) 0);
+//       printf("에러, 정의되지 않은 연산\n");
+//       exit(1);
       break;
   }
 
@@ -1543,13 +1560,15 @@ AST_value_stack* visitor_operator_minus(AST_value_stack* result,
 
   if (op1 == AST_VALUE_NULL || op2 == AST_VALUE_NULL)
   {
-    printf("에러, null은 + 연산이 불가함\n");
-    exit(1);
+    orora_error("에러, null은 + 연산이 불가함", (void*) 0);
+//     printf("에러, null은 + 연산이 불가함\n");
+//     exit(1);
   }
   else if (op1 == AST_VALUE_STRING || op2 == AST_VALUE_STRING)
   {
-    printf("에러, string은 + 연산이 불가함\n");
-    exit(1);
+    orora_error("에러, string은 + 연산이 불가함", (void*) 0);
+//     printf("에러, string은 + 연산이 불가함\n");
+//     exit(1);
   }
   switch (op1 + op2 * 100)
   {
@@ -1618,8 +1637,9 @@ AST_value_stack* visitor_operator_minus(AST_value_stack* result,
           || matrix_value->col_size != operand2->value.matrix_v->col_size
          )
       {
-        printf("에러, 행렬 덧셈시 크기가 같아야 함\n");
-        exit(1);
+        orora_error("에러, 행렬 덧셈시 크기가 같아야 함", (void*) 0);
+//         printf("에러, 행렬 덧셈시 크기가 같아야 함\n");
+//         exit(1);
       }
 
       int matrix_size = 
@@ -1689,8 +1709,9 @@ AST_value_stack* visitor_operator_minus(AST_value_stack* result,
       break;
 
     default:
-      printf("에러, 정의되지 않은 연산\n");
-      exit(1);
+      orora_error("에러, 정의되지 않은 연산", (void*) 0);
+//       printf("에러, 정의되지 않은 연산\n");
+//       exit(1);
       break;
   }
 
@@ -1706,8 +1727,9 @@ AST_value_stack* visitor_operator_product(AST_value_stack* result,
 
   if (op1 == AST_VALUE_NULL || op2 == AST_VALUE_NULL)
   {
-    printf("에러, null은 + 연산이 불가함\n");
-    exit(1);
+    orora_error("에러, null은 + 연산이 불가함", (void*) 0);
+//     printf("에러, null은 + 연산이 불가함\n");
+//     exit(1);
   }
   switch (op1 + op2 * 100)
   {
@@ -1798,8 +1820,9 @@ AST_value_stack* visitor_operator_product(AST_value_stack* result,
           || matrix_value->col_size != operand2->value.matrix_v->col_size
          )
       {
-        printf("에러, 행렬 덧셈시 크기가 같아야 함\n");
-        exit(1);
+        orora_error("에러, 행렬 덧셈시 크기가 같아야 함", (void*) 0);
+//         printf("에러, 행렬 덧셈시 크기가 같아야 함\n");
+//         exit(1);
       }
 
       int matrix_size = 
@@ -1869,8 +1892,9 @@ AST_value_stack* visitor_operator_product(AST_value_stack* result,
       break;
 
     default:
-      printf("에러, 정의되지 않은 연산\n");
-      exit(1);
+      orora_error("에러, 정의되지 않은 연산", (void*) 0);
+//       printf("에러, 정의되지 않은 연산\n");
+//       exit(1);
       break;
   }
   
@@ -1886,13 +1910,15 @@ AST_value_stack* visitor_operator_div(AST_value_stack* result,
 
   if (op1 == AST_VALUE_NULL || op2 == AST_VALUE_NULL)
   {
-    printf("에러, null은 + 연산이 불가함\n");
-    exit(1);
+    orora_error("에러, null은 + 연산이 불가함", (void*) 0);
+//     printf("에러, null은 + 연산이 불가함\n");
+//     exit(1);
   }
   else if (op1 == AST_VALUE_STRING || op2 == AST_VALUE_STRING)
   {
-    printf("에러, string은 + 연산이 불가함\n");
-    exit(1);
+    orora_error("에러, string은 + 연산이 불가함", (void*) 0);
+//     printf("에러, string은 + 연산이 불가함\n");
+//     exit(1);
   }
   switch (op1 + op2 * 100)
   {
@@ -1961,8 +1987,9 @@ AST_value_stack* visitor_operator_div(AST_value_stack* result,
           || matrix_value->col_size != operand2->value.matrix_v->col_size
          )
       {
-        printf("에러, 행렬 덧셈시 크기가 같아야 함\n");
-        exit(1);
+        orora_error("에러, 행렬 덧셈시 크기가 같아야 함", (void*) 0);
+//         printf("에러, 행렬 덧셈시 크기가 같아야 함\n");
+//         exit(1);
       }
 
       int matrix_size = 
@@ -2032,8 +2059,9 @@ AST_value_stack* visitor_operator_div(AST_value_stack* result,
       break;
 
     default:
-      printf("에러, 정의되지 않은 연산\n");
-      exit(1);
+      orora_error("에러, 정의되지 않은 연산", (void*) 0);
+//       printf("에러, 정의되지 않은 연산\n");
+//       exit(1);
       break;
   }
 
@@ -2160,8 +2188,9 @@ AST_value_stack* visitor_operator_equal(AST_value_stack* result,
       break;
 
     default:
-      printf("에러, 정의되지 않은 연산\n");
-      exit(1);
+      orora_error("에러, 정의되지 않은 연산", (void*) 0);
+//       printf("에러, 정의되지 않은 연산\n");
+//       exit(1);
       break;
   }
 
@@ -2243,8 +2272,9 @@ AST_value_stack* visitor_operator_less(AST_value_stack* result,
       break;
 
     default:
-      printf("에러, 정의되지 않은 연산\n");
-      exit(1);
+      orora_error("에러, 정의되지 않은 연산", (void*) 0);
+//       printf("에러, 정의되지 않은 연산\n");
+//       exit(1);
       break;
   }
 
@@ -2326,8 +2356,9 @@ AST_value_stack* visitor_operator_greater(AST_value_stack* result,
       break;
 
     default:
-      printf("에러, 정의되지 않은 연산\n");
-      exit(1);
+      orora_error("에러, 정의되지 않은 연산", (void*) 0);
+//       printf("에러, 정의되지 않은 연산\n");
+//       exit(1);
       break;
   }
 

@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include "loader/main.h"
+#include "loader/error_log.h"
+#include "utilities/utils.h"
 #include <string.h>
 
 AST* parser_get_satisfy
@@ -71,8 +73,9 @@ Parser* after_get_parser(Parser* parser, size_t* parser_size)
   {
     if (token->col_first != next_token->col_first)
     {
-      printf("에러, '\\left'와 '('가 다른 줄에 존재함.");
-      exit(1);
+      orora_error("에러, '\\left'와 '('가 다른 줄에 존재함.", (void*) 0);
+//       printf("에러, '\\left'와 '('가 다른 줄에 존재함.");
+//       exit(1);
     }
     int new_value_length = 6 + next_token->row_char_first - token->row_char;
     char* new_value = malloc((new_value_length + 1) * sizeof(char));
@@ -101,8 +104,9 @@ Parser* after_get_parser(Parser* parser, size_t* parser_size)
   {
     if (token->col_first != next_token->col_first)
     {
-      printf("에러, '\\right'와 ')'가 다른 줄에 존재함.");
-      exit(1);
+      orora_error("에러, '\\right'와 ')'가 다른 줄에 존재함.", (void*) 0);
+//       printf("에러, '\\right'와 ')'가 다른 줄에 존재함.");
+//       exit(1);
     }
     int new_value_length = 7 + next_token->row_char_first - token->row_char;
     char* new_value = malloc((new_value_length + 1) * sizeof(char));
@@ -159,7 +163,11 @@ Parser* init_parser(Lexer* lexer)
   if (!parser->token)
   {
 //     printf("에러, 파일이 비어있음\n");
-    exit(1);
+    if (!INTERACTIVE_MODE)
+//       continue;
+//       orora_write("", STA
+//     else
+      exit(1);
   }
   return parser;
 }
@@ -168,8 +176,9 @@ Parser* parser_set(Parser* parser, size_t pointer)
 {
   if (!parser || pointer < 0 || pointer > parser->size)
   {
-    printf("에러, 잘못된 parser 설정\n");
-    exit(1);
+    orora_error("에러, 잘못된 parser 설정", (void*) 0);
+//     printf("에러, 잘못된 parser 설정\n");
+//     exit(1);
   }
   parser->pointer = pointer;
   parser->prev_token = (pointer >= 1)
@@ -189,15 +198,26 @@ Parser* parser_advance(Parser* parser, int type)
 {
   if (parser->token->type != type)
   {
-    printf(
-        "에러, %s의 타입은 %d가 아닌 %d여야함\nprev: %s, next: %s\n",
-        parser->token->value,
-        parser->token->type,
-        type,
-        parser->prev_token ? parser->prev_token->value : "",
-        parser->next_token ? parser->next_token->value : ""
-    );
-    exit(1);
+    const char* error_message = "에러, ";
+    error_message = const_strcat(error_message, parser->token->value);
+    error_message = const_strcat(error_message, "의 타입은 ");
+    error_message = const_strcat(error_message, int_to_string(parser->token->type));
+    error_message = const_strcat(error_message, "가 아닌 ");
+    error_message = const_strcat(error_message, int_to_string(type));
+    error_message = const_strcat(error_message, "여야함\nprev: ");
+    error_message = const_strcat(error_message, parser->prev_token ? parser->prev_token->value : "");
+    error_message = const_strcat(error_message, ", next: ");
+    error_message = const_strcat(error_message, parser->next_token ? parser->next_token->value : "");
+    orora_error(error_message, (void*) 0);
+//     printf(
+//         "에러, %s의 타입은 %d가 아닌 %d여야함\nprev: %s, next: %s\n",
+//         parser->token->value,
+//         parser->token->type,
+//         type,
+//         parser->prev_token ? parser->prev_token->value : "",
+//         parser->next_token ? parser->next_token->value : ""
+//     );
+//     exit(1);
   }
 //   free(parser->prev_token);
   parser->prev_token = parser->token;
@@ -260,9 +280,14 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
                && parser_is_end(parser, compound_env->is_usefull_end))
         )
     {
-      printf("에러, 각 명령어는 줄바꿈으로 구분됨:: %s 전:: 줄: %ld\n",
-          token->value, token->col_first + 1);
-      exit(1);
+      const char* error_message = "에러, 각 명령어는 줄바꿈으로 구분됨:: ";
+      error_message = const_strcat(error_message, token->value);
+      error_message = const_strcat(error_message, " 전:: 줄: ");
+      error_message = const_strcat(error_message, int_to_string(token->row_char_first));
+      orora_error(error_message, (void*) 0);
+//       printf("에러, 각 명령어는 줄바꿈으로 구분됨:: %s 전:: 줄: %ld\n",
+//           token->value, token->col_first + 1);
+//       exit(1);
     }
 
     if (is_first_turn)
@@ -397,8 +422,9 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         }
         else
         {
-          printf("에러, return을 사용할 수 없는 위치임\n");
-          exit(1);
+          orora_error("에러, return을 사용할 수 없는 위치임", (void*) 0);
+//           printf("에러, return을 사용할 수 없는 위치임\n");
+//           exit(1);
         }
         break;
 
@@ -415,8 +441,9 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         }
         else
         {
-          printf("에러, break를 사용할 수 없는 위치임\n");
-          exit(1);
+          orora_error("에러, break를 사용할 수 없는 위치임", (void*) 0);
+//           printf("에러, break를 사용할 수 없는 위치임\n");
+//           exit(1);
         }
         break;
 
@@ -433,14 +460,19 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         }
         else
         {
-          printf("에러, continue를 사용할 수 없는 위치임\n");
-          exit(1);
+          orora_error("에러, continue를 사용할 수 없는 위치임", (void*) 0);
+//           printf("에러, continue를 사용할 수 없는 위치임\n");
+//           exit(1);
         }
         break;
 
       case TOKEN_DEFINE:
-        printf("에러, '%s'의 주어가 존재하지 않음\n", token->value);
-        exit(1);
+        const char* error_message = "에러, ";
+        error_message = const_strcat(error_message, token->value);
+        error_message = const_strcat(error_message, "의 주어가 존재하지 않음");
+        orora_error(error_message, (void*) 0);
+//         printf("에러, '%s'의 주어가 존재하지 않음\n", token->value);
+//         exit(1);
         break;
 
       default:
@@ -508,8 +540,11 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     else
     {
       free(value_node);
-      printf("에러, 설정되지 않은 token이 있음: %s\n", token->value);
-      exit(1);
+      const char* error_message = "에러, 설정되지 않은 token이 있음: ";
+      error_message = const_strcat(error_message, token->value);
+      orora_error(error_message, (void*) 0);
+//       printf("에러, 설정되지 않은 token이 있음: %s\n", token->value);
+//       exit(1);
     }
     free(value_node);
     // -----------
@@ -615,8 +650,12 @@ AST* parser_get_condition_and_code
 
   if (is_error)
   {
-    printf("에러, %s문 정의가 잘못됨\n", code);
-    exit(1);
+    const char* error_message = "에러, ";
+    error_message = const_strcat(error_message, code);
+    error_message = const_strcat(error_message, "문 정의가 잘못됨");
+    orora_error(error_message, (void*) 0);
+//     printf("에러, %s문 정의가 잘못됨\n", code);
+//     exit(1);
   }
 
   return new_ast_node;
@@ -667,8 +706,9 @@ AST* parser_get_for_condition_and_code
 
   if (is_error)
   {
-    printf("에러, for문 정의가 잘못됨\n");
-    exit(1);
+    orora_error("에러, for문 정의가 잘못됨", (void*) 0);
+//     printf("에러, for문 정의가 잘못됨\n");
+//     exit(1);
   }
 
   return new_ast_node;
@@ -822,8 +862,9 @@ AST* parser_get_cases
 
   if (is_error)
   {
-    printf("에러, cases문에서 뭔가 잘못됨\n");
-    exit(1);
+    orora_error("에러, cases문에서 뭔가 잘못됨", (void*) 0);
+//     printf("에러, cases문에서 뭔가 잘못됨\n");
+//     exit(1);
   }
 
   return new_ast_node;
@@ -860,8 +901,9 @@ AST* parser_get_code
 
   if (is_error)
   {
-    printf("에러, code문 정의가 잘못됨\n");
-    exit(1);
+    orora_error("에러, code문 정의가 잘못됨", (void*) 0);
+//     printf("에러, code문 정의가 잘못됨\n");
+//     exit(1);
   }
 
   return new_ast_node;

@@ -1,5 +1,6 @@
 #include "parser/ast/ast.h"
 #include "parser/parser.h"
+#include "loader/error_log.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -266,8 +267,9 @@ AST_matrix* init_ast_matrix(Parser* parser, bool is_minus)
       }
       else
       {
-        printf("에러, matrix 설정을 잘못함\n");
-        exit(1);
+        orora_error("에러, matrix 설정을 잘못함", (void*) 0);
+//         printf("에러, matrix 설정을 잘못함\n");
+//         exit(1);
       }
 
       row_size ++;
@@ -369,8 +371,9 @@ AST_matrix* init_ast_matrix(Parser* parser, bool is_minus)
               }
               else
               {
-                printf("에러, &가 와야함\n");
-                exit(1);
+                orora_error("에러, &가 와야함", (void*) 0);
+//                 printf("에러, &가 와야함\n");
+//                 exit(1);
               }
             }
           }
@@ -394,8 +397,9 @@ AST_matrix* init_ast_matrix(Parser* parser, bool is_minus)
 
   if (is_error)
   {
-    printf("에러, matrix 정의가 잘못됨\n");
-    exit(1);
+    orora_error("에러, matrix 정의가 잘못됨", (void*) 0);
+//     printf("에러, matrix 정의가 잘못됨\n");
+//     exit(1);
   }
 
   return ast_matrix;

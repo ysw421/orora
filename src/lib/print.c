@@ -2,6 +2,7 @@
 #include "utilities/utils.h"
 #include "lib/print.h"
 #include "loader/config.h"
+#include "loader/error_log.h"
 #include "server/status.h"
 
 const char* visitor_print_function_value(AST_value_stack* new_value);
@@ -70,8 +71,9 @@ const char* visitor_print_function_value(AST_value_stack* new_value)
       break;
 
     default:
-      printf("에러, 정의되지 않은 출력\n");
-      exit(1);
+      orora_error("에러, 정의되지 않은 출력", (void*) 0);
+//       printf("에러, 정의되지 않은 출력\n");
+//       exit(1);
       break;
   }
   return (void*) 0;
@@ -188,8 +190,9 @@ void visitor_print_function(Envs* envs, AST* ast)
           break;
 
         default:
-          printf("에러, 정의되지 않은 출력\n");
-          exit(1);
+          orora_error("에러, 정의되지 않은 출력", (void*) 0);
+//           printf("에러, 정의되지 않은 출력\n");
+//           exit(1);
           break;
       }
     }

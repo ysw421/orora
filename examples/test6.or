@@ -1,2 +1,7 @@
-f(x):=print(1)
-f(1)
+a:=32
+
+
+\begin{while}{a<40}
+a:=a+1
+print(a)
+\end{while}

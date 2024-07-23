@@ -134,13 +134,16 @@ void run_daemon()
     }
     else
     {
+      len_input ++;
+      input = realloc(input, len_input + 1);
+      input[len_input-1] = '\n';
       input[len_input] = last_char;
       orora_write(int_to_string(right_space), ORORA_STATUS_MORE);
 //       orora_write("", ORORA_STATUS_SUCCESS);
       continue;
     }
 // #include "develop/develop_mode.h"
-//     print_tokens(root);
+//       print_tokens(root);
     Parser* parser = init_parser(root);
     AST* ast_tree = parser_parse(parser);
     

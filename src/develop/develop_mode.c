@@ -1,5 +1,6 @@
 #include "develop/develop_mode.h"
 #include "utilities/utils.h"
+#include "loader/error_log.h"
 
 void print_function(AST_function* checked_function)
 {
@@ -147,7 +148,8 @@ void print_ast_tree(AST* ast_tree)
         break;
 
       default:
-        fprintf(stderr, "에러, 테스트 용 출력에 적용 안됨\n");
+        orora_error("에러, 테스트 용 출력에 적용 안됨", (void*) 0);
+        // fprintf(stderr, "에러, 테스트 용 출력에 적용 안됨\n");
         exit(1);
         break;
     }

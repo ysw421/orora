@@ -3,6 +3,7 @@
 #include "parser/parser_id.h"
 #include "loader/main.h"
 #include "loader/error_log.h"
+#include "utilities/utils.h"
 
 AST* parser_set_variable_value(Parser* parser, AST* ast, Token* last_token);
 AST* parser_set_function(Parser* parser, AST* ast, Token* last_token);
@@ -77,8 +78,12 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
           {
             if (!strcmp(s_arg_variaable_name[j], variable_name))
             {
-              printf("에러, 함수의 argument 이름이 중복됨\n");
-              exit(1);
+              const char* error_message = "에러, 함수 ";
+              error_message = const_strcat(error_message, fa->name);
+              error_message = const_strcat(error_message, "의 argument 이름이 중복됨");
+              orora_error(error_message, parser);
+//               printf("에러, 함수의 argument 이름이 중복됨\n");
+//               exit(1);
             }
           }
 
@@ -90,14 +95,18 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
         }
         else
         {
-          int required =
-            snprintf(NULL, 0, "에러, 함수 %s의 정의를 위해 argument는 변수여야함",
-                fa->name);
-          char* error_message = malloc((required + 1) * sizeof(char));
-          snprintf(error_message, required + 1,
-              "에러, 함수 %s의 정의를 위해 argument는 변수여야함",
-              fa->name);
-          error(error_message, parser);
+          const char* error_message = "에러, 함수 ";
+          error_message = const_strcat(error_message, fa->name);
+          error_message = const_strcat(error_message, "의 정의를 위해 argument는 변수여야함");
+          orora_error(error_message, parser);
+//           int required =
+//             snprintf(NULL, 0, "에러, 함수 %s의 정의를 위해 argument는 변수여야함",
+//                 fa->name);
+//           char* error_message = malloc((required + 1) * sizeof(char));
+//           snprintf(error_message, required + 1,
+//               "에러, 함수 %s의 정의를 위해 argument는 변수여야함",
+//               fa->name);
+//           error(error_message, parser);
         }
       }
       token = parser->token;
@@ -105,13 +114,15 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
 
       if (!token)
       {
-        printf("에러, ':=' 사용에 목적이 없음.");
-        exit(1);
+        orora_error("에러, ':=' 사용에 목적이 없음.", parser);
+//         printf("에러, ':=' 사용에 목적이 없음.");
+//         exit(1);
       }
       if (parser->prev_token->col != token->col_first)
       {
-        printf("에러, ':=' 뒤에는 값이 와야함.");
-        exit(1);
+        orora_error("에러, ':=' 뒤에는 값이 와야함.", parser);
+//         printf("에러, ':=' 뒤에는 값이 와야함.");
+//         exit(1);
       }
 
       AST* value_node =
@@ -142,68 +153,8 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
       }
       else
       {
-        printf("에러, ':=' 뒤에는 값이 와야함2.");
+        printf("에러, ':=' 뒤에는 값이 와야함.");
         exit(1);
-//           // e.g.
-//           // f(x) := \begin{function}
-//           //           print("hello\n")
-//           //         \end{function}
-// 
-//           token = parser->token;
-//           bool is_error = true;
-// 
-//           char* code = parser_is_begin(parser, 3, "function", "fun", "code");
-// 
-//           if (code)
-//           {
-//             AST_function* new_ast_function = new_ast_node->value.function_v;
-// 
-//             GET_COMPOUND_ENV* get_function_code_env = 
-//               init_get_compound_env(compound_env);
-//             get_function_code_env->is_usefull_end = code;
-// 
-//             new_ast_function->code = 
-//               parser_get_code(
-//                   parser, 
-//                   ast, 
-//                   token, 
-//                   token, 
-//                   compound_env, 
-//                   code
-//                 );
-//             is_error = false;
-//           }
-//           
-//           if (is_error)
-//           {
-//             code = parser_is_begin(parser, 1, "cases");
-// 
-//             if (code)
-//             {
-//               AST_function* new_ast_function = new_ast_node->value.function_v;
-// 
-//               GET_COMPOUND_ENV* get_function_code_env = 
-//                 init_get_compound_env(compound_env);
-//               get_function_code_env->is_usefull_end = code;
-// 
-//               new_ast_function->code = 
-//                 parser_get_cases(
-//                     parser, 
-//                     ast, 
-//                     token, 
-//                     token, 
-//                     compound_env
-//                   );
-//               is_error = false;
-//             }
-//           }
-//           
-//           if (is_error)
-//           {
-//             free(code);
-//             printf("에러, ':=' 뒤에는 값이 와야함2.");
-//             exit(1);
-//           }
       }
       new_ast_node->value.function_v->ast_type = AST_FUNCTION_DEFINE;
       return new_ast_node;
@@ -230,8 +181,9 @@ AST* parser_value_define
   // Check value
   if (parser->prev_token->col != token->col_first)
   {
-    printf("에러, ':=' 뒤에는 값이 와야함.");
-    exit(1);
+    orora_error("에러, ':=' 뒤에는 값이 와야함.", parser);
+//     printf("에러, ':=' 뒤에는 값이 와야함.");
+//     exit(1);
   }
   AST* value_node =
       parser_get_value(
@@ -318,8 +270,9 @@ AST* parser_value_define
   }
   else
   {
-    printf("에러, ':=' 뒤에는 값이 와야함.");
-    exit(1);
+    orora_error("에러, ':=' 뒤에는 값이 와야함.", parser);
+//     printf("에러, ':=' 뒤에는 값이 와야함.");
+//     exit(1);
   }
 
   return (void*) 0;
@@ -362,27 +315,36 @@ AST* parser_get_function
 
       if (new_arg_ast->value.compound_v->size == 0)
       {
-        int required =
-          snprintf(NULL, 0, "에러, 함수 %s의 ',' 사이 argument가 비어있음",
-            new_ast->value.function_v->name);
-        char* error_message = malloc((required + 1) * sizeof(char));
-        snprintf(error_message, required + 1,
-            "에러, 함수 %s의 ',' 사이 argument가 비어있음",
-            new_ast->value.function_v->name);
-        error(error_message, parser);
+        const char* error_message = "에러, 함수 ";
+        error_message = const_strcat(error_message, new_ast->value.function_v->name);
+        error_message = const_strcat(error_message, "의 ',' 사이 argument가 비어있음");
+        orora_error(error_message, parser);
+//         int required =
+//           snprintf(NULL, 0, "에러, 함수 %s의 ',' 사이 argument가 비어있음",
+//             new_ast->value.function_v->name);
+//         char* error_message = malloc((required + 1) * sizeof(char));
+//         snprintf(error_message, required + 1,
+//             "에러, 함수 %s의 ',' 사이 argument가 비어있음",
+//             new_ast->value.function_v->name);
+//         error(error_message, parser);
       }
 
       if (new_arg_ast->value.compound_v->size > 1)
       {
-        int required =
-          snprintf(NULL, 0, "에러, 함수 %s의 각 argument는 ','로 구분되어야 함",
-            new_ast->value.function_v->name);
-        char* error_message = malloc((required + 1) * sizeof(char));
-        snprintf(error_message, required + 1,
-            "에러, 함수 %s의 각 argument는 ','로 구분되어야 함",
-            new_ast->value.function_v->name);
+//         int required =
+//           snprintf(NULL, 0, "에러, 함수 %s의 각 argument는 ','로 구분되어야 함",
+//             new_ast->value.function_v->name);
+//         char* error_message = malloc((required + 1) * sizeof(char));
+        const char* error_message = "에러, 함수 ";
+        error_message = const_strcat(error_message, new_ast->value.function_v->name);
+        error_message = const_strcat(error_message, "의 각 argument는 ','로 구분되어야 함");
 
-        error_prev_token(error_message, parser);
+        orora_error(error_message, parser);
+//         snprintf(error_message, required + 1,
+//             "에러, 함수 %s의 각 argument는 ','로 구분되어야 함",
+//             new_ast->value.function_v->name);
+
+//         error_prev_token(error_message, parser);
       }
       if (token && token->type == TOKEN_COMMA)
         parser = parser_advance(parser, TOKEN_COMMA);
@@ -400,8 +362,9 @@ AST* parser_get_function
   }
   else
   {
-    printf("에러, 괄호가 끝나지 아니함\n");
-    exit(1);
+    orora_error("에러, 괄호가 끝나지 아니함", parser);
+//     printf("에러, 괄호가 끝나지 아니함\n");
+//     exit(1);
   }
 
   return new_ast;

@@ -1,4 +1,5 @@
 #include "lexer/lexer.h"
+#include "loader/error_log.h"
 #include <string.h>
 #include <stdlib.h>
 /* For error */
@@ -7,8 +8,9 @@
 
 void lexer_get_string_error(Lexer* lexer)
 {
-  printf("에러, string이 끝나지 않습니다.\n");
-  exit(1);
+  orora_error("에러, string이 끝나지 않습니다.", (void*) 0);
+//   printf("에러, string이 끝나지 않습니다.\n");
+//   exit(1);
 }
 
 char* lexer_get_string_add_char(char* string, char* s)
