@@ -1,26 +1,23 @@
 #include "develop/develop_mode.h"
 #include "utilities/utils.h"
-#include "lib/print.h"
+#include "syslib/print.h"
 #include "loader/config.h"
 #include "loader/error_log.h"
 #include "server/status.h"
 
+const char* visitor_get_function_value(AST_value_stack* new_value);
 const char* visitor_print_function_value(AST_value_stack* new_value);
 void visitor_print_function_variable(Env_variable* new_value);
 void visitor_print_function(Envs* envs, AST* ast);
 const char* get_matrix_text(AST_matrix* ast_matrix);
 
-const char* visitor_print_function_value(AST_value_stack* new_value)
+const char* visitor_get_function_value(AST_value_stack* new_value)
 {
   const char* output;
   switch (new_value->type)
   {
     case AST_VALUE_STRING:
       output = (const char*) new_value->value.string_v->real_value;
-      if (INTERACTIVE_MODE)
-        orora_write(output, ORORA_STATUS_CONSOLE);
-      else
-        printf("%s", output);
       return output;
       break;
 
@@ -28,55 +25,44 @@ const char* visitor_print_function_value(AST_value_stack* new_value)
       char buffer[32];
       snprintf(buffer, sizeof(buffer), "%d", new_value->value.int_v->value);
       output = (const char*) strdup(buffer);
-      if (INTERACTIVE_MODE)
-        orora_write(output, ORORA_STATUS_CONSOLE);
-      else
-        printf("%s", output);
       return output;
       break;
 
     case AST_VALUE_FLOAT:
       output = float_to_string(new_value->value.float_v->value);
-      if (INTERACTIVE_MODE)
-        orora_write(output, ORORA_STATUS_CONSOLE);
-      else
-        printf("%s", output);
       return output;
       break;
 
     case AST_VALUE_NULL:
-      if (INTERACTIVE_MODE)
-        orora_write("(NULL)", ORORA_STATUS_CONSOLE);
-      else
-        printf("(NULL)");
-      return "(NULL)";
+      output = "(NULL)";
+      return output;
       break;
 
     case AST_VALUE_BOOL:
       output = (const char*) new_value->value.bool_v->value ? "true" : "false";
-      if (INTERACTIVE_MODE)
-        orora_write(output, ORORA_STATUS_CONSOLE);
-      else
-        printf("%s", output);
       return output;
       break;
 
     case AST_VALUE_MATRIX:
       output = get_matrix_text(new_value->value.matrix_v);
-      if (INTERACTIVE_MODE)
-        orora_write(output, ORORA_STATUS_CONSOLE);
-      else
-        printf("%s", output);
       return output;
       break;
 
     default:
       orora_error("에러, 정의되지 않은 출력", (void*) 0);
-//       printf("에러, 정의되지 않은 출력\n");
-//       exit(1);
       break;
   }
   return (void*) 0;
+}
+
+const char* visitor_print_function_value(AST_value_stack* new_value)
+{
+  const char* output = visitor_get_function_value(new_value);
+  if (INTERACTIVE_MODE)
+    orora_write(output, ORORA_STATUS_CONSOLE);
+  else
+    fprintf(stderr, "%s", output);
+  return output;
 }
 
 void visitor_print_function_variable(Env_variable* new_value)
@@ -202,13 +188,19 @@ void visitor_print_function(Envs* envs, AST* ast)
 
 const char* get_matrix_text(AST_matrix* ast_matrix)
 {
-  const char* result = "[";
+  const char* result;
+  if (ast_matrix->col_size != 1)
+    result = "[";
+  else
+    result = "";
   for (
       int j = 0;
       j < ast_matrix->col_size;
       j ++ 
       )
   {
+    if (j != 0)
+      result = const_strcat(result, "\n ");
     result = const_strcat(result, "[");
     for (
         int i = 0; 
@@ -219,13 +211,14 @@ const char* get_matrix_text(AST_matrix* ast_matrix)
       AST_value_stack* new_value2 = 
         ast_matrix->value[j * ast_matrix->row_size + i]
           ->value.value_v->stack;
-      result = const_strcat(result, visitor_print_function_value(new_value2));
+      result = const_strcat(result, visitor_get_function_value(new_value2));
       if (i != ast_matrix->row_size - 1)
         result = const_strcat(result, ", ");
     }
     result = const_strcat(result, "]");
   }
-  result = const_strcat(result, "]");
+  if (ast_matrix->col_size != 1)
+    result = const_strcat(result, "]");
 
   return result;
 }

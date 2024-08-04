@@ -104,6 +104,7 @@ int get_one_char_type(char c)
     case '<': return TOKEN_LESS; break;
     case '>': return TOKEN_GREATER; break;
     case '!': return TOKEN_NEG; break;
+    case '^': return TOKEN_CIRCUMFLEX; break;
     default: return -1; break;
   }
 

@@ -2,10 +2,13 @@
 #define MAIN_H
 
 #include "parser/ast/ast.h"
-#include "server/daemon.h"
-#include "server/client.h"
+#include "loader/config.h"
+#include "os/os.h"
+#include "utilities/utils.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define EXTENTION ".or"
 

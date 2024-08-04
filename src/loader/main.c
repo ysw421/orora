@@ -5,9 +5,8 @@
 #include "loader/env.h"
 #include "loader/color.h"
 #include "visitor/visitor.h"
-#include "loader/config.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include "server/daemon.h"
+#include "server/client.h"
 #include <termios.h>
 #include <unistd.h>
 #include <signal.h>
@@ -27,61 +26,8 @@ int ORORA_PORT;
 
 extern char* get_version();
 void print_version();
-
-void print_usage(const char* program_name)
-{
-  printf("Usage: %s [OPTION] [FILE]\n", program_name);
-  printf("Options:\n");
-  printf("  -v, --version     Display version information\n");
-  printf("  -h, --help        Display this help message\n");
-}
-
-int create_and_bind_socket(int *port)
-{
-  int server_socket, opt = 1;
-  struct sockaddr_in server_addr;
-
-  for (int i = 0; i < MAX_RETRY; i++)
-  {
-    server_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_socket == -1)
-    {
-      perror("Socket creation failed");
-      continue;
-    }
-
-    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-    {
-      perror("setsockopt(SO_REUSEADDR) failed");
-      close(server_socket);
-      continue;
-    }
-
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(*port);
-
-    if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
-    {
-      if (errno == EADDRINUSE)
-      {
-        printf("Port %d is already in use. Trying next port.\n", *port);
-        (*port)++;
-        close(server_socket);
-        continue;
-      }
-      else {
-        perror("Bind failed");
-        close(server_socket);
-        return -1;
-      }
-    }
-
-    return server_socket;
-  }
-  printf("Failed to find an available port after %d attempts.\n", MAX_RETRY);
-  return -1;
-}
+void print_usage(const char* program_name);
+int create_and_bind_socket(int *port);
 
 orora_value_type* value_type_list;
 int ORORA_VALUE_TYPE_NUM;
@@ -106,6 +52,20 @@ void change_interactive_mode(bool mode)
   INTERACTIVE_MODE = mode;
 }
 
+void rum_init_or(Envs* root_envs)
+{
+  File* file = file_open(const_strcat((const char*) get_lib_path(), "init.or"));
+
+  Lexer* root = init_lexer(file->contents, &file->length);
+  free(file);
+
+  Parser* parser = init_parser(root);
+  AST* ast_tree = parser_parse(parser);
+
+  for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
+    visitor_visit(root_envs, ast_tree->value.compound_v->items[i]);
+}
+
 int main(int argc, char** argv)
 {
   if (!init_orora())
@@ -124,7 +84,7 @@ int main(int argc, char** argv)
       {0, 0, 0, 0}
   };
 
-  while ((opt = getopt_long(argc, argv, "vh", long_options, NULL)) != -1)
+  while ((opt = getopt_long(argc, argv, "vh", long_options, (void*) 0)) != -1)
   {
     switch (opt)
     {
@@ -151,6 +111,7 @@ int main(int argc, char** argv)
     Envs* root_envs = init_envs(global_env, init_env());
 #endif
 
+    rum_init_or(root_envs);
     File* file = file_open(argv[1]);
 
 #ifdef DEVELOP_MODE
@@ -305,8 +266,17 @@ bool init_orora()
 }
 
 void print_version() {
-    printf("%sOrora Programming Language%s version %s\n", ORORA_COLOR_H, ORORA_COLOR_RESET, get_version());
+    printf("%sOrora Programming Language%s version %s\n",
+            ORORA_COLOR_H, ORORA_COLOR_RESET, get_version());
     printf("(C) 2023 Orora Project\n");
+}
+
+void print_usage(const char* program_name)
+{
+  printf("Usage: %s [OPTION] [FILE]\n", program_name);
+  printf("Options:\n");
+  printf("  -v, --version     Display version information\n");
+  printf("  -h, --help        Display this help message\n");
 }
 
 char* get_version()
@@ -337,3 +307,51 @@ char* get_version()
 
   return version;
 }
+
+int create_and_bind_socket(int *port)
+{
+  int server_socket, opt = 1;
+  struct sockaddr_in server_addr;
+
+  for (int i = 0; i < MAX_RETRY; i++)
+  {
+    server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_socket == -1)
+    {
+      perror("Socket creation failed");
+      continue;
+    }
+
+    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+    {
+      perror("setsockopt(SO_REUSEADDR) failed");
+      close(server_socket);
+      continue;
+    }
+
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(*port);
+
+    if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+    {
+      if (errno == EADDRINUSE)
+      {
+        printf("Port %d is already in use. Trying next port.\n", *port);
+        (*port)++;
+        close(server_socket);
+        continue;
+      }
+      else {
+        perror("Bind failed");
+        close(server_socket);
+        return -1;
+      }
+    }
+
+    return server_socket;
+  }
+  printf("Failed to find an available port after %d attempts.\n", MAX_RETRY);
+  return -1;
+}
+

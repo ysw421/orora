@@ -163,6 +163,7 @@ typedef struct ast_value_stack_t
     AST_VALUE_RBRACE,
     AST_VALUE_CASES,
     AST_VALUE_CODE,
+    AST_VALUE_CIRCUMFLEX,
     AST_VALUE_NULL
   } type;
 
@@ -186,6 +187,8 @@ typedef struct ast_value_stack_t
   size_t row;
   size_t row_char;
   size_t row_char_first;
+
+  bool is_T;
 } AST_value_stack;
 
 typedef struct ast_value_t

@@ -1,7 +1,21 @@
 #!/bin/bash
 
-sudo echo "This shell file will check dependencies, install if necessary, and build ORORA."
+check_sudo() {
+    if sudo -n true 2>/dev/null; then
+        echo "Sudo access is available."
+    else
+        echo "Sudo access is required for this script."
+        echo "Please enter your password when prompted."
+        if ! sudo -v; then
+            echo "Failed to obtain sudo privileges. Exiting."
+            exit 1
+        fi
+    fi
+}
 
+check_sudo
+sudo chmod -R 755 build
+sudo echo "This shell file will check dependencies, install if necessary, and build ORORA."
 
 command_exists() {
     command -v "$1" >/dev/null 2>&1
@@ -33,7 +47,6 @@ if readline_installed; then
     echo "Readline development package is already installed."
 else
     echo "Readline development package is not installed. Installing..."
-
     echo "Updating package lists..."
     if [ "$PKG_MANAGER" = "apt-get" ]; then
         sudo apt-get update
@@ -42,7 +55,6 @@ else
     elif [ "$PKG_MANAGER" = "zypper" ]; then
         sudo zypper refresh
     fi
-
     echo "Installing readline development package..."
     if [ "$PKG_MANAGER" = "apt-get" ]; then
         sudo apt-get install -y "$READLINE_PKG"
@@ -53,7 +65,6 @@ else
     elif [ "$PKG_MANAGER" = "zypper" ]; then
         sudo zypper install -y "$READLINE_PKG"
     fi
-
     if readline_installed; then
         echo "Readline development package installed successfully."
     else
@@ -63,9 +74,9 @@ else
 fi
 
 echo "Building the project..."
-make clean
-make
-
+sudo make clean
+sudo make uninstall
+sudo make install
 if [ $? -eq 0 ]; then
     echo "Build completed successfully."
 else
@@ -73,9 +84,10 @@ else
     exit 1
 fi
 
-# Install orora system-wide
 echo "Installing orora system-wide..."
-sudo mv build/orora /usr/local/bin/
+ORORA_INSTALL_DIR="/usr/share/orora"
+ORORA_BIN="/usr/bin/orora"
+
 if [ $? -ne 0 ]; then
     echo "Failed to install orora. Please check your permissions."
     exit 1
@@ -84,7 +96,5 @@ fi
 echo "orora has been installed successfully!"
 echo "You can now run 'orora' from any directory."
 
-# Optional: Set up man page or help documentation
 # sudo cp orora.1 /usr/local/share/man/man1/
 # sudo mandb
-

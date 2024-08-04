@@ -119,6 +119,7 @@ AST_value_stack* init_ast_value_stack(int type, Token* token)
     (AST_value_stack*) malloc(sizeof(struct ast_value_stack_t));
 
   ast->type = type;
+  ast->is_T = false;
 
   if (token)
   {

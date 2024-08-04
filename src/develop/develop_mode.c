@@ -73,6 +73,18 @@ void print_value(AST* ast)
         print_function(stack->value.function_v);
         fprintf(stderr, "\n");
         break;
+      case AST_VALUE_NULL:
+        fprintf(stderr, "\t->null\n");
+        break;
+      case AST_VALUE_BOOL:
+        fprintf(stderr, "\t->bool: %s\n", stack->value.bool_v->value ? "true" : "false");
+        break;
+      case AST_VALUE_MATRIX:
+        fprintf(stderr, "\t->matrix\n");
+        break;
+      case AST_VALUE_CIRCUMFLEX:
+        fprintf(stderr, "\t->^\n");
+        break;
       default:
         fprintf(stderr, "\t->unkwon type: %d\n", stack->type);
         break;

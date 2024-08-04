@@ -50,6 +50,7 @@ typedef struct
     TOKEN_AND,                // 38: &&, \land
     TOKEN_NEG,                // 39: !, \neg
     TOKEN_TEXT,               // 40: \text
+    TOKEN_CIRCUMFLEX,         // 41: ^
     TOKEN_NOOP                // 99:
   } type;
 

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <math.h>
 #include "visitor/visitor.h"
 #include "loader/main.h"
 #include "parser/parser_value.h"
@@ -7,7 +8,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "lib/print.h"
+#include "syslib/print.h"
 
 void visitor_print_function(Envs* envs, AST* ast);
 
@@ -47,6 +48,9 @@ AST_value_stack* visitor_operator_less(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
 AST_value_stack* visitor_operator_greater(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2);
+AST_value_stack* visitor_operator_power(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
 
@@ -911,6 +915,8 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
 
           new_value_stack =
             visitor_get_value_from_variable(envs, env_variable);
+          if (!strcmp(env_variable->name, "T"))
+            new_value_stack->is_T = true;
 
           parser_push_value(stack, new_value_stack);
           break;
@@ -1002,6 +1008,10 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
 
         case AST_VALUE_DIV:
           result = visitor_operator_div(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_CIRCUMFLEX:
+          result = visitor_operator_power(result, operand1, operand2);
           break;
 
         case AST_VALUE_EQUAL:
@@ -2067,6 +2077,126 @@ AST_value_stack* visitor_operator_div(AST_value_stack* result,
 
   return result;
 }
+
+AST_value_stack* visitor_operator_power(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  int op1 = operand1->type;
+  int op2 = operand2->type;
+
+  if (op1 == AST_VALUE_MATRIX && operand2->is_T == 1)
+  {
+    AST_matrix* matrix_value = operand1->value.matrix_v;
+    int matrix_size = 
+      matrix_value->row_size * matrix_value->col_size;
+
+    result->type = AST_VALUE_MATRIX;
+    result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+    result->value.matrix_v->row_size = matrix_value->col_size;
+    result->value.matrix_v->col_size = matrix_value->row_size;
+
+    result->value.matrix_v->value = 
+      malloc(matrix_size * sizeof(struct ast_t));
+
+    for (int i = 0; i < matrix_size; i ++)
+    {
+      AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+      new_value->value.value_v = init_ast_value();
+      new_value->value.value_v->size = 1;
+      new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+      visitor_operator_power(
+          new_value->value.value_v->stack, 
+          matrix_value->value[i]->value.value_v->stack, 
+          operand2
+        );
+      result->value.matrix_v->value[i] = new_value;
+    }
+
+    return result;
+  }
+
+  if (op1 == AST_VALUE_STRING && op2 == AST_VALUE_INT
+      && operand2->value.int_v->value >= 0)
+  {
+    result->type = AST_VALUE_STRING;
+    AST_string* string_v = malloc(sizeof(struct ast_string_t));
+    
+    int repeat_count = operand2->value.int_v->value;
+    size_t original_length = strlen(operand1->value.string_v->real_value);
+    string_v->value_length = (original_length * repeat_count) + 3;    
+
+    string_v->real_value = malloc(string_v->value_length - 3);
+    string_v->real_value[0] = '\0';
+    
+    for (int i = 0; i < repeat_count; i++)
+      strcat(string_v->real_value, operand1->value.string_v->real_value);
+    
+    string_v->value = malloc(string_v->value_length);
+    string_v->value[0] = '\0';
+    
+    strcat(string_v->value, "\"");
+    strcat(string_v->value, string_v->real_value);
+    strcat(string_v->value, "\"");
+    
+    result->value.string_v = string_v;
+    return result;
+  }
+  if (!(op1 == AST_VALUE_INT || op1 == AST_VALUE_FLOAT)
+      || !(op2 == AST_VALUE_INT || op2 == AST_VALUE_FLOAT))
+  {
+    orora_error("에러, ^연산자는 정수 또는 실수간의 연산 또는 ", (void*) 0);
+//     printf("에러, 정수나 실수만 지원함\n");
+//     exit(1);
+  }
+  if (op2 == AST_VALUE_INT && operand2->value.int_v->value == 0)
+  {
+    result->type = AST_VALUE_INT;
+    result->value.int_v = malloc(sizeof(struct ast_int_t));
+    result->value.int_v->value = 1;
+    return result;
+  }
+  if (op1 == AST_VALUE_INT && operand2->value.int_v->value == 0)
+  {
+    result->type = AST_VALUE_INT;
+    result->value.int_v = malloc(sizeof(struct ast_int_t));
+    result->value.int_v->value = 0;
+    return result;
+  }
+//   if (op1 == AST_VALUE_INT && operand2->value.int_v->value == 1)
+//   {
+//     result->type = AST_VALUE_INT;
+//     result->value.int_v = malloc(sizeof(struct ast_int_t));
+//     result->value.int_v->value = 1;
+//     return result;
+//   }
+
+  if (op1 == AST_VALUE_INT && op2 == AST_VALUE_INT && operand2->value.int_v->value >= 0)
+  {
+    result->type = AST_VALUE_INT;
+    result->value.int_v = malloc(sizeof(struct ast_int_t));
+    result->value.int_v->value = (int) pow(operand1->value.int_v->value,
+                                            operand2->value.int_v->value);
+  }
+  else
+  {
+    result->type = AST_VALUE_FLOAT;
+    result->value.float_v = malloc(sizeof(struct ast_float_t));
+    result->value.float_v->value = 
+      pow(
+          op1 == AST_VALUE_INT ?
+            operand1->value.int_v->value
+            : operand1->value.float_v->value,
+          op2 == AST_VALUE_INT ?
+            operand2->value.int_v->value
+            : operand2->value.float_v->value
+        );
+  }
+
+  return result;
+}
+
+
 
 AST_value_stack* visitor_operator_equal(AST_value_stack* result,
     AST_value_stack* operand1,

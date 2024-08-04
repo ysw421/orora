@@ -747,14 +747,18 @@ int parser_precedence(int ast_stack_id)
       return 5;
       break;
 
-    case AST_VALUE_DOT_PRODUCT:   // *
-    case AST_VALUE_PRODUCT:       // 
-    case AST_VALUE_DIV:
+    case AST_VALUE_CIRCUMFLEX:    // ^
       return 6;
       break;
 
-    case AST_VALUE_NEG:           // !
+    case AST_VALUE_DOT_PRODUCT:   // *
+    case AST_VALUE_PRODUCT:       // 
+    case AST_VALUE_DIV:
       return 7;
+      break;
+
+    case AST_VALUE_NEG:           // !
+      return 8;
       break;
 
     case AST_VALUE_RPAR:
@@ -783,6 +787,7 @@ bool is_operator(int token_id)
     case TOKEN_OR:
     case TOKEN_AND:
     case TOKEN_NEG:
+    case TOKEN_CIRCUMFLEX:
       return true;
   }
 
@@ -818,6 +823,7 @@ int get_ast_value_type(int token_id)
     case TOKEN_OR:                  return AST_VALUE_OR;
     case TOKEN_AND:                 return AST_VALUE_AND;
     case TOKEN_NEG:                 return AST_VALUE_NEG;
+    case TOKEN_CIRCUMFLEX:          return AST_VALUE_CIRCUMFLEX;
   }
 
   return -1;
@@ -840,6 +846,7 @@ int get_token_type(int ast_value_id)
     case AST_VALUE_OR:              return TOKEN_OR;
     case AST_VALUE_AND:             return TOKEN_AND;
     case AST_VALUE_NEG:             return TOKEN_NEG;
+    case AST_VALUE_CIRCUMFLEX:      return TOKEN_CIRCUMFLEX;
   }
 
   return -1;

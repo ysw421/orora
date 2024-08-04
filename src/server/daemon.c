@@ -1,5 +1,5 @@
 #include "server/daemon.h"
-#include "lib/print.h"
+#include "syslib/print.h"
 #include "utilities/utils.h"
 
 jmp_buf interactive_mode_buf;
@@ -60,6 +60,7 @@ void run_daemon()
   Envs* global_env = init_envs((void*) 0, init_env());
   Envs* root_envs = init_envs(global_env, init_env());
 
+  rum_init_or(root_envs);
   char* input = (char*) 0;
   size_t len_input = 0;
   bool is_first_line = true;
