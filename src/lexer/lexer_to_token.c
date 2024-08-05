@@ -60,6 +60,7 @@ int get_special_string_type(int length, char* string)
       break;
 
     case 5:
+      if (!strcmp(string, "\\cdot")) return TOKEN_CDOT;
       if (!strcmp(string, "\\left")) return TOKEN_LEFT;
       if (!strcmp(string, "\\leqq")) return TOKEN_LESSEQUAL;
       if (!strcmp(string, "\\geqq")) return TOKEN_GREATEREQUAL;

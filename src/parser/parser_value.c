@@ -68,13 +68,13 @@ AST* parser_get_value
       {
         while (stack->size
             && parser_precedence(stack->stack->type)
-                >= parser_precedence(AST_VALUE_PRODUCT))
+                >= parser_precedence(AST_VALUE_DOT_PRODUCT))
         {
           save_value = parser_pop_value(stack);
           parser_push_value(postfix_expression, save_value);
         }
         parser_push_value(stack,
-            init_ast_value_stack(AST_VALUE_PRODUCT, token));
+            init_ast_value_stack(AST_VALUE_DOT_PRODUCT, token));
       }
       save_value = get_single_value(parser, ast, is_last_minus_value2);
       parser_push_value(postfix_expression, save_value);
@@ -82,7 +82,8 @@ AST* parser_get_value
       is_last_value = true;
       is_last_minus_value = false;
       is_last_minus_value2 = false;
-      is_last_single_value = true;
+//       is_last_single_value = true;
+      is_last_single_value = false;
       is_last_operator = false;
 
       token = parser->token;
@@ -154,13 +155,13 @@ AST* parser_get_value
           {
             while (stack->size
                 && parser_precedence(stack->stack->type)
-                    >= parser_precedence(AST_VALUE_PRODUCT))
+                    >= parser_precedence(AST_VALUE_DOT_PRODUCT))
             {
               save_value = parser_pop_value(stack);
               parser_push_value(postfix_expression, save_value);
             }
             parser_push_value(stack,
-                init_ast_value_stack(AST_VALUE_PRODUCT, token));
+                init_ast_value_stack(AST_VALUE_DOT_PRODUCT, token));
           }
           else if (is_last_value)
           {
@@ -179,6 +180,9 @@ AST* parser_get_value
           is_last_value = true;
           is_last_minus_value = false;
           is_last_operator = false;
+
+          is_last_single_value = true;
+
           AST_value_stack* new;
           if (function_ast)
           {
@@ -231,6 +235,7 @@ AST* parser_get_value
 
           is_last_value = true;
           is_last_minus_value = false;
+//           is_last_single_value = false;
           is_last_single_value = true;
           is_last_operator = false;
           break;
@@ -266,7 +271,8 @@ AST* parser_get_value
 
           is_last_value = true;
           is_last_minus_value = false;
-          is_last_single_value = true;
+          is_last_single_value = false;
+//           is_last_single_value = false;
           is_last_operator = false;
           break;
 
@@ -312,13 +318,13 @@ AST* parser_get_value
             {
               while (stack->size
                   && parser_precedence(stack->stack->type)
-                      >= parser_precedence(AST_VALUE_PRODUCT))
+                      >= parser_precedence(AST_VALUE_DOT_PRODUCT))
               {
                 save_value = parser_pop_value(stack);
                 parser_push_value(postfix_expression, save_value);
               }
               parser_push_value(stack,
-                  init_ast_value_stack(AST_VALUE_PRODUCT, token));
+                  init_ast_value_stack(AST_VALUE_DOT_PRODUCT, token));
             }
             Token* token = parser->token;
 
@@ -747,13 +753,13 @@ int parser_precedence(int ast_stack_id)
       return 5;
       break;
 
-    case AST_VALUE_CIRCUMFLEX:    // ^
+    case AST_VALUE_DOT_PRODUCT:   // \cdot
+    case AST_VALUE_PRODUCT:       // *, \times
+    case AST_VALUE_DIV:
       return 6;
       break;
 
-    case AST_VALUE_DOT_PRODUCT:   // *
-    case AST_VALUE_PRODUCT:       // 
-    case AST_VALUE_DIV:
+    case AST_VALUE_CIRCUMFLEX:    // ^
       return 7;
       break;
 
@@ -776,6 +782,7 @@ bool is_operator(int token_id)
   {
     case TOKEN_PLUS:
     case TOKEN_MINUS:
+    case TOKEN_CDOT:
     case TOKEN_STAR:
     case TOKEN_SLASH:
     case TOKEN_EQUAL:
@@ -813,6 +820,7 @@ int get_ast_value_type(int token_id)
     case TOKEN_PLUS:                return AST_VALUE_PLUS;
     case TOKEN_MINUS:               return AST_VALUE_MINUS;
     case TOKEN_STAR:                return AST_VALUE_PRODUCT;
+    case TOKEN_CDOT:                return AST_VALUE_DOT_PRODUCT;
     case TOKEN_SLASH:               return AST_VALUE_DIV;
     case TOKEN_EQUAL:               return AST_VALUE_EQUAL;
     case TOKEN_LESS:                return AST_VALUE_LESS;
@@ -836,6 +844,7 @@ int get_token_type(int ast_value_id)
     case AST_VALUE_PLUS:            return TOKEN_PLUS;
     case AST_VALUE_MINUS:           return TOKEN_MINUS;
     case AST_VALUE_PRODUCT:         return TOKEN_STAR;
+    case AST_VALUE_DOT_PRODUCT:     return TOKEN_CDOT;
     case AST_VALUE_DIV:             return TOKEN_SLASH;
     case AST_VALUE_EQUAL:           return TOKEN_EQUAL;
     case AST_VALUE_LESS:            return TOKEN_LESS;

@@ -35,7 +35,13 @@ AST_value_stack* visitor_operator_plus(AST_value_stack* result,
 AST_value_stack* visitor_operator_minus(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
+AST_value_stack* visitor_operator_product_(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2);
 AST_value_stack* visitor_operator_product(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2);
+AST_value_stack* visitor_operator_dot_product(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
 AST_value_stack* visitor_operator_div(AST_value_stack* result,
@@ -1006,6 +1012,10 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
           result = visitor_operator_product(result, operand1, operand2);
           break;
 
+        case AST_VALUE_DOT_PRODUCT:
+          result = visitor_operator_dot_product(result, operand1, operand2);
+          break;
+
         case AST_VALUE_DIV:
           result = visitor_operator_div(result, operand1, operand2);
           break;
@@ -1728,7 +1738,79 @@ AST_value_stack* visitor_operator_minus(AST_value_stack* result,
   return result;
 }
 
-AST_value_stack* visitor_operator_product(AST_value_stack* result,
+AST_value_stack* visitor_matrix_product(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  AST_matrix* matrix1 = operand1->value.matrix_v;
+  AST_matrix* matrix2 = operand2->value.matrix_v;
+
+  if (matrix1->row_size != matrix2->col_size)
+  {
+    orora_error("에러, 행렬의 product시 첫 행렬의 행과 두번째 행렬의 열의 크기가 같아야 함", (void*) 0);
+    return (void*) 0;
+  }
+
+  int m = matrix1->col_size;
+  int n = matrix2->row_size;
+  int matrix_size = m*n;
+
+  result->type = AST_VALUE_MATRIX;
+  result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+  result->value.matrix_v->col_size = m;
+  result->value.matrix_v->row_size = n;
+
+  result->value.matrix_v->value = 
+    malloc(matrix_size * sizeof(struct ast_t));
+
+  for (int i = 0; i < m; i++)
+  {
+    for (int j = 0; j < n; j++)
+    {
+      AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+      new_value->value.value_v = init_ast_value();
+      new_value->value.value_v->size = 1;
+      new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+      AST_value_stack* init_stack = init_ast_value_stack(AST_VALUE_INT, (void*) 0);
+      init_stack->value.int_v = malloc(sizeof(AST_int));
+      init_stack->value.int_v->value = 0;
+
+      for (int k = 0; k < matrix1->row_size; k++)
+      {
+        AST_value_stack* product_stack = malloc(sizeof(AST_value_stack));
+
+        visitor_operator_dot_product(
+            product_stack,
+            matrix1->value[i*m + k]->value.value_v->stack,
+            matrix2->value[k*n + j]->value.value_v->stack
+          );
+
+        if (k == 0)
+          visitor_operator_plus(
+              new_value->value.value_v->stack,
+              init_stack,
+              product_stack
+            );
+        else
+        {
+          AST_value_stack* plus_stack = malloc(sizeof(AST_value_stack));
+          visitor_operator_plus(
+              plus_stack,
+              new_value->value.value_v->stack,
+              product_stack
+            );
+          new_value->value.value_v->stack = plus_stack;
+        }
+        free(product_stack);
+      }
+      result->value.matrix_v->value[i*n + j] = new_value;
+    }
+  }
+
+  return result;
+}
+
+AST_value_stack* visitor_operator_product_(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
@@ -1823,55 +1905,17 @@ AST_value_stack* visitor_operator_product(AST_value_stack* result,
           * (operand2->value.bool_v->value ? 1 : 0);
       break;
 
-    case AST_VALUE_MATRIX + AST_VALUE_MATRIX * 100:
-      AST_matrix* matrix_value = operand1->value.matrix_v;
-      if (
-          matrix_value->row_size != operand2->value.matrix_v->row_size
-          || matrix_value->col_size != operand2->value.matrix_v->col_size
-         )
-      {
-        orora_error("에러, 행렬 덧셈시 크기가 같아야 함", (void*) 0);
-//         printf("에러, 행렬 덧셈시 크기가 같아야 함\n");
-//         exit(1);
-      }
-
-      int matrix_size = 
-        matrix_value->row_size * matrix_value->col_size;
-
-      result->type = AST_VALUE_MATRIX;
-      result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
-      result->value.matrix_v->row_size = matrix_value->row_size;
-      result->value.matrix_v->col_size = matrix_value->col_size;
-
-      result->value.matrix_v->value = 
-        malloc(matrix_size * sizeof(struct ast_t));
-
-      for (int i = 0; i < matrix_size; i ++)
-      {
-        AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
-        new_value->value.value_v = init_ast_value();
-        new_value->value.value_v->size = 1;
-        new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
-        visitor_operator_product(
-            new_value->value.value_v->stack, 
-            matrix_value->value[i]->value.value_v->stack, 
-            operand2->value.matrix_v->value[i]->value.value_v->stack
-          );
-        result->value.matrix_v->value[i] = new_value;
-      }
-      break;
-
     case AST_VALUE_MATRIX + AST_VALUE_INT * 100:
     case AST_VALUE_INT + AST_VALUE_MATRIX * 100:
     case AST_VALUE_MATRIX + AST_VALUE_FLOAT * 100:
     case AST_VALUE_FLOAT + AST_VALUE_MATRIX * 100:
     case AST_VALUE_BOOL + AST_VALUE_MATRIX * 100:
     case AST_VALUE_MATRIX + AST_VALUE_BOOL * 100:
-      matrix_value = 
+      AST_matrix* matrix_value = 
         op1 == AST_VALUE_MATRIX ?
           operand1->value.matrix_v
           : operand2->value.matrix_v;
-      matrix_size = 
+      int matrix_size = 
         matrix_value->row_size * matrix_value->col_size;
 
       result->type = AST_VALUE_MATRIX;
@@ -1909,6 +1953,67 @@ AST_value_stack* visitor_operator_product(AST_value_stack* result,
   }
   
   return result;
+}
+
+AST_value_stack* visitor_operator_product(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  if (operand1->type == AST_VALUE_MATRIX
+      && operand2->type == AST_VALUE_MATRIX)
+  {
+    return visitor_matrix_product(result, operand1, operand2);
+//     AST_matrix* matrix_value = operand1->value.matrix_v;
+//     if (
+//         matrix_value->row_size != operand2->value.matrix_v->row_size
+//         || matrix_value->col_size != operand2->value.matrix_v->col_size
+//        )
+//     {
+//       orora_error("에러, 행렬 덧셈시 크기가 같아야 함", (void*) 0);
+// //         printf("에러, 행렬 덧셈시 크기가 같아야 함\n");
+// //         exit(1);
+//     }
+// 
+//     int matrix_size = 
+//       matrix_value->row_size * matrix_value->col_size;
+// 
+//     result->type = AST_VALUE_MATRIX;
+//     result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+//     result->value.matrix_v->row_size = matrix_value->row_size;
+//     result->value.matrix_v->col_size = matrix_value->col_size;
+// 
+//     result->value.matrix_v->value = 
+//       malloc(matrix_size * sizeof(struct ast_t));
+// 
+//     for (int i = 0; i < matrix_size; i ++)
+//     {
+//       AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+//       new_value->value.value_v = init_ast_value();
+//       new_value->value.value_v->size = 1;
+//       new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+//       visitor_operator_product(
+//           new_value->value.value_v->stack, 
+//           matrix_value->value[i]->value.value_v->stack, 
+//           operand2->value.matrix_v->value[i]->value.value_v->stack
+//         );
+//       result->value.matrix_v->value[i] = new_value;
+//     }
+// 
+//     return result;
+  }
+  return visitor_operator_product_(result, operand1, operand2);
+}
+
+AST_value_stack* visitor_operator_dot_product(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  if (operand1->type == AST_VALUE_MATRIX
+      && operand2->type == AST_VALUE_MATRIX)
+  {
+    return visitor_matrix_product(result, operand1, operand2);
+  }
+  return visitor_operator_product_(result, operand1, operand2);
 }
 
 AST_value_stack* visitor_operator_div(AST_value_stack* result,
@@ -2115,8 +2220,14 @@ AST_value_stack* visitor_operator_power(AST_value_stack* result,
 
     return result;
   }
-
-  if (op1 == AST_VALUE_STRING && op2 == AST_VALUE_INT
+  else if (op1 == AST_VALUE_MATRIX && op2 == AST_VALUE_INT
+      && operand2->value.int_v->value == -1)
+  {
+    // inverse matrix
+    // ToDo...
+    orora_error("에러, 행렬의 역행렬은 아직 지원하지 않음", (void*) 0);
+  }
+  else if (op1 == AST_VALUE_STRING && op2 == AST_VALUE_INT
       && operand2->value.int_v->value >= 0)
   {
     result->type = AST_VALUE_STRING;
@@ -2195,8 +2306,6 @@ AST_value_stack* visitor_operator_power(AST_value_stack* result,
 
   return result;
 }
-
-
 
 AST_value_stack* visitor_operator_equal(AST_value_stack* result,
     AST_value_stack* operand1,

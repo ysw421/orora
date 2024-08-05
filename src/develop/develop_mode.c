@@ -60,6 +60,9 @@ void print_value(AST* ast)
       case AST_VALUE_PRODUCT:
         fprintf(stderr, "\t->*\n");
         break;
+      case AST_VALUE_DOT_PRODUCT:
+        fprintf(stderr, "\t->dot\n");
+        break;
       case AST_VALUE_DIV:
         fprintf(stderr, "\t->/\n");
         break;

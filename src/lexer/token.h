@@ -15,7 +15,7 @@ typedef struct
     TOKEN_STRING,             // 03: In ' ' or " "...
     TOKEN_PLUS,               // 04: +
     TOKEN_MINUS,              // 05: -
-    TOKEN_STAR,               // 06: *
+    TOKEN_STAR,               // 06: *, \times : cartesian product
     TOKEN_SLASH,              // 07: /
     TOKEN_LPAR,               // 08: (
     TOKEN_RPAR,               // 09: )
@@ -51,6 +51,7 @@ typedef struct
     TOKEN_NEG,                // 39: !, \neg
     TOKEN_TEXT,               // 40: \text
     TOKEN_CIRCUMFLEX,         // 41: ^
+    TOKEN_CDOT,               // 42: \cdot : dot product
     TOKEN_NOOP                // 99:
   } type;
 
