@@ -62,6 +62,7 @@ AST* parser_get_value
 
     if (is_single_value)
     {
+//       fprintf(stderr, "!@#!#@!#\n");
       if (is_last_single_value)
         break;
       else if (is_last_value)
@@ -82,8 +83,8 @@ AST* parser_get_value
       is_last_value = true;
       is_last_minus_value = false;
       is_last_minus_value2 = false;
-//       is_last_single_value = true;
-      is_last_single_value = false;
+      is_last_single_value = true;
+//       is_last_single_value = false;
       is_last_operator = false;
 
       token = parser->token;

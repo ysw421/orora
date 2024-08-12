@@ -2013,6 +2013,13 @@ AST_value_stack* visitor_operator_dot_product(AST_value_stack* result,
   {
     return visitor_matrix_product(result, operand1, operand2);
   }
+  else if (operand1->type == AST_VALUE_MATRIX
+      && operand2->type == AST_VALUE_INT
+      && operand2->value.int_v->value == -1)
+  {
+    // ToDO: matrix inverse
+    orora_error("에러, 행렬의 역행렬은 아직 지원하지 않음", (void*) 0);
+  }
   return visitor_operator_product_(result, operand1, operand2);
 }
 
@@ -2449,11 +2456,11 @@ AST_value_stack* visitor_operator_less(AST_value_stack* result,
   switch (operand1->type)
   {
     case AST_VALUE_NULL:
-      // ToDo...
+      orora_error("에러, null은 < 연산이 불가함", (void*) 0);
       break;
 
     case AST_VALUE_STRING:
-      // ToDo...
+      orora_error("에러, string은 < 연산이 불가함", (void*) 0);
       break;
 
     case AST_VALUE_INT:
@@ -2533,11 +2540,11 @@ AST_value_stack* visitor_operator_greater(AST_value_stack* result,
   switch (operand1->type)
   {
     case AST_VALUE_NULL:
-      // ToDo...
+      orora_error("에러, null은 < 연산이 불가함", (void*) 0);
       break;
 
     case AST_VALUE_STRING:
-      // ToDo...
+      orora_error("에러, string은 < 연산이 불가함", (void*) 0);
       break;
 
     case AST_VALUE_INT:
