@@ -1,0 +1,14 @@
+f(a, b) := \begin{cases}
+              b               & a \mod b = 0 \\
+%              f(b, print(a))         & otherwise \\
+              f(b, print(b))         & otherwise \\
+%              f(print(a),b)         & otherwise \\
+%              f(b, a \mod b +3)         & otherwise \\
+            \end{cases}
+print(f(15, 6))
+% print(f(6, 3))
+
+f(a, b) := \begin{cases}
+              b               & a \mod b = 0 \\
+              f(b, print(b))         & otherwise \\
+            \end{cases}
