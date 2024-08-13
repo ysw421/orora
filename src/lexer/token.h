@@ -52,6 +52,7 @@ typedef struct
     TOKEN_TEXT,               // 40: \text
     TOKEN_CIRCUMFLEX,         // 41: ^
     TOKEN_CDOT,               // 42: \cdot : dot product
+    TOKEN_MOD,                // 43: \mod
     TOKEN_NOOP                // 99:
   } type;
 

@@ -59,6 +59,9 @@ AST_value_stack* visitor_operator_greater(AST_value_stack* result,
 AST_value_stack* visitor_operator_power(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
+AST_value_stack* visitor_operator_mod(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2);
 
 AST_value_stack* get_variable_from_Env_variable
 (Envs* envs, AST_value_stack* ast);
@@ -1018,6 +1021,10 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
 
         case AST_VALUE_DIV:
           result = visitor_operator_div(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_MOD:
+          result = visitor_operator_mod(result, operand1, operand2);
           break;
 
         case AST_VALUE_CIRCUMFLEX:
@@ -2186,6 +2193,25 @@ AST_value_stack* visitor_operator_div(AST_value_stack* result,
 //       exit(1);
       break;
   }
+
+  return result;
+}
+
+AST_value_stack* visitor_operator_mod(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  int op1 = operand1->type;
+  int op2 = operand2->type;
+
+  if (op1 != AST_VALUE_INT || op2 != AST_VALUE_INT)
+  {
+    orora_error("에러, 정수만 지원함", (void*) 0);
+  }
+  result->type = AST_VALUE_INT;
+  result->value.int_v = malloc(sizeof(struct ast_int_t));
+  result->value.int_v->value =
+    operand1->value.int_v->value % operand2->value.int_v->value;
 
   return result;
 }

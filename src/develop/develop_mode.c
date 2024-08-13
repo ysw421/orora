@@ -88,6 +88,9 @@ void print_value(AST* ast)
       case AST_VALUE_CIRCUMFLEX:
         fprintf(stderr, "\t->^\n");
         break;
+      case AST_VALUE_MOD:
+        fprintf(stderr, "\t->mod\n");
+        break;
       default:
         fprintf(stderr, "\t->unkwon type: %d\n", stack->type);
         break;

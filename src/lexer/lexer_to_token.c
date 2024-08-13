@@ -73,6 +73,7 @@ int get_special_string_type(int length, char* string)
       if (!strcmp(string, "\\neq")) return TOKEN_NOTEQUAL;
       if (!strcmp(string, "\\lor")) return TOKEN_OR;
       if (!strcmp(string, "\\neg")) return TOKEN_NEG;
+      if (!strcmp(string, "\\mod")) return TOKEN_MOD;
       break;
 
     default: 
