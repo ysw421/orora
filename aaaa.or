@@ -1,14 +1,31 @@
-f(a, b) := \begin{cases}
-              b               & a \mod b = 0 \\
-%              f(b, print(a))         & otherwise \\
-              f(b, print(b))         & otherwise \\
-%              f(print(a),b)         & otherwise \\
-%              f(b, a \mod b +3)         & otherwise \\
-            \end{cases}
-print(f(15, 6))
-% print(f(6, 3))
+f(x) := \begin{code}
+          return 2x - 1
+        \end{code}
 
-f(a, b) := \begin{cases}
-              b               & a \mod b = 0 \\
-              f(b, print(b))         & otherwise \\
-            \end{cases}
+MAX := 10
+i := 0
+\begin{while}{1}
+  i := i + 1
+  j := 0
+  c := ""
+  k := 0
+  \begin{while}{1}
+    k := k + 1
+    \begin{if}{k = MAX - i + 1}
+      break
+    \end{if}
+    c := c * " "
+  \end{while}
+  \begin{while}{1}
+    j := j + 1
+    c := c * "*"
+    \begin{if}{f(i) = j}
+      print(c)
+      break
+    \end{if}
+  \end{while}
+  print("\n")
+  \begin{if}{i = MAX}
+    break
+  \end{if}
+\end{while}

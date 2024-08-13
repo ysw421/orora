@@ -73,35 +73,35 @@ void visitor_print_function_variable(Env_variable* new_value)
       if (INTERACTIVE_MODE)
         orora_write(new_value->value.string_v->real_value, ORORA_STATUS_CONSOLE);
       else
-        printf("%s", new_value->value.string_v->real_value);
+        fprintf(stderr, "%s", new_value->value.string_v->real_value);
       break;
 
     case ENV_VARIABLE_INT:
       if (INTERACTIVE_MODE)
         orora_write(int_to_string(new_value->value.int_v->value), ORORA_STATUS_CONSOLE);
       else
-        printf("%d", new_value->value.int_v->value);
+        fprintf(stderr, "%d", new_value->value.int_v->value);
       break;
 
     case ENV_VARIABLE_FLOAT:
       if (INTERACTIVE_MODE)
         orora_write(float_to_string(new_value->value.float_v->value), ORORA_STATUS_CONSOLE);
       else
-        printf("%f", new_value->value.float_v->value);
+        fprintf(stderr, "%f", new_value->value.float_v->value);
       break;
 
     case ENV_VARIABLE_NULL:
       if (INTERACTIVE_MODE)
         orora_write("(NULL)", ORORA_STATUS_CONSOLE);
       else
-        printf("(NULL)");
+        fprintf(stderr, "(NULL)");
       break;
 
     case ENV_VARIABLE_BOOL:
       if (INTERACTIVE_MODE)
         orora_write(new_value->value.bool_v->value ? "true" : "false", ORORA_STATUS_CONSOLE);
       else
-        printf(new_value->value.bool_v->value ? "true" : "false");
+        fprintf(stderr, "%s", new_value->value.bool_v->value ? "true" : "false");
       break;
 
     case ENV_VARIABLE_MATRIX:
@@ -109,7 +109,7 @@ void visitor_print_function_variable(Env_variable* new_value)
       if (INTERACTIVE_MODE)
         orora_write(output, ORORA_STATUS_CONSOLE);
       else
-        printf("%s", output);
+        fprintf(stderr, "%s", output);
       break;
   }
 }
