@@ -5,7 +5,7 @@
 
 ### How to install
 ```shell
-sudo install.sh
+sudo ./install.sh
 ```
 
 #### Goal of this programming language
