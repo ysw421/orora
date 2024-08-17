@@ -1,12 +1,16 @@
 ## ORORA: the programming language similar to math expression
-<div align="center">
-⚠️ This project is Beta version... I'm working hard on it 😊
-</div>
+
+<p align="center">
+  <img src="images/web-client.png" alt="example code" width="500">
+</p>
 
 ### How to install
 ```shell
 sudo ./install.sh
 ```
+
+- Web client: [ [Link](https://orora-lang.github.io/web-client/) ]
+  : ORORA offers a primary tty client, but its Web client is more user-friendly.
 
 #### Goal of this programming language
 The grammar of ORORA should be similar to the math expression from $\LaTeX$. For example, this beta version can run the code like :
@@ -32,7 +36,8 @@ f(x) := \begin{cases}
         \end{cases}
 ```
 
-ORORA is a programming language. so, you can run not only math expressions but also algorithms. Like the following codes:
+The grammar of ORORA is designed to be similar to mathematical expressions in $\LaTeX$. For instance, this beta version can execute code such as:
+
 ###### input:
 ```latex
 f(x) := \begin{code}
