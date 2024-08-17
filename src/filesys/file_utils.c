@@ -18,11 +18,14 @@ File* file_open(const char* file_path)
   File* file = (File*) malloc(sizeof(File));
 
   fseek(f, 0, SEEK_END);
-  file->length = ftell(f);
-  fseek(f, 0, SEEK_SET);
+  size_t size = ftell(f);
 
-  file->contents = (char*) malloc(file->length * sizeof(char) + 1);
-  fread(file->contents, 1, file->length, f);
+  file->contents = malloc(size+1);
+  memset(file->contents, 0, size+1);
+  fseek(f, 0, SEEK_SET);
+  fread(file->contents, size, 1, f);
+
+  file->length = size;
 
   fclose(f);
   return file;

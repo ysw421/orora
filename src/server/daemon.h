@@ -19,10 +19,12 @@
 #include "loader/color.h"
 #include "visitor/visitor.h"
 #include "server/status.h"
+#include "syslib/print.h"
 #include <setjmp.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <libwebsockets.h>
 
 #define PID_FILE "/tmp/orora_daemon.pid"
 #define RESULT_FILE "/tmp/orora_result.txt"
@@ -36,6 +38,8 @@
 
 int read_port_from_file();
 void run_daemon();
+int is_end_interactive_line(Lexer* root);
+void send_ws_message(const char* message);
 
 #endif
 

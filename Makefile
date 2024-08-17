@@ -3,8 +3,8 @@ include Makefile.build
 EXEC = orora
 OBJECTS = $(SOURCES:.c=.o)
 DEPENDENCYS = $(SOURCES:.c=.d)
-CFLAGS = -g -Wall -ldl -fPIC -rdynamic -I./src
-LDFLAGS = -lm
+CFLAGS = -g -Wall -ldl -fPIC -rdynamic -I./src -I/usr/include/libwebsockets -I/usr/include/json-c
+LDFLAGS = -lm -lreadline -lwebsockets -ljson-c -lpthread
 MKBUILD_SUBDIRS = lib
 BUILD_FOLDER = build
 BUILD_FOLDER_PATH = $(join $(BUILD_FOLDER),/)
@@ -26,6 +26,10 @@ check_dependencies:
 		echo "Readline not found. Please run './install.sh' to install dependencies."; \
 		exit 1; \
 	fi
+	@if ! pkg-config --exists libwebsockets; then \
+		echo "libwebsockets not found. Please run './install.sh' to install dependencies."; \
+		exit 1; \
+	fi
 
 copy_lib_files:
 	@mkdir -p $(LIBDIR)
@@ -37,6 +41,14 @@ ifeq ($(READLINE_AVAILABLE),yes)
     LDFLAGS += $(shell pkg-config --libs readline)
 else
     $(warning Readline not found. Building without readline support.)
+endif
+
+LIBWEBSOCKETS_AVAILABLE := $(shell pkg-config --exists libwebsockets && echo yes || echo no)
+ifeq ($(LIBWEBSOCKETS_AVAILABLE),yes)
+    CFLAGS += $(shell pkg-config --cflags libwebsockets)
+    LDFLAGS += $(shell pkg-config --libs libwebsockets)
+else
+    $(warning libwebsockets not found. Building without libwebsockets support.)
 endif
 
 $(MKBUILD_SUBDIRS):
@@ -82,4 +94,3 @@ debug:
 	gdb $(EXEC)
 
 .PHONY: all check_dependencies install uninstall clean lint debug
-

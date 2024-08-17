@@ -25,21 +25,29 @@ readline_installed() {
     pkg-config --exists readline
 }
 
+libwebsockets_installed() {
+    pkg-config --exists libwebsockets
+}
+
 # Detect the package manager
 if command_exists apt-get; then
     PKG_MANAGER="apt-get"
     READLINE_PKG="libreadline-dev"
+    LIBWEBSOCKETS_PKG="libwebsockets-dev"
 elif command_exists yum; then
     PKG_MANAGER="yum"
     READLINE_PKG="readline-devel"
+    LIBWEBSOCKETS_PKG="libwebsockets-devel"
 elif command_exists pacman; then
     PKG_MANAGER="pacman"
     READLINE_PKG="readline"
+    LIBWEBSOCKETS_PKG="libwebsockets"
 elif command_exists zypper; then
     PKG_MANAGER="zypper"
     READLINE_PKG="readline-devel"
+    LIBWEBSOCKETS_PKG="libwebsockets-devel"
 else
-    echo "Unsupported package manager. Please install readline."
+    echo "Unsupported package manager. Please install readline and libwebsockets manually."
     exit 1
 fi
 
@@ -69,6 +77,28 @@ else
         echo "Readline development package installed successfully."
     else
         echo "Failed to install readline development package."
+        exit 1
+    fi
+fi
+
+if libwebsockets_installed; then
+    echo "libwebsockets development package is already installed."
+else
+    echo "libwebsockets development package is not installed. Installing..."
+    echo "Installing libwebsockets development package..."
+    if [ "$PKG_MANAGER" = "apt-get" ]; then
+        sudo apt-get install -y "$LIBWEBSOCKETS_PKG"
+    elif [ "$PKG_MANAGER" = "yum" ]; then
+        sudo yum install -y "$LIBWEBSOCKETS_PKG"
+    elif [ "$PKG_MANAGER" = "pacman" ]; then
+        sudo pacman -S --noconfirm "$LIBWEBSOCKETS_PKG"
+    elif [ "$PKG_MANAGER" = "zypper" ]; then
+        sudo zypper install -y "$LIBWEBSOCKETS_PKG"
+    fi
+    if libwebsockets_installed; then
+        echo "libwebsockets development package installed successfully."
+    else
+        echo "Failed to install libwebsockets development package."
         exit 1
     fi
 fi

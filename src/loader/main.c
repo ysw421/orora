@@ -13,6 +13,8 @@
 #include <string.h>
 #include <netdb.h>
 #include <getopt.h>
+#include <sys/wait.h>
+#include <sys/file.h>
 
 #ifdef DEVELOP_MODE
 #include "develop/develop_mode.h"
@@ -36,7 +38,6 @@ bool init_orora();
 void handle_sigint(int sig)
 {
   fprintf(stderr, "\n");
-//   fprintf(stderr, DIALOGUE);
 }
 
 void handle_sigterm(int sig)
@@ -66,6 +67,50 @@ void rum_init_or(Envs* root_envs)
     visitor_visit(root_envs, ast_tree->value.compound_v->items[i]);
 }
 
+void sigchld_handler(int s)
+{
+  while(waitpid(-1, (void*) 0, WNOHANG) > 0);
+}
+
+void run_server(int server_socket)
+{
+  while (1) 
+  {
+    struct sockaddr_in client_addr;
+    socklen_t client_len = sizeof(client_addr);
+    int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_len);
+    if (client_socket < 0) 
+    {
+      perror("Accept failed");
+      continue;
+    }
+
+    pid_t pid = fork();
+    if (pid < 0) 
+    {
+      perror("Fork failed");
+      close(client_socket);
+      continue;
+    }
+    else if (pid == 0) 
+    {
+      // Child process
+      close(server_socket);  // Close server socket in child process
+
+      dup2(client_socket, STDIN_FILENO);
+      dup2(client_socket, STDOUT_FILENO);
+
+      close(client_socket);
+
+      run_daemon();
+      exit(0);
+    } else {
+      // Parent process
+      close(client_socket);  // Close client socket in parent process
+    }
+  }
+}
+
 int main(int argc, char** argv)
 {
   if (!init_orora())
@@ -79,9 +124,9 @@ int main(int argc, char** argv)
 
   int opt;
   static struct option long_options[] = {
-      {"version", no_argument, 0, 'v'},
-      {"help", no_argument, 0, 'h'},
-      {0, 0, 0, 0}
+    {"version", no_argument, 0, 'v'},
+    {"help", no_argument, 0, 'h'},
+    {0, 0, 0, 0}
   };
 
   while ((opt = getopt_long(argc, argv, "vh", long_options, (void*) 0)) != -1)
@@ -101,7 +146,7 @@ int main(int argc, char** argv)
   }
 
   if (!init_orora())
-      return 1;
+    return 1;
 
   if (argc == 2)
   {
@@ -115,21 +160,21 @@ int main(int argc, char** argv)
     File* file = file_open(argv[1]);
 
 #ifdef DEVELOP_MODE
-//     print_file(file);
+    //     print_file(file);
 #endif
 
     Lexer* root = init_lexer(file->contents, &file->length);
     free(file);
 
 #ifdef DEVELOP_MODE
-//     print_tokens(root);
+    //     print_tokens(root);
 #endif
 
     Parser* parser = init_parser(root);
     AST* ast_tree = parser_parse(parser);
 
 #ifdef DEVELOP_MODE
-//     print_ast_tree(ast_tree);
+    //     print_ast_tree(ast_tree);
 #endif
 
     for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
@@ -137,7 +182,7 @@ int main(int argc, char** argv)
     printf("\n");
 
 #ifdef DEVELOP_MODE
-//     print_ast_tree(ast_tree);
+    //     print_ast_tree(ast_tree);
 #endif
 
     free(root);
@@ -148,53 +193,20 @@ int main(int argc, char** argv)
   {
     change_interactive_mode(1);
 
-//     signal(SIGINT, handle_sigint);
-//     signal(SIGTERM, handle_sigterm);
+    struct sigaction sa;
+    sa.sa_handler = sigchld_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
+    if (sigaction(SIGCHLD, &sa, (void*) 0) == -1)
+    {
+      perror("sigaction");
+      exit(1);
+    }
+
     fflush(stdout);
 
     int port = START_PORT;
-    int server_socket = create_and_bind_socket(&port);
-    if (server_socket == -1)
-      exit(EXIT_FAILURE);
-
-    if (listen(server_socket, 1) < 0)
-    {
-      perror("Listen failed");
-      exit(EXIT_FAILURE);
-    }
-
-    pid_t pid = fork();
-    if (pid < 0)
-    {
-      perror("Fork failed");
-      exit(EXIT_FAILURE);
-    }
-    else if (pid == 0)
-    {
-      struct sockaddr_in client_addr;
-      socklen_t client_len = sizeof(client_addr);
-      int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_len);
-      if (client_socket < 0)
-      {
-        perror("Accept failed");
-        exit(EXIT_FAILURE);
-      }
-
-      dup2(client_socket, STDIN_FILENO);
-      dup2(client_socket, STDOUT_FILENO);
-      
-      close(server_socket);
-      close(client_socket);
-      
-      run_daemon();
-      exit(0);
-    }
-    else
-    {
-      close(server_socket);
-      ORORA_PORT = port;
-      run_client(port);
-    }
+    run_daemon(port);
   }
 
   free(global_env);
@@ -202,7 +214,6 @@ int main(int argc, char** argv)
 
   return 0;
 }
-
 
 bool init_orora()
 {
@@ -223,7 +234,7 @@ bool init_orora()
      ENV_VARIABLE_INT, AST_VALUE_INT,
      visitor_set_value_Env_variable_from_AST_value_stack_int,
      visitor_set_value_AST_value_stack_from_Env_variable_int
-     );
+    );
   /* float type */
   push_value_type_list
     (
@@ -265,10 +276,11 @@ bool init_orora()
   return true;
 }
 
-void print_version() {
-    printf("%sOrora Programming Language%s version %s\n",
-            ORORA_COLOR_H, ORORA_COLOR_RESET, get_version());
-    printf("(C) 2023 Orora Project\n");
+void print_version()
+{
+  printf("%sOrora Programming Language%s version %s\n",
+      ORORA_COLOR_H, ORORA_COLOR_RESET, get_version());
+  printf("(C) 2023 Orora Project\n");
 }
 
 void print_usage(const char* program_name)
@@ -282,7 +294,7 @@ void print_usage(const char* program_name)
 char* get_version()
 {
   static char version[MAX_VERSION_LENGTH] = {0};
-  
+
   if (version[0] == '\0')
   {
     FILE* version_file = fopen("VERSION", "r");
@@ -307,51 +319,3 @@ char* get_version()
 
   return version;
 }
-
-int create_and_bind_socket(int *port)
-{
-  int server_socket, opt = 1;
-  struct sockaddr_in server_addr;
-
-  for (int i = 0; i < MAX_RETRY; i++)
-  {
-    server_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_socket == -1)
-    {
-      perror("Socket creation failed");
-      continue;
-    }
-
-    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-    {
-      perror("setsockopt(SO_REUSEADDR) failed");
-      close(server_socket);
-      continue;
-    }
-
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(*port);
-
-    if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
-    {
-      if (errno == EADDRINUSE)
-      {
-        printf("Port %d is already in use. Trying next port.\n", *port);
-        (*port)++;
-        close(server_socket);
-        continue;
-      }
-      else {
-        perror("Bind failed");
-        close(server_socket);
-        return -1;
-      }
-    }
-
-    return server_socket;
-  }
-  printf("Failed to find an available port after %d attempts.\n", MAX_RETRY);
-  return -1;
-}
-

@@ -94,6 +94,10 @@ Token* lexer_get_token(Lexer* lexer)
     {
       lexer_skip_comment(lexer);
       continue;
+    } else if (lexer->c == '$')
+    {
+      lexer_advance(lexer);
+      continue;
     }
 
     Token* two_char = lexer_to_token_two_char(lexer);

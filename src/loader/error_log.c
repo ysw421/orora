@@ -127,8 +127,9 @@ const char* orora_error(const char* error_message, Parser* parser)
   {
 //     printf("hello\n");
 //     exit(1);
-    orora_write(error_message, ORORA_STATUS_ERROR);
-    syslog(LOG_ERR, "Error: %s", error_message);
+//     orora_write(error_message, ORORA_STATUS_ERROR);
+//     syslog(LOG_ERR, "Error: %s", error_message);
+    printf("%s\n", error_message);
     longjmp(interactive_mode_buf, 1);
   }
   else
