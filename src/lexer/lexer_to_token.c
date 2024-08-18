@@ -40,6 +40,7 @@ int get_special_string_type(int length, char* string)
   switch (length)
   {
     case 10:
+      if (!strcmp(string, "\\otherwise")) return TOKEN_OTHERWISE;
       if (!strcmp(string, "\\leftarrow")) return TOKEN_DEFINE;
       if (!strcmp(string, "\\subjectto")) return TOKEN_SATISFY;
       break;
@@ -88,25 +89,26 @@ int get_one_char_type(char c)
 {
   switch (c)
   {
-    case '=': return TOKEN_EQUAL; break;
-    case ',': return TOKEN_COMMA; break;
-    case '+': return TOKEN_PLUS; break;
-    case '-': return TOKEN_MINUS; break;
-    case '*': return TOKEN_STAR; break;
-    case '/': return TOKEN_SLASH; break;
-    case '(': return TOKEN_LPAR; break;
-    case ')': return TOKEN_RPAR; break;
-    case '{': return TOKEN_LBRACE; break;
-    case '}': return TOKEN_RBRACE; break;
-    case '[': return TOKEN_LSQB; break;
-    case ']': return TOKEN_RSQB; break;
-    case '$': return TOKEN_DOLLAR; break;
-    case ':': return TOKEN_COLON; break;
-    case '&': return TOKEN_AMPER; break;
-    case '<': return TOKEN_LESS; break;
-    case '>': return TOKEN_GREATER; break;
-    case '!': return TOKEN_NEG; break;
-    case '^': return TOKEN_CIRCUMFLEX; break;
+    case '=': return TOKEN_EQUAL;       break;
+    case ',': return TOKEN_COMMA;       break;
+    case '+': return TOKEN_PLUS;        break;
+    case '-': return TOKEN_MINUS;       break;
+    case '*': return TOKEN_STAR;        break;
+    case '/': return TOKEN_SLASH;       break;
+    case '(': return TOKEN_LPAR;        break;
+    case ')': return TOKEN_RPAR;        break;
+    case '{': return TOKEN_LBRACE;      break;
+    case '}': return TOKEN_RBRACE;      break;
+    case '[': return TOKEN_LSQB;        break;
+    case ']': return TOKEN_RSQB;        break;
+    case '$': return TOKEN_DOLLAR;      break;
+    case ':': return TOKEN_COLON;       break;
+    case '&': return TOKEN_AMPER;       break;
+    case '<': return TOKEN_LESS;        break;
+    case '>': return TOKEN_GREATER;     break;
+    case '!': return TOKEN_NEG;         break;
+    case '^': return TOKEN_CIRCUMFLEX;  break;
+    case '_': return TOKEN_UNDER;       break;
     default: return -1; break;
   }
 

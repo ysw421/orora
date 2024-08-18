@@ -1,7 +1,5 @@
 #include "develop/develop_mode.h"
-#include "utilities/utils.h"
 #include "syslib/print.h"
-#include "loader/config.h"
 #include "loader/error_log.h"
 #include "server/status.h"
 #include "syslib/console_print.h"
@@ -9,7 +7,7 @@
 const char* visitor_get_function_value(AST_value_stack* new_value);
 const char* visitor_print_function_value(AST_value_stack* new_value);
 void visitor_print_function_variable(Env_variable* new_value);
-void visitor_print_function(Envs* envs, AST* ast);
+AST_value_stack* visitor_print_function(Envs* envs, AST_function* ast_function);
 const char* get_matrix_text(AST_matrix* ast_matrix);
 
 const char* visitor_get_function_value(AST_value_stack* new_value)
@@ -130,10 +128,8 @@ void visitor_print_function_variable(Env_variable* new_value)
   }
 }
 
-void visitor_print_function(Envs* envs, AST* ast)
+AST_value_stack* visitor_print_function(Envs* envs, AST_function* ast_function)
 {
-  AST_function* ast_function = ast->value.function_v;
-
   if (!strcmp(ast_function->name, "print"))
   {
     for (int i = 0; i < ast_function->args_size; i ++)
@@ -199,7 +195,7 @@ void visitor_print_function(Envs* envs, AST* ast)
       }
     }
   }
-  return;
+  return init_ast_value_stack(AST_VALUE_NULL, (void*) 0);
 }
 
 const char* get_matrix_text(AST_matrix* ast_matrix)

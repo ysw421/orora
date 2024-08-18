@@ -10,6 +10,6 @@
 
 const char* visitor_print_function_value(AST_value_stack* new_value);
 void visitor_print_function_variable(Env_variable* new_value);
-void visitor_print_function(Envs* envs, AST* ast);
+AST_value_stack* visitor_print_function(Envs* envs, AST_function* ast_function);
 
 #endif

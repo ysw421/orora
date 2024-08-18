@@ -29,6 +29,7 @@ CFILES_UTILITIES =	src/utilities/utils.c
 
 CFILES_SYSLIB 	=		src/syslib/print.c
 CFILES_SYSLIB		+=	src/syslib/console_print.c
+CFILES_SYSLIB		+=	src/syslib/sysfunc.c
 
 CFILES_OS		=	src/os/os.c
 

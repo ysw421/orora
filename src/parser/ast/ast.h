@@ -165,6 +165,7 @@ typedef struct ast_value_stack_t
     AST_VALUE_CODE,
     AST_VALUE_CIRCUMFLEX,
     AST_VALUE_MOD,
+    AST_VALUE_UNDER,
     AST_VALUE_NULL
   } type;
 

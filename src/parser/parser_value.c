@@ -798,6 +798,7 @@ bool is_operator(int token_id)
     case TOKEN_NEG:
     case TOKEN_CIRCUMFLEX:
     case TOKEN_MOD:
+    case TOKEN_UNDER:
       return true;
   }
 
@@ -836,6 +837,7 @@ int get_ast_value_type(int token_id)
     case TOKEN_NEG:                 return AST_VALUE_NEG;
     case TOKEN_CIRCUMFLEX:          return AST_VALUE_CIRCUMFLEX;
     case TOKEN_MOD:                 return AST_VALUE_MOD;
+    case TOKEN_UNDER:               return AST_VALUE_UNDER;
   }
 
   return -1;
@@ -861,6 +863,8 @@ int get_token_type(int ast_value_id)
     case AST_VALUE_NEG:             return TOKEN_NEG;
     case AST_VALUE_CIRCUMFLEX:      return TOKEN_CIRCUMFLEX;
     case AST_VALUE_MOD:             return TOKEN_MOD;
+    case AST_VALUE_UNDER:           return TOKEN_UNDER;
+
   }
 
   return -1;

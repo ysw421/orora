@@ -8,9 +8,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "syslib/print.h"
-
-void visitor_print_function(Envs* envs, AST* ast);
+#include "syslib/sysfunc.h"
 
 GET_VISITOR_ENV* init_get_visitor_env();
 orora_value_type* get_single_value_type(int ast_type);
@@ -131,14 +129,16 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
       break;
 
     case AST_FUNCTION:
-      if (!strcmp(ast->value.function_v->name, "print"))
+      AST_value_stack* output = check_sysfunc(envs, ast->value.function_v);
+
+      if (output)
       {
-        visitor_print_function(envs, ast);
-        get_visitor_env->output = init_ast_value_stack(AST_VALUE_NULL, (void*) 0);
+        get_visitor_env->output = output;
         break;
       }
       else
       {
+        free(output);
         AST_function* ast_function = ast->value.function_v;
         switch (ast_function->ast_type)
         {
@@ -534,14 +534,15 @@ AST_value_stack* visitor_get_value_from_function
     visitor_get_function(envs, ast_function);
   if (!env_function)
   {
-    if (!strcmp(ast_function->name, "print"))
+    AST_value_stack* result = check_sysfunc(envs, ast_function);
+
+    if (result)
+      return result;
+    else
     {
-      AST* ast = init_ast(AST_FUNCTION, (void*) 0, (void*) 0);
-      ast->value.function_v = ast_function;
-      visitor_print_function(envs, ast);
-      return init_ast_value_stack(AST_VALUE_NULL, (void*) 0);
+      free(result);
+      visitor_nondefine_function_error(ast_function);
     }
-    visitor_nondefine_function_error(ast_function);
   }
 
   Envs* new_envs =
