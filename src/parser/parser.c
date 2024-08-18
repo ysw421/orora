@@ -397,8 +397,9 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         else
         {
           free(new_satisfy_ast);
-          printf("satisfy 사용법: 'satisfy (variable name):(condition1), (condition2)\n");
-          exit(1);
+          orora_error("satisfy 사용법: 'satisfy (variable name):(condition1), (condition2)\n", parser);
+//           printf("satisfy 사용법: 'satisfy (variable name):(condition1), (condition2)\n");
+//           exit(1);
         }
         break;
 
@@ -416,8 +417,9 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
           else
           {
             free(new_return_ast);
-            printf("return이 잘못됨...\n");
-            exit(1);
+            orora_error("return이 잘못됨...\n", parser);
+//             printf("return이 잘못됨...\n");
+//             exit(1);
           }
         }
         else

@@ -1,6 +1,7 @@
 #include "loader/error_log.h"
 #include "utilities/utils.h"
 #include "server/daemon.h"
+#include "syslib/console_print.h"
 #include <syslog.h>
 
 extern jmp_buf interactive_mode_buf;
@@ -129,12 +130,14 @@ const char* orora_error(const char* error_message, Parser* parser)
 //     exit(1);
 //     orora_write(error_message, ORORA_STATUS_ERROR);
 //     syslog(LOG_ERR, "Error: %s", error_message);
-    printf("%s\n", error_message);
+//     printf("%s\n", error_message);
+    console_print(error_message);
     longjmp(interactive_mode_buf, 1);
   }
   else
   {
-    printf("%s\n", error_message);
+//     printf("%s\n", error_message);
+    console_print(error_message);
     exit(1);
   }
 

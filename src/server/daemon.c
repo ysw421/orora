@@ -1,5 +1,6 @@
 #include "server/daemon.h"
 #include "utilities/utils.h"
+#include "syslib/console_print.h"
 #include <time.h>
 #include <string.h>
 #include <signal.h>
@@ -14,11 +15,6 @@
 #include <json-c/json.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-
-// #define BUFFER_SIZE 4096
-#define MAX_PAYLOAD_SIZE 4096
-#define MAX_PORT_ATTEMPTS 20
-#define MAX_RETRY 5
 
 jmp_buf interactive_mode_buf;
 volatile sig_atomic_t running = 1;
@@ -57,9 +53,20 @@ void execute_orora_code(const char* code, char* result, size_t result_size, Envs
       AST_value_stack* new_value = visitor_visit(root_envs, ast)->output;
       if (new_value)
       {
-        const char* temp_result = visitor_print_function_value(new_value);
-        strncpy(result, temp_result, result_size - 1);
-        result[result_size - 1] = '\0';
+        if (new_value->type != AST_VALUE_NULL || !(ast->type == AST_FUNCTION
+            || ast->type == AST_CODE
+            || ast->type == AST_FOR
+            || ast->type == AST_WHILE
+            || ast->type == AST_CASES
+            || (ast->type == AST_VALUE && (ast->value.value_v->stack->type == AST_VALUE_CODE)
+              )
+            )
+          )
+        {
+          const char* temp_result = visitor_print_function_value(new_value);
+          strncpy(result, temp_result, result_size - 1);
+          result[result_size - 1] = '\0';
+        }
       }
       else
       {
@@ -201,9 +208,15 @@ void send_ws_message(const char* message)
 //   return lws_callback_http_dummy(wsi, reason, user, in, len);
 // }
 
-static int callback_orora(struct lws *wsi, enum lws_callback_reasons reason,
-    void *user, void *in, size_t len)
+struct lws* wsi_global = (void*) 0;
+const char* cell_id_global = (void*) 0;
+
+
+static int callback_orora(struct lws* wsi, enum lws_callback_reasons reason,
+    void* user, void* in, size_t len)
 {
+  wsi_global = wsi;
+
   struct per_session_data__orora *pss = (struct per_session_data__orora *)user;
   char buffer[MAX_PAYLOAD_SIZE + LWS_PRE];
   int n;
@@ -237,45 +250,64 @@ static int callback_orora(struct lws *wsi, enum lws_callback_reasons reason,
         break;
       }
 
-      const char *type = json_object_get_string(type_obj);
-      const char *cell_id = json_object_get_string(id_obj);
-      const char *code = json_object_get_string(code_obj);
+      const char* type = json_object_get_string(type_obj);
+      const char* cell_id = json_object_get_string(id_obj);
+      cell_id_global = cell_id;
+      const char* code = json_object_get_string(code_obj);
 
       printf("Received message - Type: %s, Cell ID: %s, Code: %s\n", type, cell_id, code);
 
       if (strcmp(type, "execute") == 0)
       {
-        n = snprintf(buffer + LWS_PRE, sizeof(buffer) - LWS_PRE,
-            "{\"type\":\"execution_status\",\"id\":\"%s\",\"status\":\"running\",\"result\":\"Execution started...\"}", cell_id);
-        if (lws_write(wsi, (unsigned char*)buffer + LWS_PRE, n, LWS_WRITE_TEXT) < n)
-        {
-          printf("Error: lws_write failed (running status)\n");
-        }
-        else
-        {
-          printf("WebSocket running status sent successfully\n");
-        }
-
-        char intermediate_result[BUFFER_SIZE] = "Intermediate result...";
-        printf("Intermediate result: %s\n", intermediate_result);
-
-        n = snprintf(buffer + LWS_PRE, sizeof(buffer) - LWS_PRE,
-            "{\"type\":\"execution_status\",\"id\":\"%s\",\"status\":\"running\",\"result\":\"%s\"}", cell_id, intermediate_result);
-        if (lws_write(wsi, (unsigned char*)buffer + LWS_PRE, n, LWS_WRITE_TEXT) < n)
-        {
-          printf("Error: lws_write failed (intermediate result)\n");
-        }
-        else
-        {
-          printf("WebSocket intermediate result sent successfully\n");
-        }
+//         n = snprintf(buffer + LWS_PRE, sizeof(buffer) - LWS_PRE,
+//             "{\"type\":\"execution_status\",\"id\":\"%s\",\"status\":\"running\",\"result\":\"Execution started...\"}", cell_id);
+//         if (lws_write(wsi, (unsigned char*)buffer + LWS_PRE, n, LWS_WRITE_TEXT) < n)
+//         {
+//           printf("Error: lws_write failed (running status)\n");
+//         }
+//         else
+//         {
+//           printf("WebSocket running status sent successfully\n");
+//         }
+// 
+//         char intermediate_result[BUFFER_SIZE] = "Intermediate result...";
+//         printf("Intermediate result: %s\n", intermediate_result);
+// 
+//         n = snprintf(buffer + LWS_PRE, sizeof(buffer) - LWS_PRE,
+//             "{\"type\":\"execution_status\",\"id\":\"%s\",\"status\":\"running\",\"result\":\"%s\"}", cell_id, intermediate_result);
+// #include "syslib/console_print.h"
+//         console_print((const char*) intermediate_result);
+//         if (lws_write(wsi, (unsigned char*)buffer + LWS_PRE, n, LWS_WRITE_TEXT) < n)
+//         {
+//           printf("Error: lws_write failed (intermediate result)\n");
+//         }
+//         else
+//         {
+//           printf("WebSocket intermediate result sent successfully\n");
+//         }
+// 
+//         char final_result[BUFFER_SIZE] = {0};
+//         execute_orora_code(code, final_result, BUFFER_SIZE, root_envs);
+//         printf("Final execution result: %s\n", final_result);
+// 
+//         n = snprintf(buffer + LWS_PRE, sizeof(buffer) - LWS_PRE,
+//             "{\"type\":\"execution_status\",\"id\":\"%s\",\"status\":\"completed\",\"result\":\"%s\"}", cell_id, final_result);
+//         if (lws_write(wsi, (unsigned char*)buffer + LWS_PRE, n, LWS_WRITE_TEXT) < n)
+//         {
+//           printf("Error: lws_write failed (completed status)\n");
+//         }
+//         else
+//         {
+//           printf("WebSocket completed status sent successfully\n");
+//         }
+//       }
 
         char final_result[BUFFER_SIZE] = {0};
         execute_orora_code(code, final_result, BUFFER_SIZE, root_envs);
-        printf("Final execution result: %s\n", final_result);
+//         printf("Final execution result: %s\n", final_result);
 
         n = snprintf(buffer + LWS_PRE, sizeof(buffer) - LWS_PRE,
-            "{\"type\":\"execution_status\",\"id\":\"%s\",\"status\":\"completed\",\"result\":\"%s\"}", cell_id, final_result);
+            "{\"type\":\"execution_status\",\"id\":\"%s\",\"status\":\"completed\",\"result\":\"%s\"}", cell_id, "");
         if (lws_write(wsi, (unsigned char*)buffer + LWS_PRE, n, LWS_WRITE_TEXT) < n)
         {
           printf("Error: lws_write failed (completed status)\n");
@@ -287,6 +319,7 @@ static int callback_orora(struct lws *wsi, enum lws_callback_reasons reason,
       }
 
       json_object_put(jobj);
+      cell_id_global = (void*) 0;
       break;
 
     case LWS_CALLBACK_CLOSED:

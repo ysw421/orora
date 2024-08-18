@@ -153,8 +153,9 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
       }
       else
       {
-        printf("에러, ':=' 뒤에는 값이 와야함.");
-        exit(1);
+        orora_error("에러, ':=' 뒤에는 값이 와야함.", parser);
+//         printf("에러, ':=' 뒤에는 값이 와야함.");
+//         exit(1);
       }
       new_ast_node->value.function_v->ast_type = AST_FUNCTION_DEFINE;
       return new_ast_node;

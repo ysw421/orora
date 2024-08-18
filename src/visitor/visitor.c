@@ -297,8 +297,9 @@ bool visitor_check_satisfy(Envs* envs, Env_variable* env_variable)
 
     if (!is_true(value))
     {
-      printf("에러, satisfy 조건에 만족하지 아니함\n");
-      exit(1);
+      orora_error("에러, satisfy 조건에 만족하지 아니함\n", (void*) 0);
+//       printf("에러, satisfy 조건에 만족하지 아니함\n");
+//       exit(1);
     }
 
     value_list = value_list->next;

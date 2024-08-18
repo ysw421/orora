@@ -33,6 +33,11 @@
 #define PORT_FILE "/tmp/orora_port.txt"
 #define SOCKET_PATH "/tmp/orora_socket"
 
+// #define BUFFER_SIZE 4096
+#define MAX_PAYLOAD_SIZE 4096
+#define MAX_PORT_ATTEMPTS 20
+#define MAX_RETRY 5
+
 #define ORORA_PROMPT "orora>> "
 #define DIALOGUE "%s%s%s", ORORA_COLOR_H, ORORA_PROMPT, ORORA_COLOR_RESET
 
