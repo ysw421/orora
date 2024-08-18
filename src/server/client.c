@@ -158,14 +158,13 @@ void* internal_client_thread(void* arg)
            )
         {
           const char* result = visitor_print_function_value(new_value);
-          fprintf(stderr, "\n");
           //                     fprintf(stderr, "%s\n", result);
 
-          // Send the result via WebSocket
           char ws_message[BUFFER_SIZE];
           snprintf(ws_message, BUFFER_SIZE, "{\"type\":\"internal_result\",\"result\":\"%s\"}", result);
           send_ws_message(ws_message);
         }
+        fprintf(stderr, "\n");
       }
     }
     free(input);
