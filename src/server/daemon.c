@@ -415,7 +415,6 @@ int create_and_bind_socket()
       port ++;
       continue;
     }
-    printf("Orora daemon started on port %d\n", port);
     return 0;
   }
   printf("Failed to open port");
