@@ -1180,11 +1180,11 @@ Envs* visitor_get_envs_from_function
 
   for (int i = 0; i < env_function->args_size; i ++)
   {
-    AST* ast = ast_function->args[i];
+    AST_variable* ast_variable =
+      env_function->args[i]->value.variable_v;
     if (i < ast_function->args_size)
     {
-      AST_variable* ast_variable =
-        env_function->args[i]->value.variable_v;
+      AST* ast = ast_function->args[i];
       Env_variable* env_variable =
         init_env_variable(ast_variable->name,
                           ast_variable->name_length);
@@ -1262,8 +1262,12 @@ Envs* visitor_get_envs_from_function
       if (env_function->args[i]
           ->value.variable_v->ast_type == AST_VARIABLE_DEFINE)
       {
-        visitor_variable_define(new_envs,
-            env_function->args[i]->value.variable_v);
+        Env_variable* env_variable =
+          init_env_variable(ast_variable->name,
+                          ast_variable->name_length);
+        
+        env_variable = visitor_variable_define(new_envs, env_function->args[i]->value.variable_v);
+        args[i] = env_variable;
       }
       else
       {
