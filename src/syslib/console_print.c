@@ -3,8 +3,6 @@
 
 void console_print(const char* text)
 {
-  fprintf(stderr, "%s", text);
-
   if (INTERACTIVE_MODE)
   {
     extern struct lws* wsi_global;
@@ -18,5 +16,13 @@ void console_print(const char* text)
       
       lws_write(wsi_global, (unsigned char*) buffer + LWS_PRE, n, LWS_WRITE_TEXT);
     }
+    else
+    {
+      fprintf(stderr, "%s", text);
+    }
+  }
+  else
+  {
+    fprintf(stderr, "%s", text);
   }
 }

@@ -21,7 +21,8 @@ CFILES_PARSER	+=	src/parser/parser_value.c
 CFILES_SERVER += src/server/daemon.c
 CFILES_SERVER += src/server/client.c
 
-CFILES_VISITOR +=	src/visitor/visitor.c
+CFILES_VISITOR =	src/visitor/visitor.c
+CFILES_VISITOR +=	src/visitor/visitor_operator.c
 
 CFILES_DEVELOP	=	src/develop/develop_mode.c
 
@@ -30,6 +31,7 @@ CFILES_UTILITIES =	src/utilities/utils.c
 CFILES_SYSLIB 	=		src/syslib/print.c
 CFILES_SYSLIB		+=	src/syslib/console_print.c
 CFILES_SYSLIB		+=	src/syslib/sysfunc.c
+CFILES_SYSLIB		+=	src/syslib/type.c
 
 CFILES_OS		=	src/os/os.c
 

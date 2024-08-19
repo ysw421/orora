@@ -1,2 +1,15 @@
+% Variables
 T := 1
 \pi := 3.14159265
+
+% Functions
+...type.to.string(value) :=  \begin{cases}
+  "int"     & value = 1 \\
+  "float"   & value = 2 \\
+  "string"  & value = 3 \\
+  "bool"    & value = 4 \\
+  "matrix"  & value = 5 \\
+  "null"    & value = 6 \\
+\end{cases}
+
+type(value) := print(...type.to.string(...type(value)))

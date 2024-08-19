@@ -130,38 +130,36 @@ void visitor_print_function_variable(Env_variable* new_value)
 
 AST_value_stack* visitor_print_function(Envs* envs, AST_function* ast_function)
 {
-  if (!strcmp(ast_function->name, "print"))
+  for (int i = 0; i < ast_function->args_size; i ++)
   {
-    for (int i = 0; i < ast_function->args_size; i ++)
+    AST* ast_function_arg = ast_function->args[i];
+    AST_value_stack* new_value;
+    switch (ast_function_arg->type)
     {
-      AST* ast_function_arg = ast_function->args[i];
-      AST_value_stack* new_value;
-      switch (ast_function_arg->type)
-      {
-        case AST_VALUE:
-          AST_value* ast_function_arg_value =
-            ast_function_arg->value.value_v;
-          new_value =
-            visitor_get_value(envs, ast_function_arg_value);
-          visitor_print_function_value(new_value);
-          break;
+      case AST_VALUE:
+        AST_value* ast_function_arg_value =
+          ast_function_arg->value.value_v;
+        new_value =
+          visitor_get_value(envs, ast_function_arg_value);
+        visitor_print_function_value(new_value);
+        break;
 
-        case AST_VARIABLE:
-          AST_variable* ast_function_arg_variable =
-            ast_function_arg->value.variable_v;
-          Env_variable* variable =
-            visitor_get_variable(envs, ast_function_arg_variable);
-          if (!variable)
-          {
-            visitor_nondefine_variable_error(ast_function_arg_variable);
-          }
+      case AST_VARIABLE:
+        AST_variable* ast_function_arg_variable =
+          ast_function_arg->value.variable_v;
+        Env_variable* variable =
+          visitor_get_variable(envs, ast_function_arg_variable);
+        if (!variable)
+        {
+          visitor_nondefine_variable_error(ast_function_arg_variable);
+        }
 
-          visitor_print_function_variable(variable);
-          break;
+        visitor_print_function_variable(variable);
+        break;
 
-        case AST_FUNCTION:
-          AST_function* ast_function_arg_function =
-            ast_function_arg->value.function_v;
+      case AST_FUNCTION:
+        AST_function* ast_function_arg_function =
+          ast_function_arg->value.function_v;
 //           Env_function* function =
 //             visitor_get_function(envs, ast_function_arg_function);
 //           if (!function)
@@ -169,30 +167,29 @@ AST_value_stack* visitor_print_function(Envs* envs, AST_function* ast_function)
 //             visitor_nondefine_function_error(ast_function_arg_function);
 //           }
 
-          new_value =
-            visitor_get_value_from_function(envs, 
-                ast_function_arg_function);
+        new_value =
+          visitor_get_value_from_function(envs, 
+              ast_function_arg_function);
 
-          visitor_print_function_value(new_value);
-          break;
+        visitor_print_function_value(new_value);
+        break;
 
-        case AST_CODE:
-        case AST_CASES:
-          new_value = 
-            visitor_get_value_from_ast(
-                envs, 
-                ast_function_arg
-              );
+      case AST_CODE:
+      case AST_CASES:
+        new_value = 
+          visitor_get_value_from_ast(
+              envs, 
+              ast_function_arg
+            );
 
-          visitor_print_function_value(new_value);
-          break;
+        visitor_print_function_value(new_value);
+        break;
 
-        default:
-          orora_error("에러, 정의되지 않은 출력", (void*) 0);
+      default:
+        orora_error("에러, 정의되지 않은 출력", (void*) 0);
 //           printf("에러, 정의되지 않은 출력\n");
 //           exit(1);
-          break;
-      }
+        break;
     }
   }
   return init_ast_value_stack(AST_VALUE_NULL, (void*) 0);

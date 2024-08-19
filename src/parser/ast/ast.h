@@ -143,6 +143,7 @@ typedef struct ast_value_stack_t
     AST_VALUE_STRING,
     AST_VALUE_BOOL,
     AST_VALUE_MATRIX,
+    AST_VALUE_NULL,
     AST_VALUE_PLUS,
     AST_VALUE_MINUS,
     AST_VALUE_PRODUCT,
@@ -165,8 +166,7 @@ typedef struct ast_value_stack_t
     AST_VALUE_CODE,
     AST_VALUE_CIRCUMFLEX,
     AST_VALUE_MOD,
-    AST_VALUE_UNDER,
-    AST_VALUE_NULL
+    AST_VALUE_UNDER
   } type;
 
   union
