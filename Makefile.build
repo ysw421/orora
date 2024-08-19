@@ -32,6 +32,8 @@ CFILES_SYSLIB 	=		src/syslib/print.c
 CFILES_SYSLIB		+=	src/syslib/console_print.c
 CFILES_SYSLIB		+=	src/syslib/sysfunc.c
 CFILES_SYSLIB		+=	src/syslib/type.c
+CFILES_SYSLIB		+=	src/syslib/random.c
+CFILES_SYSLIB		+=	src/syslib/input.c
 
 CFILES_OS		=	src/os/os.c
 

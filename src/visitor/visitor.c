@@ -60,6 +60,9 @@ AST_value_stack* visitor_operator_power(AST_value_stack* result,
 AST_value_stack* visitor_operator_mod(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
+AST_value_stack* visitor_operator_comma(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2);
 
 AST_value_stack* get_variable_from_Env_variable
 (Envs* envs, AST_value_stack* ast);
@@ -1048,6 +1051,10 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
 
         case AST_VALUE_GREATER:
           result = visitor_operator_greater(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_COMMA:
+          result = visitor_operator_comma(result, operand1, operand2);
           break;
 
         case AST_VALUE_LESSEQUAL:

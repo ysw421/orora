@@ -732,41 +732,45 @@ int parser_precedence(int ast_stack_id)
       return 1;
       break;
 
+    case AST_VALUE_COMMA:         // ,
+      return 2;
+      break;
+
     case AST_VALUE_OR:            // ||
     case AST_VALUE_AND:           // &&
-      return 2;
+      return 3;
       break;
 
     case AST_VALUE_EQUAL:         // =
     case AST_VALUE_NOTEQUAL:      // !=
-      return 3;
+      return 4;
       break;
 
     case AST_VALUE_LESS:          // <
     case AST_VALUE_GREATER:       // >
     case AST_VALUE_LESSEQUAL:     // <=
     case AST_VALUE_GREATEREQUAL:  // >=
-      return 4;
+      return 5;
       break;
 
     case AST_VALUE_PLUS:          // +
     case AST_VALUE_MINUS:         // -
-      return 5;
+      return 6;
       break;
 
     case AST_VALUE_DOT_PRODUCT:   // \cdot
     case AST_VALUE_PRODUCT:       // *, \times
     case AST_VALUE_DIV:          // /, \div
     case AST_VALUE_MOD:          // \mod
-      return 6;
-      break;
-
-    case AST_VALUE_CIRCUMFLEX:    // ^
       return 7;
       break;
 
-    case AST_VALUE_NEG:           // !, \neg
+    case AST_VALUE_CIRCUMFLEX:    // ^
       return 8;
+      break;
+
+    case AST_VALUE_NEG:           // !, \neg
+      return 9;
       break;
 
     case AST_VALUE_RPAR:          // )
@@ -799,6 +803,7 @@ bool is_operator(int token_id)
     case TOKEN_CIRCUMFLEX:
     case TOKEN_MOD:
     case TOKEN_UNDER:
+    case TOKEN_COMMA:
       return true;
   }
 
@@ -838,6 +843,7 @@ int get_ast_value_type(int token_id)
     case TOKEN_CIRCUMFLEX:          return AST_VALUE_CIRCUMFLEX;
     case TOKEN_MOD:                 return AST_VALUE_MOD;
     case TOKEN_UNDER:               return AST_VALUE_UNDER;
+    case TOKEN_COMMA:               return AST_VALUE_COMMA;
   }
 
   return -1;
@@ -864,7 +870,7 @@ int get_token_type(int ast_value_id)
     case AST_VALUE_CIRCUMFLEX:      return TOKEN_CIRCUMFLEX;
     case AST_VALUE_MOD:             return TOKEN_MOD;
     case AST_VALUE_UNDER:           return TOKEN_UNDER;
-
+    case AST_VALUE_COMMA:           return TOKEN_COMMA;
   }
 
   return -1;

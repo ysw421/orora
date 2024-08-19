@@ -12,6 +12,7 @@ struct operation_t {
   operator_t opt;
 };
 
+// Operator
 AST_value_stack* visitor_operator_plus(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* visitor_operator_minus(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* visitor_operator_product(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
@@ -21,6 +22,7 @@ AST_value_stack* visitor_operator_power(AST_value_stack* result, AST_value_stack
 AST_value_stack* visitor_operator_equal(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* visitor_operator_less(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* visitor_operator_greater(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+AST_value_stack* visitor_operator_comma(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 
 
 // Plus
@@ -116,6 +118,12 @@ AST_value_stack* operator_greater_float_float(AST_value_stack* result, AST_value
 AST_value_stack* operator_greater_float_bool(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* operator_greater_bool_float(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* operator_greater_bool_bool(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+
+// Comma
+AST_value_stack* operator_comma_v_v(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+AST_value_stack* operator_comma_v_m(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+AST_value_stack* operator_comma_m_v(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+AST_value_stack* operator_comma_m_m(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 
 AST_value_stack* visitor_operator(AST_value_stack* result,
     AST_value_stack* operand1,
@@ -355,6 +363,52 @@ AST_value_stack* visitor_operator_greater(AST_value_stack* result,
   };
 
   return visitor_operator(result, operand1, operand2, greater_op, sizeof(greater_op)/sizeof(struct operation_t));
+}
+
+AST_value_stack* visitor_operator_comma(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  struct operation_t comma_op[] = {
+    {AST_VALUE_INT,   AST_VALUE_INT,    operator_comma_v_v},
+    {AST_VALUE_INT,   AST_VALUE_FLOAT,  operator_comma_v_v},
+    {AST_VALUE_INT,   AST_VALUE_STRING, operator_comma_v_v},
+    {AST_VALUE_INT,   AST_VALUE_BOOL,   operator_comma_v_v},
+    {AST_VALUE_INT,   AST_VALUE_MATRIX, operator_comma_v_m},
+    {AST_VALUE_INT,   AST_VALUE_NULL,   operator_comma_v_v},
+    {AST_VALUE_FLOAT, AST_VALUE_INT,    operator_comma_v_v},
+    {AST_VALUE_FLOAT, AST_VALUE_FLOAT,  operator_comma_v_v},
+    {AST_VALUE_FLOAT, AST_VALUE_STRING, operator_comma_v_v},
+    {AST_VALUE_FLOAT, AST_VALUE_BOOL,   operator_comma_v_v},
+    {AST_VALUE_FLOAT, AST_VALUE_MATRIX, operator_comma_v_m},
+    {AST_VALUE_FLOAT, AST_VALUE_NULL,   operator_comma_v_v},
+    {AST_VALUE_STRING,AST_VALUE_INT,    operator_comma_v_v},
+    {AST_VALUE_STRING,AST_VALUE_FLOAT,  operator_comma_v_v},
+    {AST_VALUE_STRING,AST_VALUE_STRING, operator_comma_v_v},
+    {AST_VALUE_STRING,AST_VALUE_BOOL,   operator_comma_v_v},
+    {AST_VALUE_STRING,AST_VALUE_MATRIX, operator_comma_v_m},
+    {AST_VALUE_STRING,AST_VALUE_NULL,   operator_comma_v_v},
+    {AST_VALUE_BOOL,  AST_VALUE_INT,    operator_comma_v_v},
+    {AST_VALUE_BOOL,  AST_VALUE_FLOAT,  operator_comma_v_v},
+    {AST_VALUE_BOOL,  AST_VALUE_STRING, operator_comma_v_v},
+    {AST_VALUE_BOOL,  AST_VALUE_BOOL,   operator_comma_v_v},
+    {AST_VALUE_BOOL,  AST_VALUE_MATRIX, operator_comma_v_m},
+    {AST_VALUE_BOOL,  AST_VALUE_NULL,   operator_comma_v_v},
+    {AST_VALUE_MATRIX,AST_VALUE_INT,    operator_comma_m_v},
+    {AST_VALUE_MATRIX,AST_VALUE_FLOAT,  operator_comma_m_v},
+    {AST_VALUE_MATRIX,AST_VALUE_STRING, operator_comma_m_v},
+    {AST_VALUE_MATRIX,AST_VALUE_BOOL,   operator_comma_m_v},
+    {AST_VALUE_MATRIX,AST_VALUE_MATRIX, operator_comma_m_m},
+    {AST_VALUE_MATRIX,AST_VALUE_NULL,   operator_comma_m_v},
+    {AST_VALUE_NULL,  AST_VALUE_INT,    operator_comma_v_v},
+    {AST_VALUE_NULL,  AST_VALUE_FLOAT,  operator_comma_v_v},
+    {AST_VALUE_NULL,  AST_VALUE_STRING, operator_comma_v_v},
+    {AST_VALUE_NULL,  AST_VALUE_BOOL,   operator_comma_v_v},
+    {AST_VALUE_NULL,  AST_VALUE_MATRIX, operator_comma_v_m},
+    {AST_VALUE_NULL,  AST_VALUE_NULL,   operator_comma_v_v}
+  };
+
+  return visitor_operator(result, operand1, operand2, comma_op, sizeof(comma_op)/sizeof(struct operation_t));
 }
 
 
@@ -1701,3 +1755,113 @@ AST_value_stack* operator_greater_bool_bool(AST_value_stack* result,
     return result;
 }
 
+// Comma
+AST_value_stack* operator_comma_v_v(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+    AST* v1 = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+    v1->value.value_v = init_ast_value();
+    v1->value.value_v->size = 1;
+    v1->value.value_v->stack = malloc(sizeof(AST_value_stack));
+    *(v1->value.value_v->stack) = *operand1;
+    AST* v2 = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+    v2->value.value_v = init_ast_value();
+    v2->value.value_v->size = 1;
+    v2->value.value_v->stack = malloc(sizeof(AST_value_stack));
+    *(v2->value.value_v->stack) = *operand2;
+
+    result->type = AST_VALUE_MATRIX;
+    result->value.bool_v = malloc(sizeof(struct ast_matrix_t));
+    result->value.matrix_v->row_size = 1;
+    result->value.matrix_v->col_size = 2;
+    result->value.matrix_v->value = malloc(2 * sizeof(struct ast_t));
+    result->value.matrix_v->value[0] = v1;
+    result->value.matrix_v->value[1] = v2;
+    return result;
+}
+
+AST_value_stack* operator_comma_v_m(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  if (operand2->value.matrix_v->row_size != 1) {
+    orora_error("에러, 행렬의 행 크기는 1이어야 함", (void*) 0);
+    return (void*) 0;
+  }
+
+  AST* v1 = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+  v1->value.value_v = init_ast_value();
+  v1->value.value_v->size = 1;
+  v1->value.value_v->stack = malloc(sizeof(AST_value_stack));
+  *(v1->value.value_v->stack) = *operand1;
+
+  result->type = AST_VALUE_MATRIX;
+  result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+  result->value.matrix_v->row_size = 1;
+  result->value.matrix_v->col_size = operand2->value.matrix_v->col_size + 1;
+  result->value.matrix_v->value = malloc(result->value.matrix_v->col_size * sizeof(struct ast_t));
+  result->value.matrix_v->value[0] = v1;
+
+  for (int i = 0; i < operand2->value.matrix_v->col_size; i++) {
+    result->value.matrix_v->value[i + 1] = operand2->value.matrix_v->value[i];
+  }
+
+  return result;
+}
+
+AST_value_stack* operator_comma_m_v(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  if (operand1->value.matrix_v->row_size != 1) {
+    orora_error("에러, 행렬의 행 크기는 1이어야 함", (void*) 0);
+    return (void*) 0;
+  }
+
+  AST* v2 = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+  v2->value.value_v = init_ast_value();
+  v2->value.value_v->size = 1;
+  v2->value.value_v->stack = malloc(sizeof(AST_value_stack));
+  *(v2->value.value_v->stack) = *operand2;
+
+  result->type = AST_VALUE_MATRIX;
+  result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+  result->value.matrix_v->row_size = 1;
+  result->value.matrix_v->col_size = operand1->value.matrix_v->col_size + 1;
+  result->value.matrix_v->value = malloc(result->value.matrix_v->col_size * sizeof(struct ast_t));
+  result->value.matrix_v->value[0] = v2;
+
+  for (int i = 0; i < operand1->value.matrix_v->col_size; i++) {
+    result->value.matrix_v->value[i + 1] = operand1->value.matrix_v->value[i];
+  }
+
+  return result;
+}
+
+AST_value_stack* operator_comma_m_m(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  if (operand1->value.matrix_v->row_size != operand2->value.matrix_v->row_size) {
+    orora_error("에러, 행렬의 행 크기가 같아야 함", (void*) 0);
+    return (void*) 0;
+  }
+
+  result->type = AST_VALUE_MATRIX;
+  result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+  result->value.matrix_v->row_size = operand1->value.matrix_v->row_size;
+  result->value.matrix_v->col_size = operand1->value.matrix_v->col_size + operand2->value.matrix_v->col_size;
+  result->value.matrix_v->value = malloc(result->value.matrix_v->row_size * result->value.matrix_v->col_size * sizeof(struct ast_t));
+
+  for (int i = 0; i < operand1->value.matrix_v->row_size; i++) {
+    for (int j = 0; j < operand1->value.matrix_v->col_size; j++) {
+      result->value.matrix_v->value[i * result->value.matrix_v->col_size + j] = operand1->value.matrix_v->value[i * operand1->value.matrix_v->col_size + j];
+    }
+    for (int j = 0; j < operand2->value.matrix_v->col_size; j++) {
+      result->value.matrix_v->value[i * result->value.matrix_v->col_size + operand1->value.matrix_v->col_size + j] = operand2->value.matrix_v->value[i * operand2->value.matrix_v->col_size + j];
+    }
+  }
+
+  return result;
+}

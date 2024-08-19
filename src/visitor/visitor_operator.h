@@ -15,5 +15,6 @@ AST_value_stack* visitor_operator_power(AST_value_stack* result, AST_value_stack
 AST_value_stack* visitor_operator_equal(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* visitor_operator_less(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* visitor_operator_greater(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+AST_value_stack* visitor_operator_comma(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 
 #endif
