@@ -94,6 +94,10 @@ void print_value(AST* ast)
       case AST_VALUE_COMMA:
         fprintf(stderr, "\t->,\n");
         break;
+      case AST_VALUE_UNDER:
+        fprintf(stderr, "\t->_\n");
+        break;
+
       default:
         fprintf(stderr, "\t->unkwon type: %d\n", stack->type);
         break;

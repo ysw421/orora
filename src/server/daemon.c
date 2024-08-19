@@ -37,6 +37,53 @@ void* internal_client_thread(void* arg);
 int create_and_bind_socket();
 void run_client(int port);
 
+char* preprocess_latex_json(const char* input) {
+    if (input == NULL) return NULL;
+
+    size_t input_len = strlen(input);
+    char* output = malloc(input_len * 2 + 1);  // 최악의 경우를 고려한 메모리 할당
+    if (output == NULL) return NULL;
+
+    size_t j = 0;
+    int in_latex = 0;
+    for (size_t i = 0; i < input_len; i++) {
+        if (input[i] == '$') {
+            in_latex = !in_latex;  // LaTeX 영역 시작/끝 토글
+        }
+        
+        if (in_latex && input[i] == '\\') {
+            output[j++] = '\\';
+            output[j++] = '\\';
+        } else if (input[i] == '"') {
+            output[j++] = '\\';
+            output[j++] = '"';
+        } else if (input[i] == '\r') {
+            output[j++] = '\\';
+            output[j++] = 'r';
+        } else if (input[i] == '\n') {
+            output[j++] = '\\';
+            output[j++] = 'n';
+        } else {
+            output[j++] = input[i];
+        }
+    }
+    output[j] = '\0';
+
+    return output;
+}
+
+json_object* parse_websocket_message(const char* message) {
+    json_object* json = json_tokener_parse(message);
+    if (json == NULL) {
+        char* preprocessed_message = preprocess_latex_json(message);
+        if (preprocessed_message) {
+            json = json_tokener_parse(preprocessed_message);
+            free(preprocessed_message);
+        }
+    }
+    return json;
+}
+
 void execute_orora_code(const char* code, char* result, size_t result_size, Envs* root_envs)
 {
   off_t len = strlen(code);
@@ -233,7 +280,7 @@ static int callback_orora(struct lws* wsi, enum lws_callback_reasons reason,
       if (len > MAX_PAYLOAD_SIZE)
         break;
 
-      json_object *jobj = json_tokener_parse((char *)in);
+      json_object *jobj = parse_websocket_message((const char*) in);
       if (jobj == (void*) 0)
       {
         printf("Failed to parse JSON\n");

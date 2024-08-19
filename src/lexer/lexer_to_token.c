@@ -66,6 +66,7 @@ int get_special_string_type(int length, char* string)
       if (!strcmp(string, "\\leqq")) return TOKEN_LESSEQUAL;
       if (!strcmp(string, "\\geqq")) return TOKEN_GREATEREQUAL;
       if (!strcmp(string, "\\land")) return TOKEN_AND;
+      if (!strcmp(string, "\\over")) return TOKEN_SLASH;
       break;
 
     case 4:

@@ -63,6 +63,10 @@ AST_value_stack* visitor_operator_mod(AST_value_stack* result,
 AST_value_stack* visitor_operator_comma(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
+AST_value_stack* visitor_operator_under(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2,
+    Envs* envs);
 
 AST_value_stack* get_variable_from_Env_variable
 (Envs* envs, AST_value_stack* ast);
@@ -1056,6 +1060,9 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
         case AST_VALUE_COMMA:
           result = visitor_operator_comma(result, operand1, operand2);
           break;
+        case AST_VALUE_UNDER:
+          result = visitor_operator_under(result, operand1, operand2, envs);
+          break;
 
         case AST_VALUE_LESSEQUAL:
           result->type = AST_VALUE_BOOL;
@@ -1749,4 +1756,128 @@ GET_VISITOR_ENV* visitor_run_cases(Envs* envs, AST_cases* ast_cases)
   free(new_envs);
 
   return get_visitor_env;
+}
+
+AST_value_stack* visitor_operator_under_int(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2,
+    Envs* envs)
+{
+  int index = operand2->value.int_v->value;
+
+  if (index <= 0 || index > operand1->value.matrix_v->col_size)
+  {
+    orora_error("에러, 범위를 넘어감", (void*) 0);
+  }
+
+  if (operand1->value.matrix_v->row_size == 1)
+  {
+    return visitor_get_value_from_ast(envs, operand1->value.matrix_v->value[index - 1]);
+  }
+  else
+  {
+    result->type = AST_VALUE_MATRIX;
+    result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+    result->value.matrix_v->row_size = operand1->value.matrix_v->row_size;
+    result->value.matrix_v->col_size = 1;
+    
+    result->value.matrix_v->value = malloc(result->value.matrix_v->row_size * sizeof(struct ast_t));
+
+    for (int i = 0; i < operand1->value.matrix_v->row_size; i++)
+    {
+      result->value.matrix_v->value[i] = operand1->value.matrix_v->value[(index - 1)*operand1->value.matrix_v->row_size + i];
+    }
+
+    return result;
+  }
+}
+
+AST_value_stack* visitor_operator_under(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2,
+    Envs* envs)
+{
+  if (operand1->type != AST_VALUE_MATRIX)
+  {
+    orora_error("에러, 행렬에 대하여만 _연산이 가능함.", (void*) 0);
+  }
+  else if (operand2->type != AST_VALUE_MATRIX && operand2->type != AST_VALUE_INT)
+  {
+    orora_error("에러, 정의되지 않은 연산", (void*) 0);
+  }
+
+  if (operand2->type == AST_VALUE_INT)
+  {
+    return visitor_operator_under_int(result, operand1, operand2, envs);
+  }
+  else
+  {
+    int col = operand2->value.matrix_v->col_size;
+    int row = operand2->value.matrix_v->row_size;
+    if (col == 1 && row == 1)
+    {
+      if (visitor_get_value_from_ast(envs, operand2->value.matrix_v->value[0])->type == AST_VALUE_INT)
+      {
+        return visitor_operator_under_int(result, operand1, operand2, envs);
+      }
+      orora_error("에러, index가 (2 * 1)행렬이 아님", (void*) 0);
+    }
+    if (col != 2)
+    {
+      orora_error("에러, index가 (2 * 1)행렬이 아님", (void*) 0);
+    }
+
+    if (row == 1)
+    {
+      AST* ast_w = operand2->value.matrix_v->value[0];
+      AST* ast_h = operand2->value.matrix_v->value[1];
+      AST_value_stack* stack_w = visitor_get_value_from_ast(envs, ast_w);
+      AST_value_stack* stack_h = visitor_get_value_from_ast(envs, ast_h);
+      if (stack_w->type != AST_VALUE_INT || stack_h->type != AST_VALUE_INT)
+      {
+        orora_error("에러, 정의되지 않은 연산", (void*) 0);
+      }
+      int w = stack_w->value.int_v->value;
+      int h = stack_h->value.int_v->value;
+      if (w <= 0 || w > operand1->value.matrix_v->col_size
+          || h <= 0 || h > operand1->value.matrix_v->row_size)
+      {
+        orora_error("에러, 범위를 넘어감", (void*) 0);
+      }
+
+      return visitor_get_value_from_ast(envs, operand1->value.matrix_v->value[(w - 1)*operand1->value.matrix_v->row_size + h - 1]);
+    }
+    else
+    {
+      result->type = AST_VALUE_MATRIX;
+      result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+      result->value.matrix_v->row_size = 1;
+      result->value.matrix_v->col_size = row;
+      
+      result->value.matrix_v->value = malloc(row * sizeof(struct ast_t));
+      for (int i = 0; i < row; i++)
+      {
+        AST* ast_w = operand2->value.matrix_v->value[i];
+        AST* ast_h = operand2->value.matrix_v->value[i + row];
+        AST_value_stack* stack_w = visitor_get_value_from_ast(envs, ast_w);
+        AST_value_stack* stack_h = visitor_get_value_from_ast(envs, ast_h);
+        if (stack_w->type != AST_VALUE_INT || stack_h->type != AST_VALUE_INT)
+        {
+          orora_error("에러, 정의되지 않은 연산", (void*) 0);
+        }
+        int w = stack_w->value.int_v->value;
+        int h = stack_h->value.int_v->value;
+        if (w <= 0 || w > operand1->value.matrix_v->col_size
+            || h <= 0 || h > operand1->value.matrix_v->row_size)
+        {
+          orora_error("에러, 범위를 넘어감", (void*) 0);
+        }
+        result->value.matrix_v->value[i] = operand1->value.matrix_v->value[(w - 1)*operand1->value.matrix_v->row_size + h - 1];
+      }
+    }
+
+    return result;
+  }
+
+  return (void*) 0;
 }

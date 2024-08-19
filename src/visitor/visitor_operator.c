@@ -125,6 +125,7 @@ AST_value_stack* operator_comma_v_m(AST_value_stack* result, AST_value_stack* op
 AST_value_stack* operator_comma_m_v(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* operator_comma_m_m(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 
+
 AST_value_stack* visitor_operator(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2,
@@ -412,7 +413,6 @@ AST_value_stack* visitor_operator_comma(AST_value_stack* result,
 }
 
 
-
 // Plus
 AST_value_stack* operator_plus_int_int(AST_value_stack* result,
     AST_value_stack* operand1,
@@ -599,8 +599,12 @@ AST_value_stack* operator_minus_int_float(AST_value_stack* result,
 {
     result->type = AST_VALUE_FLOAT;
     result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value =
-        operand1->value.int_v->value - operand2->value.float_v->value;
+    if (operand1->type == AST_VALUE_INT)
+        result->value.float_v->value =
+            operand1->value.int_v->value - operand2->value.float_v->value;
+    else
+      result->value.float_v->value =
+        operand1->value.float_v->value - operand2->value.int_v->value;
     return result;
 }
 
@@ -610,7 +614,11 @@ AST_value_stack* operator_minus_float_int(AST_value_stack* result,
 {
     result->type = AST_VALUE_FLOAT;
     result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value =
+    if (operand1->type == AST_VALUE_INT)
+        result->value.float_v->value =
+            operand1->value.int_v->value - operand2->value.float_v->value;
+    else
+      result->value.float_v->value =
         operand1->value.float_v->value - operand2->value.int_v->value;
     return result;
 }
@@ -621,8 +629,12 @@ AST_value_stack* operator_minus_int_bool(AST_value_stack* result,
 {
     result->type = AST_VALUE_INT;
     result->value.int_v = malloc(sizeof(struct ast_int_t));
-    result->value.int_v->value =
-        operand1->value.int_v->value - (operand2->value.bool_v->value ? 1 : 0);
+    if (operand1->type == AST_VALUE_INT)
+        result->value.int_v->value =
+            operand1->value.int_v->value - (operand2->value.bool_v->value ? 1 : 0);
+    else
+      result->value.int_v->value =
+        operand1->value.float_v->value - (operand2->value.bool_v->value ? 1 : 0);
     return result;
 }
 
@@ -632,8 +644,12 @@ AST_value_stack* operator_minus_bool_int(AST_value_stack* result,
 {
     result->type = AST_VALUE_INT;
     result->value.int_v = malloc(sizeof(struct ast_int_t));
-    result->value.int_v->value =
-        (operand1->value.bool_v->value ? 1 : 0) - operand2->value.int_v->value;
+    if (operand1->type == AST_VALUE_INT)
+        result->value.int_v->value =
+            (operand1->value.bool_v->value ? 1 : 0) - operand2->value.int_v->value;
+    else
+      result->value.int_v->value =
+        (operand1->value.bool_v->value ? 1 : 0) - operand2->value.float_v->value;
     return result;
 }
 
@@ -654,8 +670,12 @@ AST_value_stack* operator_minus_float_bool(AST_value_stack* result,
 {
     result->type = AST_VALUE_FLOAT;
     result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value =
-        operand1->value.float_v->value - (operand2->value.bool_v->value ? 1.0 : 0.0);
+    if (operand1->type == AST_VALUE_FLOAT)
+        result->value.float_v->value =
+            operand1->value.float_v->value - (operand2->value.bool_v->value ? 1.0 : 0.0);
+    else
+      result->value.float_v->value =
+        (operand1->value.bool_v->value ? 1.0 : 0.0) - operand2->value.float_v->value;
     return result;
 }
 
@@ -665,7 +685,11 @@ AST_value_stack* operator_minus_bool_float(AST_value_stack* result,
 {
     result->type = AST_VALUE_FLOAT;
     result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value =
+    if (operand1->type == AST_VALUE_FLOAT)
+        result->value.float_v->value =
+            (operand1->value.bool_v->value ? 1.0 : 0.0) - operand2->value.float_v->value;
+    else
+      result->value.float_v->value =
         (operand1->value.bool_v->value ? 1.0 : 0.0) - operand2->value.float_v->value;
     return result;
 }
@@ -801,8 +825,12 @@ AST_value_stack* operator_product_int_float(AST_value_stack* result,
 {
     result->type = AST_VALUE_FLOAT;
     result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value =
-        operand1->value.int_v->value * operand2->value.float_v->value;
+    if (operand1->type == AST_VALUE_INT)
+        result->value.float_v->value =
+            operand1->value.int_v->value * operand2->value.float_v->value;
+    else
+        result->value.float_v->value =
+            operand1->value.float_v->value * operand2->value.int_v->value;
     return result;
 }
 
@@ -812,8 +840,12 @@ AST_value_stack* operator_product_float_int(AST_value_stack* result,
 {
     result->type = AST_VALUE_FLOAT;
     result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value =
-        operand1->value.float_v->value * operand2->value.int_v->value;
+    if (operand1->type == AST_VALUE_INT)
+        result->value.float_v->value =
+            operand1->value.int_v->value * operand2->value.float_v->value;
+    else
+        result->value.float_v->value =
+            operand1->value.float_v->value * operand2->value.int_v->value;
     return result;
 }
 
@@ -823,19 +855,12 @@ AST_value_stack* operator_product_int_bool(AST_value_stack* result,
 {
     result->type = AST_VALUE_INT;
     result->value.int_v = malloc(sizeof(struct ast_int_t));
-    result->value.int_v->value =
-        operand1->value.int_v->value * (operand2->value.bool_v->value ? 1 : 0);
-    return result;
-}
-
-AST_value_stack* operator_product_bool_int(AST_value_stack* result,
-    AST_value_stack* operand1,
-    AST_value_stack* operand2)
-{
-    result->type = AST_VALUE_INT;
-    result->value.int_v = malloc(sizeof(struct ast_int_t));
-    result->value.int_v->value =
-        (operand1->value.bool_v->value ? 1 : 0) * operand2->value.int_v->value;
+    if (operand1->type == AST_VALUE_INT)
+        result->value.int_v->value =
+            operand1->value.int_v->value * (operand2->value.bool_v->value ? 1 : 0);
+    else
+        result->value.int_v->value =
+            operand1->value.float_v->value * (operand2->value.bool_v->value ? 1 : 0);
     return result;
 }
 
@@ -867,8 +892,12 @@ AST_value_stack* operator_product_bool_float(AST_value_stack* result,
 {
     result->type = AST_VALUE_FLOAT;
     result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value =
-        (operand1->value.bool_v->value ? 1.0 : 0.0) * operand2->value.float_v->value;
+    if (operand1->type == AST_VALUE_FLOAT)
+        result->value.float_v->value =
+            (operand1->value.bool_v->value ? 1.0 : 0.0) * operand2->value.float_v->value;
+    else
+        result->value.float_v->value =
+            (operand1->value.bool_v->value ? 1.0 : 0.0) * operand2->value.float_v->value;
     return result;
 }
 
@@ -1016,29 +1045,29 @@ AST_value_stack* operator_div_int_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
+  if (operand1->type == AST_VALUE_INT) 
+  {
+    if (operand2->value.float_v->value == 0.0) 
+    {
+      orora_error("에러, 0으로 나눌 수 없음", (void*) 0);
+      return (void*) 0;
+    }
+    result->type = AST_VALUE_FLOAT;
+    result->value.float_v = malloc(sizeof(struct ast_float_t));
+    result->value.float_v->value =
+      (float)operand1->value.int_v->value / operand2->value.float_v->value;
+  } else 
+  {
     if (operand2->value.float_v->value == 0.0) {
-        orora_error("에러, 0으로 나눌 수 없음", (void*) 0);
-        return (void*) 0;
+      orora_error("에러, 0으로 나눌 수 없음", (void*) 0);
+      return (void*) 0;
     }
     result->type = AST_VALUE_FLOAT;
     result->value.float_v = malloc(sizeof(struct ast_float_t));
     result->value.float_v->value =
-        (float)operand1->value.int_v->value / operand2->value.float_v->value;
-    return result;
-}
-
-AST_value_stack* operator_div_float_int(AST_value_stack* result,
-    AST_value_stack* operand1,
-    AST_value_stack* operand2)
-{
-    if (operand2->value.int_v->value == 0) {
-        orora_error("에러, 0으로 나눌 수 없음", (void*) 0);
-        return (void*) 0;
-    }
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value =
-        operand1->value.float_v->value / (float)operand2->value.int_v->value;
+      operand1->value.float_v->value / (float)operand2->value.int_v->value;
+  }
+   
     return result;
 }
 
@@ -1046,28 +1075,29 @@ AST_value_stack* operator_div_int_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    if (!operand2->value.bool_v->value) {
-        orora_error("에러, 0(false)으로 나눌 수 없음", (void*) 0);
-        return (void*) 0;
+  if (operand1->type == AST_VALUE_INT)
+  {
+    if (!operand2->value.bool_v->value) 
+    {
+      orora_error("에러, 0(false)으로 나눌 수 없음", (void*) 0);
+      return (void*) 0;
     }
     result->type = AST_VALUE_INT;
     result->value.int_v = malloc(sizeof(struct ast_int_t));
-    result->value.int_v->value = operand1->value.int_v->value;
-    return result;
-}
-
-AST_value_stack* operator_div_bool_int(AST_value_stack* result,
-    AST_value_stack* operand1,
-    AST_value_stack* operand2)
-{
-    if (operand2->value.int_v->value == 0) {
-        orora_error("에러, 0으로 나눌 수 없음", (void*) 0);
-        return (void*) 0;
+    result->value.int_v->value =
+      operand1->value.int_v->value / (operand2->value.bool_v->value ? 1 : 0);
+  } else
+  {
+    if (!operand2->value.bool_v->value) 
+    {
+      orora_error("에러, 0(false)으로 나눌 수 없음", (void*) 0);
+      return (void*) 0;
     }
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value =
-        (float)(operand1->value.bool_v->value ? 1 : 0) / operand2->value.int_v->value;
+    result->type = AST_VALUE_INT;
+    result->value.int_v = malloc(sizeof(struct ast_int_t));
+    result->value.int_v->value =
+      (operand1->value.bool_v->value ? 1 : 0) / operand2->value.int_v->value;
+  }
     return result;
 }
 
@@ -1090,28 +1120,27 @@ AST_value_stack* operator_div_float_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    if (!operand2->value.bool_v->value) {
-        orora_error("에러, 0(false)으로 나눌 수 없음", (void*) 0);
-        return (void*) 0;
+  if (operand1->type == AST_VALUE_FLOAT)
+  {
+    if (!operand2->value.bool_v->value) 
+    {
+      orora_error("에러, 0(false)으로 나눌 수 없음", (void*) 0);
+      return (void*) 0;
     }
     result->type = AST_VALUE_FLOAT;
     result->value.float_v = malloc(sizeof(struct ast_float_t));
     result->value.float_v->value = operand1->value.float_v->value;
-    return result;
-}
-
-AST_value_stack* operator_div_bool_float(AST_value_stack* result,
-    AST_value_stack* operand1,
-    AST_value_stack* operand2)
-{
-    if (operand2->value.float_v->value == 0.0) {
-        orora_error("에러, 0으로 나눌 수 없음", (void*) 0);
-        return (void*) 0;
+  } else
+  {
+    if (!operand2->value.bool_v->value) 
+    {
+      orora_error("에러, 0(false)으로 나눌 수 없음", (void*) 0);
+      return (void*) 0;
     }
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value =
-        (float)(operand1->value.bool_v->value ? 1 : 0) / operand2->value.float_v->value;
+    result->type = AST_VALUE_INT;
+    result->value.int_v = malloc(sizeof(struct ast_int_t));
+    result->value.int_v->value = operand1->value.bool_v->value ? 1 : 0;
+  }
     return result;
 }
 
@@ -1465,10 +1494,20 @@ AST_value_stack* operator_equal_int_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
+  if (operand1->type == AST_VALUE_INT)
+  {
     result->type = AST_VALUE_BOOL;
     result->value.bool_v = malloc(sizeof(struct ast_bool_t));
     result->value.bool_v->value = 
         ((float)operand1->value.int_v->value == operand2->value.float_v->value);
+  }
+  else
+  {
+    result->type = AST_VALUE_BOOL;
+    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+    result->value.bool_v->value = 
+        (operand1->value.float_v->value == (float)operand2->value.int_v->value);
+  }
     return result;
 }
 
@@ -1476,10 +1515,19 @@ AST_value_stack* operator_equal_int_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
+  if (operand1->type == AST_VALUE_INT)
+  {
     result->type = AST_VALUE_BOOL;
     result->value.bool_v = malloc(sizeof(struct ast_bool_t));
     result->value.bool_v->value = 
         (operand1->value.int_v->value == (operand2->value.bool_v->value ? 1 : 0));
+  } else
+  {
+    result->type = AST_VALUE_BOOL;
+    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+    result->value.bool_v->value = 
+        ((operand1->value.bool_v->value ? 1 : 0) == operand2->value.int_v->value);
+  }
     return result;
 }
 
@@ -1498,10 +1546,19 @@ AST_value_stack* operator_equal_float_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
+  if (operand1->type == AST_VALUE_FLOAT)
+  {
     result->type = AST_VALUE_BOOL;
     result->value.bool_v = malloc(sizeof(struct ast_bool_t));
     result->value.bool_v->value = 
         (operand1->value.float_v->value == (operand2->value.bool_v->value ? 1.0 : 0.0));
+  } else
+  {
+    result->type = AST_VALUE_BOOL;
+    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+    result->value.bool_v->value = 
+        ((operand1->value.bool_v->value ? 1.0 : 0.0) == operand2->value.float_v->value);
+  }
     return result;
 }
 
@@ -1773,8 +1830,8 @@ AST_value_stack* operator_comma_v_v(AST_value_stack* result,
 
     result->type = AST_VALUE_MATRIX;
     result->value.bool_v = malloc(sizeof(struct ast_matrix_t));
-    result->value.matrix_v->row_size = 1;
-    result->value.matrix_v->col_size = 2;
+    result->value.matrix_v->row_size = 2;
+    result->value.matrix_v->col_size = 1;
     result->value.matrix_v->value = malloc(2 * sizeof(struct ast_t));
     result->value.matrix_v->value[0] = v1;
     result->value.matrix_v->value[1] = v2;
@@ -1785,7 +1842,8 @@ AST_value_stack* operator_comma_v_m(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-  if (operand2->value.matrix_v->row_size != 1) {
+  if (operand2->value.matrix_v->col_size != 1) 
+  {
     orora_error("에러, 행렬의 행 크기는 1이어야 함", (void*) 0);
     return (void*) 0;
   }
@@ -1798,13 +1856,14 @@ AST_value_stack* operator_comma_v_m(AST_value_stack* result,
 
   result->type = AST_VALUE_MATRIX;
   result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
-  result->value.matrix_v->row_size = 1;
-  result->value.matrix_v->col_size = operand2->value.matrix_v->col_size + 1;
-  result->value.matrix_v->value = malloc(result->value.matrix_v->col_size * sizeof(struct ast_t));
+  result->value.matrix_v->row_size = operand2->value.matrix_v->row_size + 1;
+  result->value.matrix_v->col_size = 1;
+  result->value.matrix_v->value = malloc(result->value.matrix_v->row_size * sizeof(struct ast_t));
   result->value.matrix_v->value[0] = v1;
 
-  for (int i = 0; i < operand2->value.matrix_v->col_size; i++) {
-    result->value.matrix_v->value[i + 1] = operand2->value.matrix_v->value[i];
+  for (int i = 0; i < operand2->value.matrix_v->row_size; i++) 
+  {
+    result->value.matrix_v->value[i+1] = operand2->value.matrix_v->value[i];
   }
 
   return result;
@@ -1814,7 +1873,8 @@ AST_value_stack* operator_comma_m_v(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-  if (operand1->value.matrix_v->row_size != 1) {
+  if (operand1->value.matrix_v->col_size != 1)
+  {
     orora_error("에러, 행렬의 행 크기는 1이어야 함", (void*) 0);
     return (void*) 0;
   }
@@ -1827,14 +1887,15 @@ AST_value_stack* operator_comma_m_v(AST_value_stack* result,
 
   result->type = AST_VALUE_MATRIX;
   result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
-  result->value.matrix_v->row_size = 1;
-  result->value.matrix_v->col_size = operand1->value.matrix_v->col_size + 1;
-  result->value.matrix_v->value = malloc(result->value.matrix_v->col_size * sizeof(struct ast_t));
-  result->value.matrix_v->value[0] = v2;
+  result->value.matrix_v->row_size = operand1->value.matrix_v->row_size + 1;
+  result->value.matrix_v->col_size = 1;
+  result->value.matrix_v->value = malloc(result->value.matrix_v->row_size * sizeof(struct ast_t));
 
-  for (int i = 0; i < operand1->value.matrix_v->col_size; i++) {
-    result->value.matrix_v->value[i + 1] = operand1->value.matrix_v->value[i];
+  for (int i = 0; i < operand1->value.matrix_v->row_size; i++)
+  {
+    result->value.matrix_v->value[i] = operand1->value.matrix_v->value[i];
   }
+  result->value.matrix_v->value[operand1->value.matrix_v->row_size] = v2;
 
   return result;
 }
@@ -1843,23 +1904,26 @@ AST_value_stack* operator_comma_m_m(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-  if (operand1->value.matrix_v->row_size != operand2->value.matrix_v->row_size) {
+  if (operand1->value.matrix_v->col_size != operand2->value.matrix_v->col_size) {
     orora_error("에러, 행렬의 행 크기가 같아야 함", (void*) 0);
     return (void*) 0;
   }
 
   result->type = AST_VALUE_MATRIX;
   result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
-  result->value.matrix_v->row_size = operand1->value.matrix_v->row_size;
-  result->value.matrix_v->col_size = operand1->value.matrix_v->col_size + operand2->value.matrix_v->col_size;
+  result->value.matrix_v->row_size = operand1->value.matrix_v->row_size + operand2->value.matrix_v->row_size;
+  result->value.matrix_v->col_size = operand1->value.matrix_v->col_size;
   result->value.matrix_v->value = malloc(result->value.matrix_v->row_size * result->value.matrix_v->col_size * sizeof(struct ast_t));
 
-  for (int i = 0; i < operand1->value.matrix_v->row_size; i++) {
-    for (int j = 0; j < operand1->value.matrix_v->col_size; j++) {
-      result->value.matrix_v->value[i * result->value.matrix_v->col_size + j] = operand1->value.matrix_v->value[i * operand1->value.matrix_v->col_size + j];
+  for (int i = 0; i < operand1->value.matrix_v->col_size; i++) 
+  {
+    for (int j = 0; j < operand1->value.matrix_v->row_size; j++) 
+    {
+      result->value.matrix_v->value[i * result->value.matrix_v->row_size + j] = operand1->value.matrix_v->value[i * operand1->value.matrix_v->row_size + j];
     }
-    for (int j = 0; j < operand2->value.matrix_v->col_size; j++) {
-      result->value.matrix_v->value[i * result->value.matrix_v->col_size + operand1->value.matrix_v->col_size + j] = operand2->value.matrix_v->value[i * operand2->value.matrix_v->col_size + j];
+    for (int j = 0; j < operand2->value.matrix_v->row_size; j++) 
+    {
+      result->value.matrix_v->value[i * result->value.matrix_v->row_size + j + operand1->value.matrix_v->row_size] = operand2->value.matrix_v->value[i * operand2->value.matrix_v->row_size + j];
     }
   }
 

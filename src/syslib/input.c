@@ -2,12 +2,11 @@
 
 AST_value_stack* input_function(Envs* envs, AST_function* ast_function)
 {
-  if (ast_function->args_size > 1)
+  if (ast_function->args_size != 1)
   {
-    orora_error("에러, input 함수 인자는 최대 1개입니다.", (void*) 0);
+    orora_error("에러, input 함수 인자는 1개 여야함", (void*) 0);
   }
-  else if (ast_function->args_size == 1)
-    visitor_print_function(envs, ast_function);
+  visitor_print_function(envs, ast_function);
 
   char* value = malloc(500 * sizeof(char));;
 

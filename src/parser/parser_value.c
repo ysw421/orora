@@ -131,6 +131,8 @@ AST* parser_get_value
           break;
 
         default:
+          if (token->type == TOKEN_COMMA && compound_env->is_usefull_comma)
+            break;
           if (is_operator(token->type))
             token_type = TOKEN_TYPE_OPERATOR;
           break;
@@ -769,8 +771,12 @@ int parser_precedence(int ast_stack_id)
       return 8;
       break;
 
-    case AST_VALUE_NEG:           // !, \neg
+    case AST_VALUE_UNDER:         // _
       return 9;
+      break;
+
+    case AST_VALUE_NEG:           // !, \neg
+      return 10;
       break;
 
     case AST_VALUE_RPAR:          // )

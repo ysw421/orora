@@ -310,7 +310,9 @@ AST* parser_get_function
       new_env->is_size_one = true;
 //       new_env->is_allow_linebreak = true;
 //       new_env->is_in_parentheses = true;
-//       new_env->is_usefull_comma = true;
+// !!!!!!!!!
+      new_env->is_usefull_comma = true;
+// !!!!!!!!!
       AST* new_arg_ast = parser_get_compound(parser, new_env);
       token = parser->token;
 

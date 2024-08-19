@@ -16,4 +16,4 @@ type(value) := print(...type.to.string(...type(value)))
 
 random() := ...random()
 
-input(value) := ...input(value)
+input(value:="") := ...input(value)
