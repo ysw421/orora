@@ -1814,20 +1814,20 @@ AST_value_stack* visitor_operator_under(AST_value_stack* result,
   {
     int col = operand2->value.matrix_v->col_size;
     int row = operand2->value.matrix_v->row_size;
-    if (col == 1 && row == 1)
+    if (row == 1)
     {
       if (visitor_get_value_from_ast(envs, operand2->value.matrix_v->value[0])->type == AST_VALUE_INT)
       {
         return visitor_operator_under_int(result, operand1, operand2, envs);
       }
-      orora_error("에러, index가 (2 * 1)행렬이 아님", (void*) 0);
+      orora_error("에러, index가 (n, 2)행렬이 아님", (void*) 0);
     }
-    if (col != 2)
+    if (row != 2)
     {
-      orora_error("에러, index가 (2 * 1)행렬이 아님", (void*) 0);
+      orora_error("에러, index가 (n, 2)행렬이 아님", (void*) 0);
     }
 
-    if (row == 1)
+    if (col == 1)
     {
       AST* ast_w = operand2->value.matrix_v->value[0];
       AST* ast_h = operand2->value.matrix_v->value[1];
@@ -1851,14 +1851,14 @@ AST_value_stack* visitor_operator_under(AST_value_stack* result,
     {
       result->type = AST_VALUE_MATRIX;
       result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
-      result->value.matrix_v->row_size = 1;
-      result->value.matrix_v->col_size = row;
+      result->value.matrix_v->row_size = row;
+      result->value.matrix_v->col_size = 1;
       
       result->value.matrix_v->value = malloc(row * sizeof(struct ast_t));
       for (int i = 0; i < row; i++)
       {
-        AST* ast_w = operand2->value.matrix_v->value[i];
-        AST* ast_h = operand2->value.matrix_v->value[i + row];
+        AST* ast_w = operand2->value.matrix_v->value[2*i];
+        AST* ast_h = operand2->value.matrix_v->value[2*i + 1];
         AST_value_stack* stack_w = visitor_get_value_from_ast(envs, ast_w);
         AST_value_stack* stack_h = visitor_get_value_from_ast(envs, ast_h);
         if (stack_w->type != AST_VALUE_INT || stack_h->type != AST_VALUE_INT)
