@@ -29,25 +29,33 @@ libwebsockets_installed() {
     pkg-config --exists libwebsockets
 }
 
+json_c_installed() {
+    pkg-config --exists json-c
+}
+
 # Detect the package manager
 if command_exists apt-get; then
     PKG_MANAGER="apt-get"
     READLINE_PKG="libreadline-dev"
     LIBWEBSOCKETS_PKG="libwebsockets-dev"
+    JSON_C_PKG="libjson-c-dev"
 elif command_exists yum; then
     PKG_MANAGER="yum"
     READLINE_PKG="readline-devel"
     LIBWEBSOCKETS_PKG="libwebsockets-devel"
+    JSON_C_PKG="json-c-devel"
 elif command_exists pacman; then
     PKG_MANAGER="pacman"
     READLINE_PKG="readline"
     LIBWEBSOCKETS_PKG="libwebsockets"
+    JSON_C_PKG="json-c"
 elif command_exists zypper; then
     PKG_MANAGER="zypper"
     READLINE_PKG="readline-devel"
     LIBWEBSOCKETS_PKG="libwebsockets-devel"
+    JSON_C_PKG="libjson-c-devel"
 else
-    echo "Unsupported package manager. Please install readline and libwebsockets manually."
+    echo "Unsupported package manager. Please install readline, libwebsockets, and json-c manually."
     exit 1
 fi
 
@@ -99,6 +107,28 @@ else
         echo "libwebsockets development package installed successfully."
     else
         echo "Failed to install libwebsockets development package."
+        exit 1
+    fi
+fi
+
+if json_c_installed; then
+    echo "json-c development package is already installed."
+else
+    echo "json-c development package is not installed. Installing..."
+    echo "Installing json-c development package..."
+    if [ "$PKG_MANAGER" = "apt-get" ]; then
+        sudo apt-get install -y "$JSON_C_PKG"
+    elif [ "$PKG_MANAGER" = "yum" ]; then
+        sudo yum install -y "$JSON_C_PKG"
+    elif [ "$PKG_MANAGER" = "pacman" ]; then
+        sudo pacman -S --noconfirm "$JSON_C_PKG"
+    elif [ "$PKG_MANAGER" = "zypper" ]; then
+        sudo zypper install -y "$JSON_C_PKG"
+    fi
+    if json_c_installed; then
+        echo "json-c development package installed successfully."
+    else
+        echo "Failed to install json-c development package."
         exit 1
     fi
 fi

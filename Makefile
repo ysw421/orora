@@ -30,6 +30,10 @@ check_dependencies:
 		echo "libwebsockets not found. Please run './install.sh' to install dependencies."; \
 		exit 1; \
 	fi
+	@if ! pkg-config --exists json-c; then \
+		echo "json-c not found. Please run './install.sh' to install dependencies."; \
+		exit 1; \
+	fi
 
 copy_lib_files:
 	@mkdir -p $(LIBDIR)
@@ -49,6 +53,14 @@ ifeq ($(LIBWEBSOCKETS_AVAILABLE),yes)
     LDFLAGS += $(shell pkg-config --libs libwebsockets)
 else
     $(warning libwebsockets not found. Building without libwebsockets support.)
+endif
+
+JSON_C_AVAILABLE := $(shell pkg-config --exists json-c && echo yes || echo no)
+ifeq ($(JSON_C_AVAILABLE),yes)
+    CFLAGS += $(shell pkg-config --cflags json-c)
+    LDFLAGS += $(shell pkg-config --libs json-c)
+else
+    $(warning json-c not found. Building without json-c support.)
 endif
 
 $(MKBUILD_SUBDIRS):

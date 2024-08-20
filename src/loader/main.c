@@ -21,7 +21,7 @@
 #endif
 
 #define MAX_RETRY 5
-#define START_PORT 8080
+#define START_PORT 8421
 #define MAX_VERSION_LENGTH 20
 
 int ORORA_PORT;
