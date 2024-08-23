@@ -532,8 +532,65 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
       else
       {
         free(stoken);
-        ast_compound_add(ast->value.compound_v, value_node);
         token = parser->token;
+
+        bool is_used = false;
+        if (token)
+        {
+          if (token->type == TOKEN_DEFINE && value_node->value.value_v->stack->type == AST_VALUE_UNDER)
+          {
+            Token* last_token = parser->prev_token;
+            AST* index_node = value_node;
+            // matrix value definition
+            
+            parser = parser_advance(parser, TOKEN_DEFINE);
+            Token* token = parser->token;
+
+            if (!token)
+            {
+              orora_error("에러, ':=' 사용에 목적이 없음.", parser);
+            }
+
+            // Check value
+            if (parser->prev_token->col != token->col_first)
+            {
+              orora_error("에러, ':=' 뒤에는 값이 와야함.", parser);
+            }
+            value_node =
+                parser_get_value(
+                    &parser, 
+                    ast, 
+                    token, 
+                    init_get_value_env(), 
+                    compound_env
+                  );
+
+            token = parser->prev_token;
+            if (!value_node)
+            {
+              orora_error("에러, ':=' 뒤에는 값이 와야함.", parser);
+            }
+
+            AST* new_ast_node =
+              init_ast(AST_MATRIX_INDEX, ast, last_token);
+            new_ast_node->value.matrix_index_v =
+              init_ast_matrix_index();
+            new_ast_node->value.matrix_index_v->index = index_node;
+            new_ast_node->value.matrix_index_v->value = value_node;
+
+            ast_compound_add(ast->value.compound_v, new_ast_node);
+            token = parser->token;
+            
+            is_used = true;
+            break;
+          }
+
+        }
+        if (!is_used)
+        {
+          ast_compound_add(ast->value.compound_v, value_node);
+          token = parser->token;
+        }
       }
 
 //       free(value_node);
@@ -671,18 +728,15 @@ AST* parser_get_for_condition_and_code
 
   token = parser->token;
 
-  AST* new_init_ast = parser_get_condition(parser);
-  AST* new_condition_ast = parser_get_condition(parser);
-  AST* new_update_ast = parser_get_condition(parser);
+  AST* new_variable_ast = parser_get_condition(parser);
+  AST* new_range_ast = parser_get_condition(parser);
 
-  if (new_init_ast && new_condition_ast && new_update_ast)
+  if (new_variable_ast && new_range_ast)
   {
-    new_ast_node->value.for_v->init = 
-      new_init_ast->value.compound_v->items[0];
-    new_ast_node->value.for_v->condition =
-      new_condition_ast->value.compound_v->items[0];
-    new_ast_node->value.for_v->update =
-      new_update_ast->value.compound_v->items[0];
+    new_ast_node->value.for_v->variable = 
+      new_variable_ast->value.compound_v->items[0];
+    new_ast_node->value.for_v->range =
+      new_range_ast->value.compound_v->items[0];
 
     GET_COMPOUND_ENV* get_for_code_env = 
       init_get_compound_env(compound_env);

@@ -64,12 +64,21 @@ AST_for* init_ast_for()
 {
   AST_for* ast_for =
     (AST_for*) malloc(sizeof(struct ast_for_t));
-  ast_for->init = (void*) 0;
-  ast_for->condition = (void*) 0;
-  ast_for->update = (void*) 0;
+  ast_for->variable = (void*) 0;
+  ast_for->range = (void*) 0;
   ast_for->code = (void*) 0;
 
   return ast_for;
+}
+
+AST_matrix_index* init_ast_matrix_index()
+{
+  AST_matrix_index* ast_matrix_index =
+    (AST_matrix_index*) malloc(sizeof(struct ast_matrix_index_t));
+  ast_matrix_index->index = (void*) 0;
+  ast_matrix_index->value = (void*) 0;
+
+  return ast_matrix_index;
 }
 
 AST_if* init_ast_if()

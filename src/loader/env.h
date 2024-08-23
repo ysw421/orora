@@ -26,6 +26,7 @@ typedef struct env_variable_t
     struct ast_string_t* string_v;
     struct ast_bool_t* bool_v;
     struct ast_matrix_t* matrix_v;
+//     struct ast_null_t* null_v;
   } value;
 
   size_t satisfy_size;

@@ -72,6 +72,23 @@ AST_value_stack* get_variable_from_Env_variable
 (Envs* envs, AST_value_stack* ast);
 Env_variable* visitor_variable_satisfy(Envs* envs, AST_variable* ast_variable);
 
+
+
+struct AST_VALUE_STACK_INDEX_T
+{
+  AST_value_stack* value;
+  AST** index;
+  size_t index_size;
+};
+
+struct AST_VALUE_STACK_INDEX_T* visitor_operator_under_for_index(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2,
+    Envs* envs);
+
+struct AST_VALUE_STACK_INDEX_T* visitor_get_matrix_index(Envs* envs, AST_value* ast_value);
+
+
 void visitor_nondefine_variable_error(AST_variable* ast_variable);
 void visitor_nondefine_function_error(AST_function* ast_function);
 
@@ -124,6 +141,36 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
 
   switch (ast->type)
   {
+    case AST_MATRIX_INDEX:
+      AST_matrix_index* ast_matrix_index = ast->value.matrix_index_v;
+
+      struct AST_VALUE_STACK_INDEX_T* index = visitor_get_matrix_index(envs, ast_matrix_index->index->value.value_v);
+
+      size_t index_size = index->index_size;
+      if (index_size == 1)
+      {
+        index->index[0]->value.value_v->stack = visitor_get_value_from_ast(envs, ast_matrix_index->value);
+      }
+      else
+      {
+        AST_value_stack* value_ast = visitor_get_value_from_ast(envs, ast_matrix_index->value);
+        if (value_ast->type != AST_VALUE_MATRIX)
+        {
+          orora_error("에러, 대입값은 (1, n) 행렬이어야 함..", (void*) 0);
+        }
+        AST_matrix* value_matrix = value_ast->value.matrix_v;
+        if (!(value_matrix->col_size == 1 && value_matrix->row_size == index_size))
+        {
+          orora_error("에러, 대입값은 (1, n) 행렬이어야 함.", (void*) 0);
+        }
+        for (int i = 0; i < index_size; i++)
+        {
+          index->index[i]->value.value_v->stack = visitor_get_value_from_ast(envs, value_matrix->value[i]);
+        }
+      }
+
+      break;
+
     case AST_VARIABLE:
       AST_variable* ast_variable = ast->value.variable_v;
       Env_variable* env_variable = visitor_variable(envs, ast_variable);
@@ -897,6 +944,252 @@ AST_value_stack* get_deep_copy_ast_value_stack
   return new_value_stack;
 }
 
+struct AST_VALUE_STACK_INDEX_T* visitor_get_matrix_index(Envs* envs, AST_value* ast_value)
+{
+  struct AST_VALUE_STACK_INDEX_T* index_result = malloc(sizeof(struct AST_VALUE_STACK_INDEX_T));
+
+  AST_value* stack = init_ast_value();
+  AST_value_stack* text;
+  int max_cnt = ast_value->size;
+  AST_value_stack** text_array =
+    malloc(max_cnt * sizeof(AST_value_stack*));
+  AST_value_stack* p = ast_value->stack;
+  for (int i = max_cnt - 1; i >= 0; i --)
+  {
+    text_array[i] = get_deep_copy_ast_value_stack(p);
+    
+    p = p->next;
+  }
+
+  int i = 0;
+  while (i < max_cnt)
+  {
+
+    text = text_array[i];
+    i ++;
+    if (parser_precedence(text->type) == -1)
+    {
+      AST_value_stack* new_value_stack;
+      switch (text->type)
+      {
+        case AST_VALUE_VARIABLE:
+          Env_variable* env_variable =
+            visitor_get_variable(envs, text->value.variable_v);
+          if (!env_variable)
+          {
+            visitor_nondefine_variable_error(text->value.variable_v);
+          }
+
+          new_value_stack =
+            visitor_get_value_from_variable(envs, env_variable);
+          if (!strcmp(env_variable->name, "T"))
+            new_value_stack->is_T = true;
+
+          parser_push_value(stack, new_value_stack);
+          break;
+
+        case AST_VALUE_FUNCTION:
+          AST_function* ast_function = text->value.function_v;
+//           Env_function* env_function =
+//             visitor_get_function(envs, text->value.function_v);
+//           if (!env_function)
+//           {
+//             visitor_nondefine_function_error(text->value.function_v);
+//           }
+
+          new_value_stack =
+            visitor_get_value_from_function(envs, ast_function);
+
+          parser_push_value(stack, new_value_stack);
+          break;
+
+        case AST_VALUE_CASES:
+          parser_push_value(
+              stack, 
+              visitor_get_value_from_cases(envs, text->value.cases_v) 
+            );
+          break;
+
+        case AST_VALUE_CODE:
+          parser_push_value(
+              stack, 
+              visitor_get_value_from_code(envs, text->value.code_v->code) 
+            );
+          break;
+
+        case AST_VALUE_MATRIX:
+          AST_matrix* matrix_value = text->value.matrix_v;
+          for (
+               int i = 0; 
+               i < matrix_value->row_size * matrix_value->col_size;
+               i ++
+              )
+          {
+            AST* matrix_each_value = 
+              init_ast(AST_VALUE, (void*) 0, (void*) 0);
+            matrix_each_value->value.value_v = init_ast_value();
+            matrix_each_value->value.value_v->size = 1;
+            matrix_each_value->value.value_v->stack = 
+              visitor_get_value_from_ast(envs, matrix_value->value[i]);
+            free(matrix_value->value[i]);
+            matrix_value->value[i] = 
+              matrix_each_value;
+          }
+          AST_value_stack* new_matrix_value = 
+            init_ast_value_stack(AST_VALUE_MATRIX, (void*) 0);
+          new_matrix_value->value.matrix_v = matrix_value;
+          parser_push_value(stack, new_matrix_value);
+          break;
+
+        default:
+          parser_push_value(stack, text);
+          break;
+      }
+    }
+    else
+    {
+      AST_value_stack* operand1;
+      AST_value_stack* operand2;
+      operand2 = parser_pop_value(stack);
+
+      if (!is_operator_use_one_value(get_token_type(text->type))
+          || text->type == AST_VALUE_MINUS)
+      {
+        operand1 = parser_pop_value(stack);
+      }
+
+      AST_value_stack* result = malloc(sizeof(AST_value_stack));
+      switch (text->type)
+      {
+        case AST_VALUE_PLUS:
+          result = visitor_operator_plus(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_MINUS:
+          result = visitor_operator_minus(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_PRODUCT:
+          result = visitor_operator_product(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_DOT_PRODUCT:
+          result = visitor_operator_dot_product(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_DIV:
+          result = visitor_operator_div(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_MOD:
+          result = visitor_operator_mod(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_CIRCUMFLEX:
+          result = visitor_operator_power(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_EQUAL:
+          result = visitor_operator_equal(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_NOTEQUAL:
+          result = visitor_operator_equal(result, operand1, operand2);
+          result->value.bool_v->value = !result->value.bool_v->value;
+          break;
+
+        case AST_VALUE_LESS:
+          result = visitor_operator_less(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_GREATER:
+          result = visitor_operator_greater(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_COMMA:
+          result = visitor_operator_comma(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_UNDER:
+          index_result = visitor_operator_under_for_index(result, operand1, operand2, envs);
+          result = index_result->value;
+          break;
+
+        case AST_VALUE_LESSEQUAL:
+          result->type = AST_VALUE_BOOL;
+          result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+
+          result->value.bool_v->value = 
+            visitor_operator_less(result, operand1, operand2)
+              ->value.bool_v->value
+                || visitor_operator_equal(result, operand1, operand2)
+                   ->value.bool_v->value;
+          break;
+
+        case AST_VALUE_GREATEREQUAL:
+          result->type = AST_VALUE_BOOL;
+          result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+
+          result->value.bool_v->value = 
+            visitor_operator_greater(result, operand1, operand2)
+              ->value.bool_v->value
+                || visitor_operator_equal(result, operand1, operand2)
+                   ->value.bool_v->value;
+          break;
+
+        case AST_VALUE_OR:
+          result->type = AST_VALUE_BOOL;
+          result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+
+          result->value.bool_v->value = 
+            is_true(operand1) || is_true(operand2);
+          break;
+
+        case AST_VALUE_AND:
+          result->type = AST_VALUE_BOOL;
+          result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+
+          result->value.bool_v->value = 
+            is_true(operand1) && is_true(operand2);
+          break;
+
+        case AST_VALUE_NEG:
+          result->type = AST_VALUE_BOOL;
+          result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+
+          result->value.bool_v->value = !is_true(operand2);
+          break;
+
+        default:
+          printf("에러, 연산자를 추가하지 아니하였음\n");
+          exit(1);
+      }
+
+      parser_push_value(stack, result);
+//       free(text);
+//       if (!is_operator_use_one_value(get_token_type(text->type))
+//           || text->type == AST_VALUE_MINUS)
+//       {
+//         free(operand1);
+//       }
+//       free(operand2);
+    }
+  }
+
+//   if (stack->size != 1)
+//   {
+//     orora_error("에러, 연산 불가함", (void*) 0);
+// //     printf("에러, 연산 불가함\n");
+// //     exit(1);
+//   }
+
+  free(text_array);
+
+//   AST_value_stack* return_value = parser_pop_value(stack);
+  free(stack);
+  return index_result;
+}
+
 AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
 {
   AST_value* stack = init_ast_value();
@@ -1571,19 +1864,70 @@ GET_VISITOR_ENV* visitor_run_for(Envs* envs, AST_for* ast_for)
   GET_VISITOR_ENV* get_visitor_env = 
     init_get_visitor_env();
 
-  AST* init = ast_for->init;
-  AST* condition = ast_for->condition;
-  AST* update = ast_for->update;
-
   Envs* new_envs = visitor_merge_envs(envs);
-  visitor_visit(
-      new_envs,
-      init
-  );
 
-  while (is_true(visitor_get_value_from_ast(new_envs, condition)))
+  AST* variable_ast = ast_for->variable;
+  AST* range_ast = ast_for->range;
+
+  if (variable_ast->type != AST_VARIABLE)
+    orora_error("에러, 첫 argument는 변수여야 함", (void*) 0);
+
+  AST_matrix* range = malloc(sizeof(AST_matrix));
+  range = visitor_get_value_from_ast(new_envs, range_ast)->value.matrix_v;
+
+  if (range->col_size != 1)
+    orora_error("에러, 범위는 (1, n) 행렬이어야 함", (void*) 0);
+
+  Env_variable* env_variable = init_env_variable(
+      variable_ast->value.variable_v->name,
+      variable_ast->value.variable_v->name_length
+    );
+  env_variable->next = new_envs->local->variables;
+  new_envs->local->variable_size ++;
+  new_envs->local->variables = env_variable;
+
+  for (int i=0; i<range->row_size; i++)
   {
     AST* ast_tree = ast_for->code;
+
+    AST_value_stack* new_value = malloc(sizeof(AST_value_stack));
+    new_value = visitor_get_value_from_ast(new_envs, range->value[i]);
+
+    switch (new_value->type)
+    {
+      case AST_VALUE_INT:
+        env_variable->type = ENV_VARIABLE_INT;
+        env_variable->value.int_v = new_value->value.int_v;
+        break;
+
+      case AST_VALUE_FLOAT:
+        env_variable->type = ENV_VARIABLE_FLOAT;
+        env_variable->value.float_v = new_value->value.float_v;
+        break;
+
+      case AST_VALUE_STRING:
+        env_variable->type = ENV_VARIABLE_STRING;
+        env_variable->value.string_v = new_value->value.string_v;
+        break;
+
+      case AST_VALUE_BOOL:
+        env_variable->type = ENV_VARIABLE_BOOL;
+        env_variable->value.bool_v = new_value->value.bool_v;
+        break;
+
+      case AST_VALUE_MATRIX:
+        env_variable->type = ENV_VARIABLE_MATRIX;
+        env_variable->value.matrix_v = new_value->value.matrix_v;
+        break;
+
+      case AST_VALUE_NULL:
+        env_variable->type = ENV_VARIABLE_NULL;
+//         env_variable->value.null_v = (void*) 0;
+        break;
+
+      default:
+        orora_error("에러, 변수의 타입이 없음", (void*) 0);
+    }
 
     bool is_break = false;
     for (int i = 0; i < ast_tree->value.compound_v->size; i ++)
@@ -1643,11 +1987,6 @@ GET_VISITOR_ENV* visitor_run_for(Envs* envs, AST_for* ast_for)
         break;
       }
     }
-
-    visitor_visit(
-        new_envs,
-        update
-    );
 
     if (is_break)
       break;
@@ -1877,6 +2216,161 @@ AST_value_stack* visitor_operator_under(AST_value_stack* result,
     }
 
     return result;
+  }
+
+  return (void*) 0;
+}
+
+
+struct AST_VALUE_STACK_INDEX_T* visitor_operator_under_for_index_int(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2,
+    Envs* envs)
+{
+  int index = operand2->value.int_v->value;
+
+  if (index <= 0 || index > operand1->value.matrix_v->col_size)
+  {
+    orora_error("에러, 범위를 넘어감", (void*) 0);
+  }
+
+  if (operand1->value.matrix_v->row_size == 1)
+  {
+    struct AST_VALUE_STACK_INDEX_T* return_result = malloc(sizeof(struct AST_VALUE_STACK_INDEX_T));
+    return_result->value = visitor_get_value_from_ast(envs, operand1->value.matrix_v->value[index - 1]);
+    return_result->index_size = 1;
+    return_result->index = malloc(sizeof(struct ast_t));
+    return_result->index[0] = operand1->value.matrix_v->value[index - 1];
+
+    return return_result;
+  }
+  else
+  {
+    result->type = AST_VALUE_MATRIX;
+    result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+    result->value.matrix_v->row_size = operand1->value.matrix_v->row_size;
+    result->value.matrix_v->col_size = 1;
+    
+    result->value.matrix_v->value = malloc(result->value.matrix_v->row_size * sizeof(struct ast_t));
+
+    for (int i = 0; i < operand1->value.matrix_v->row_size; i++)
+    {
+      result->value.matrix_v->value[i] = operand1->value.matrix_v->value[(index - 1)*operand1->value.matrix_v->row_size + i];
+    }
+
+    struct AST_VALUE_STACK_INDEX_T* return_result = malloc(sizeof(struct AST_VALUE_STACK_INDEX_T));
+    return_result->value = result;
+    return_result->index_size = operand1->value.matrix_v->row_size;
+    return_result->index = malloc(operand1->value.matrix_v->row_size * sizeof(struct ast_t));
+    for (int i = 0; i < operand1->value.matrix_v->row_size; i++)
+    {
+      return_result->index[i] = operand1->value.matrix_v->value[(index - 1)*operand1->value.matrix_v->row_size + i];
+    }
+
+    return return_result;
+  }
+}
+
+struct AST_VALUE_STACK_INDEX_T* visitor_operator_under_for_index(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2,
+    Envs* envs)
+{
+  if (operand1->type != AST_VALUE_MATRIX)
+  {
+    orora_error("에러, 행렬에 대하여만 _연산이 가능함.", (void*) 0);
+  }
+  else if (operand2->type != AST_VALUE_MATRIX && operand2->type != AST_VALUE_INT)
+  {
+    orora_error("에러, 정의되지 않은 연산", (void*) 0);
+  }
+
+  if (operand2->type == AST_VALUE_INT)
+  {
+    return visitor_operator_under_for_index_int(result, operand1, operand2, envs);
+  }
+  else
+  {
+    int col = operand2->value.matrix_v->col_size;
+    int row = operand2->value.matrix_v->row_size;
+    if (row == 1)
+    {
+      if (visitor_get_value_from_ast(envs, operand2->value.matrix_v->value[0])->type == AST_VALUE_INT)
+      {
+        return visitor_operator_under_for_index_int(result, operand1, operand2, envs);
+      }
+      orora_error("에러, index가 (n, 2)행렬이 아님", (void*) 0);
+    }
+    if (row != 2)
+    {
+      orora_error("에러, index가 (n, 2)행렬이 아님", (void*) 0);
+    }
+
+    if (col == 1)
+    {
+      AST* ast_w = operand2->value.matrix_v->value[0];
+      AST* ast_h = operand2->value.matrix_v->value[1];
+      AST_value_stack* stack_w = visitor_get_value_from_ast(envs, ast_w);
+      AST_value_stack* stack_h = visitor_get_value_from_ast(envs, ast_h);
+      if (stack_w->type != AST_VALUE_INT || stack_h->type != AST_VALUE_INT)
+      {
+        orora_error("에러, 정의되지 않은 연산", (void*) 0);
+      }
+      int w = stack_w->value.int_v->value;
+      int h = stack_h->value.int_v->value;
+      if (w <= 0 || w > operand1->value.matrix_v->col_size
+          || h <= 0 || h > operand1->value.matrix_v->row_size)
+      {
+        orora_error("에러, 범위를 넘어감", (void*) 0);
+      }
+
+      struct AST_VALUE_STACK_INDEX_T* return_result = malloc(sizeof(struct AST_VALUE_STACK_INDEX_T));
+      return_result->value = visitor_get_value_from_ast(envs, operand1->value.matrix_v->value[(w - 1)*operand1->value.matrix_v->row_size + h - 1]);
+      return_result->index_size = 1;
+      return_result->index = malloc(sizeof(struct ast_t));
+      return_result->index[0] = operand1->value.matrix_v->value[(w - 1)*operand1->value.matrix_v->row_size + h - 1];
+
+      return return_result;
+    }
+    else
+    {
+      result->type = AST_VALUE_MATRIX;
+      result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+      result->value.matrix_v->row_size = row;
+      result->value.matrix_v->col_size = 1;
+      
+      result->value.matrix_v->value = malloc(row * sizeof(struct ast_t));
+
+      struct AST_VALUE_STACK_INDEX_T* return_result = malloc(sizeof(struct AST_VALUE_STACK_INDEX_T));
+      return_result->index_size = row;
+      return_result->index = malloc(row * sizeof(struct ast_t));
+      
+      for (int i = 0; i < row; i++)
+      {
+        AST* ast_w = operand2->value.matrix_v->value[2*i];
+        AST* ast_h = operand2->value.matrix_v->value[2*i + 1];
+        AST_value_stack* stack_w = visitor_get_value_from_ast(envs, ast_w);
+        AST_value_stack* stack_h = visitor_get_value_from_ast(envs, ast_h);
+        if (stack_w->type != AST_VALUE_INT || stack_h->type != AST_VALUE_INT)
+        {
+          orora_error("에러, 정의되지 않은 연산", (void*) 0);
+        }
+        int w = stack_w->value.int_v->value;
+        int h = stack_h->value.int_v->value;
+        if (w <= 0 || w > operand1->value.matrix_v->col_size
+            || h <= 0 || h > operand1->value.matrix_v->row_size)
+        {
+          orora_error("에러, 범위를 넘어감", (void*) 0);
+        }
+        result->value.matrix_v->value[i] = operand1->value.matrix_v->value[(w - 1)*operand1->value.matrix_v->row_size + h - 1];
+        return_result->index[i] = operand1->value.matrix_v->value[(w - 1)*operand1->value.matrix_v->row_size + h - 1];
+      }
+      return_result->value = result;
+
+      return return_result;
+    }
+
+    return (void*) 0;
   }
 
   return (void*) 0;

@@ -3,6 +3,15 @@ T := 1
 \pi := 3.14159265
 
 % Functions
+print(value) := ...print(value)
+print.many(value) := \begin{code}
+  \begin{cases}
+    print(value) & ...type(value) \neg 5 \\
+  \end{cases}
+  return NULL
+\end{code}
+println(value) := ...println(value, "\n")
+
 ...type.to.string(value) :=  \begin{cases}
   "int"     & value = 1 \\
   "float"   & value = 2 \\

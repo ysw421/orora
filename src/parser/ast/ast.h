@@ -26,9 +26,11 @@ typedef struct ast_while_t
 
 typedef struct ast_for_t
 {
-  struct ast_t* init;
-  struct ast_t* condition;
-  struct ast_t* update;
+  struct ast_t* variable;
+  struct ast_t* range;
+//   struct ast_t* init;
+//   struct ast_t* condition;
+//   struct ast_t* update;
   struct ast_t* code;
 } AST_for;
 
@@ -50,6 +52,12 @@ typedef struct ast_return_t
 {
   struct ast_t* value;
 } AST_return;
+
+typedef struct ast_matrix_index_t
+{
+  struct ast_t* index;
+  struct ast_t* value;
+} AST_matrix_index;
 
 typedef struct ast_variable_t
 {
@@ -226,6 +234,7 @@ typedef struct ast_t
     AST_BOOL,           // 16:
     AST_MATRIX,         // 17:
     AST_FOR,            // 18:
+    AST_MATRIX_INDEX,   // 19:
     AST_NOOP = 99       // 99: Similar with NULL
   } type;
 
@@ -248,6 +257,7 @@ typedef struct ast_t
     struct ast_code_t* code_v;
     struct ast_cases_t* cases_v;
     struct ast_return_t* return_v;
+    struct ast_matrix_index_t* matrix_index_v;
   } value;
 
   struct ast_t* parent;
@@ -273,6 +283,7 @@ AST_compound* init_ast_compound();
 AST_code* init_ast_code();
 AST_while* init_ast_while();
 AST_for* init_ast_for();
+AST_matrix_index* init_ast_matrix_index();
 AST_if* init_ast_if();
 AST_cases* init_ast_cases();
 AST_return* init_ast_return();

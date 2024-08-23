@@ -37,51 +37,61 @@ void* internal_client_thread(void* arg);
 int create_and_bind_socket();
 void run_client(int port);
 
-char* preprocess_latex_json(const char* input) {
-    if (input == NULL) return NULL;
+char* preprocess_latex_json(const char* input)
+{
+  if (input == NULL) return NULL;
 
-    size_t input_len = strlen(input);
-    char* output = malloc(input_len * 2 + 1);  // 최악의 경우를 고려한 메모리 할당
-    if (output == NULL) return NULL;
+  size_t input_len = strlen(input);
+  char* output = malloc(input_len * 2 + 1);
+  if (output == NULL) return NULL;
 
-    size_t j = 0;
-    int in_latex = 0;
-    for (size_t i = 0; i < input_len; i++) {
-        if (input[i] == '$') {
-            in_latex = !in_latex;  // LaTeX 영역 시작/끝 토글
-        }
-        
-        if (in_latex && input[i] == '\\') {
-            output[j++] = '\\';
-            output[j++] = '\\';
-        } else if (input[i] == '"') {
-            output[j++] = '\\';
-            output[j++] = '"';
-        } else if (input[i] == '\r') {
-            output[j++] = '\\';
-            output[j++] = 'r';
-        } else if (input[i] == '\n') {
-            output[j++] = '\\';
-            output[j++] = 'n';
-        } else {
-            output[j++] = input[i];
-        }
+  size_t j = 0;
+  int in_latex = 0;
+  for (size_t i = 0; i < input_len; i++) 
+  {
+    if (input[i] == '$') 
+    {
+      in_latex = !in_latex;
     }
-    output[j] = '\0';
 
-    return output;
+    if (in_latex && input[i] == '\\') 
+    {
+      output[j++] = '\\';
+      output[j++] = '\\';
+    } else if (input[i] == '"') 
+    {
+      output[j++] = '\\';
+      output[j++] = '"';
+    } else if (input[i] == '\r') 
+    {
+      output[j++] = '\\';
+      output[j++] = 'r';
+    } else if (input[i] == '\n') {
+      output[j++] = '\\';
+      output[j++] = 'n';
+    } else 
+    {
+      output[j++] = input[i];
+    }
+  }
+  output[j] = '\0';
+
+  return output;
 }
 
-json_object* parse_websocket_message(const char* message) {
-    json_object* json = json_tokener_parse(message);
-    if (json == NULL) {
-        char* preprocessed_message = preprocess_latex_json(message);
-        if (preprocessed_message) {
-            json = json_tokener_parse(preprocessed_message);
-            free(preprocessed_message);
-        }
+json_object* parse_websocket_message(const char* message) 
+{
+  json_object* json = json_tokener_parse(message);
+  if (json == (void*) 0) 
+  {
+    char* preprocessed_message = preprocess_latex_json(message);
+    if (preprocessed_message) 
+    {
+      json = json_tokener_parse(preprocessed_message);
+      free(preprocessed_message);
     }
-    return json;
+  }
+  return json;
 }
 
 void execute_orora_code(const char* code, char* result, size_t result_size, Envs* root_envs)
@@ -101,14 +111,14 @@ void execute_orora_code(const char* code, char* result, size_t result_size, Envs
       if (new_value)
       {
         if (new_value->type != AST_VALUE_NULL || !(ast->type == AST_FUNCTION
-            || ast->type == AST_CODE
-            || ast->type == AST_FOR
-            || ast->type == AST_WHILE
-            || ast->type == AST_CASES
-            || (ast->type == AST_VALUE && (ast->value.value_v->stack->type == AST_VALUE_CODE)
+              || ast->type == AST_CODE
+              || ast->type == AST_FOR
+              || ast->type == AST_WHILE
+              || ast->type == AST_CASES
+              || (ast->type == AST_VALUE && (ast->value.value_v->stack->type == AST_VALUE_CODE)
+                )
               )
-            )
-          )
+           )
         {
           const char* temp_result = visitor_print_function_value(new_value);
           strncpy(result, temp_result, result_size - 1);
@@ -170,7 +180,7 @@ void send_ws_message(const char* message)
     int n = snprintf(buffer + LWS_PRE, sizeof(buffer) - LWS_PRE, "%s", message);
     if (lws_write(latest_ws_connection, (unsigned char*)buffer + LWS_PRE, n, LWS_WRITE_TEXT) < n)
     {
-      printf("Error: lws_write failed when sending message from internal client\n");
+//       printf("Error: lws_write failed when sending message from internal client\n");
     }
   }
 }
@@ -272,18 +282,18 @@ static int callback_orora(struct lws* wsi, enum lws_callback_reasons reason,
   {
     case LWS_CALLBACK_ESTABLISHED:
       pss->id = rand();
-      printf("WebSocket connection established\n");
+//       printf("WebSocket connection established\n");
       break;
 
     case LWS_CALLBACK_RECEIVE:
-      printf("WebSocket message received: %.*s\n", (int)len, (char *)in);
+//       printf("WebSocket message received: %.*s\n", (int)len, (char *)in);
       if (len > MAX_PAYLOAD_SIZE)
         break;
 
       json_object *jobj = parse_websocket_message((const char*) in);
       if (jobj == (void*) 0)
       {
-        printf("Failed to parse JSON\n");
+//         printf("Failed to parse JSON\n");
         break;
       }
 
@@ -292,7 +302,7 @@ static int callback_orora(struct lws* wsi, enum lws_callback_reasons reason,
           !json_object_object_get_ex(jobj, "id", &id_obj) ||
           !json_object_object_get_ex(jobj, "code", &code_obj))
       {
-        printf("Missing required JSON fields\n");
+//         printf("Missing required JSON fields\n");
         json_object_put(jobj);
         break;
       }
@@ -302,82 +312,82 @@ static int callback_orora(struct lws* wsi, enum lws_callback_reasons reason,
       cell_id_global = cell_id;
       const char* code = json_object_get_string(code_obj);
 
-      printf("Received message - Type: %s, Cell ID: %s, Code: %s\n", type, cell_id, code);
+//       printf("Received message - Type: %s, Cell ID: %s, Code: %s\n", type, cell_id, code);
 
       if (strcmp(type, "execute") == 0)
       {
-//         n = snprintf(buffer + LWS_PRE, sizeof(buffer) - LWS_PRE,
-//             "{\"type\":\"execution_status\",\"id\":\"%s\",\"status\":\"running\",\"result\":\"Execution started...\"}", cell_id);
-//         if (lws_write(wsi, (unsigned char*)buffer + LWS_PRE, n, LWS_WRITE_TEXT) < n)
-//         {
-//           printf("Error: lws_write failed (running status)\n");
-//         }
-//         else
-//         {
-//           printf("WebSocket running status sent successfully\n");
-//         }
-// 
-//         char intermediate_result[BUFFER_SIZE] = "Intermediate result...";
-//         printf("Intermediate result: %s\n", intermediate_result);
-// 
-//         n = snprintf(buffer + LWS_PRE, sizeof(buffer) - LWS_PRE,
-//             "{\"type\":\"execution_status\",\"id\":\"%s\",\"status\":\"running\",\"result\":\"%s\"}", cell_id, intermediate_result);
-// #include "syslib/console_print.h"
-//         console_print((const char*) intermediate_result);
-//         if (lws_write(wsi, (unsigned char*)buffer + LWS_PRE, n, LWS_WRITE_TEXT) < n)
-//         {
-//           printf("Error: lws_write failed (intermediate result)\n");
-//         }
-//         else
-//         {
-//           printf("WebSocket intermediate result sent successfully\n");
-//         }
-// 
-//         char final_result[BUFFER_SIZE] = {0};
-//         execute_orora_code(code, final_result, BUFFER_SIZE, root_envs);
-//         printf("Final execution result: %s\n", final_result);
-// 
-//         n = snprintf(buffer + LWS_PRE, sizeof(buffer) - LWS_PRE,
-//             "{\"type\":\"execution_status\",\"id\":\"%s\",\"status\":\"completed\",\"result\":\"%s\"}", cell_id, final_result);
-//         if (lws_write(wsi, (unsigned char*)buffer + LWS_PRE, n, LWS_WRITE_TEXT) < n)
-//         {
-//           printf("Error: lws_write failed (completed status)\n");
-//         }
-//         else
-//         {
-//           printf("WebSocket completed status sent successfully\n");
-//         }
-//       }
+        //         n = snprintf(buffer + LWS_PRE, sizeof(buffer) - LWS_PRE,
+        //             "{\"type\":\"execution_status\",\"id\":\"%s\",\"status\":\"running\",\"result\":\"Execution started...\"}", cell_id);
+        //         if (lws_write(wsi, (unsigned char*)buffer + LWS_PRE, n, LWS_WRITE_TEXT) < n)
+        //         {
+        //           printf("Error: lws_write failed (running status)\n");
+        //         }
+        //         else
+        //         {
+        //           printf("WebSocket running status sent successfully\n");
+        //         }
+        // 
+        //         char intermediate_result[BUFFER_SIZE] = "Intermediate result...";
+        //         printf("Intermediate result: %s\n", intermediate_result);
+        // 
+        //         n = snprintf(buffer + LWS_PRE, sizeof(buffer) - LWS_PRE,
+        //             "{\"type\":\"execution_status\",\"id\":\"%s\",\"status\":\"running\",\"result\":\"%s\"}", cell_id, intermediate_result);
+        // #include "syslib/console_print.h"
+        //         console_print((const char*) intermediate_result);
+        //         if (lws_write(wsi, (unsigned char*)buffer + LWS_PRE, n, LWS_WRITE_TEXT) < n)
+        //         {
+        //           printf("Error: lws_write failed (intermediate result)\n");
+        //         }
+        //         else
+        //         {
+        //           printf("WebSocket intermediate result sent successfully\n");
+        //         }
+        // 
+        //         char final_result[BUFFER_SIZE] = {0};
+        //         execute_orora_code(code, final_result, BUFFER_SIZE, root_envs);
+        //         printf("Final execution result: %s\n", final_result);
+        // 
+        //         n = snprintf(buffer + LWS_PRE, sizeof(buffer) - LWS_PRE,
+        //             "{\"type\":\"execution_status\",\"id\":\"%s\",\"status\":\"completed\",\"result\":\"%s\"}", cell_id, final_result);
+        //         if (lws_write(wsi, (unsigned char*)buffer + LWS_PRE, n, LWS_WRITE_TEXT) < n)
+        //         {
+        //           printf("Error: lws_write failed (completed status)\n");
+        //         }
+        //         else
+        //         {
+        //           printf("WebSocket completed status sent successfully\n");
+        //         }
+        //       }
 
-        char final_result[BUFFER_SIZE] = {0};
-        execute_orora_code(code, final_result, BUFFER_SIZE, root_envs);
-//         printf("Final execution result: %s\n", final_result);
+      char final_result[BUFFER_SIZE] = {0};
+      execute_orora_code(code, final_result, BUFFER_SIZE, root_envs);
+      //         printf("Final execution result: %s\n", final_result);
 
-        n = snprintf(buffer + LWS_PRE, sizeof(buffer) - LWS_PRE,
-            "{\"type\":\"execution_status\",\"id\":\"%s\",\"status\":\"completed\",\"result\":\"%s\"}", cell_id, "");
-        if (lws_write(wsi, (unsigned char*)buffer + LWS_PRE, n, LWS_WRITE_TEXT) < n)
-        {
-          printf("Error: lws_write failed (completed status)\n");
-        }
-        else
-        {
-          printf("WebSocket completed status sent successfully\n");
-        }
+      n = snprintf(buffer + LWS_PRE, sizeof(buffer) - LWS_PRE,
+          "{\"type\":\"execution_status\",\"id\":\"%s\",\"status\":\"completed\",\"result\":\"%s\"}", cell_id, "");
+      if (lws_write(wsi, (unsigned char*)buffer + LWS_PRE, n, LWS_WRITE_TEXT) < n)
+      {
+//         printf("Error: lws_write failed (completed status)\n");
       }
-
-      json_object_put(jobj);
-      cell_id_global = (void*) 0;
-      break;
-
-    case LWS_CALLBACK_CLOSED:
-      printf("WebSocket connection closed\n");
-      break;
-
-    default:
-      break;
+      else
+      {
+//         printf("WebSocket completed status sent successfully\n");
+      }
   }
 
-  return 0;
+  json_object_put(jobj);
+  cell_id_global = (void*) 0;
+  break;
+
+  case LWS_CALLBACK_CLOSED:
+//   printf("WebSocket connection closed\n");
+  break;
+
+  default:
+  break;
+}
+
+return 0;
 }
 
 // Modify the protocols array
