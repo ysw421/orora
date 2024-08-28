@@ -35,6 +35,7 @@ CFILES_SYSLIB		+=	src/syslib/type.c
 CFILES_SYSLIB		+=	src/syslib/random.c
 CFILES_SYSLIB		+=	src/syslib/input.c
 CFILES_SYSLIB		+=	src/syslib/get_space.c
+CFILES_SYSLIB		+=	src/syslib/matrix_info.c
 
 CFILES_OS		=	src/os/os.c
 

@@ -4,7 +4,7 @@ AST_value_stack* get_space_function(Envs* envs, AST_function* ast_function)
 {
   if (ast_function->args_size > 1)
   {
-    orora_error("에러, random 함수는 인자를 1개만 받습니다.", (void*) 0);
+    orora_error("에러, ...get.space 함수는 인자를 1개만 받습니다.", (void*) 0);
   }
 
   AST_value_stack* result = init_ast_value_stack(AST_VALUE_STRING, (void*) 0);

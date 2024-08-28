@@ -60,3 +60,6 @@ type(value) := print(...type.to.string(...type(value)))
 random() := ...random()
 
 input(value:="") := ...input(value)
+
+row(value) := ...row(value)
+col(value) := ...col(value)
