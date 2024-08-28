@@ -2,6 +2,7 @@
 #define ENV_H
 
 #include <stddef.h>
+#include <string.h>
 #include "parser/ast/ast.h"
 
 typedef struct env_variable_t
@@ -48,6 +49,18 @@ typedef struct env_function_t
   struct env_function_t* next;
 } Env_function;
 
+typedef struct env_macro_t
+{
+  char* name;
+  int length;
+
+  int args_size;
+
+  struct ast_t* code;
+
+  struct env_macro_t* next;
+} Env_macro;
+
 typedef struct env_value_list_t
 {
   struct ast_value_t* value;
@@ -61,6 +74,9 @@ typedef struct env_t
 
   size_t function_size;
   struct env_function_t* functions;
+
+  size_t macro_size;
+  struct env_macro_t* macros;
 
 // include packages, variables,
 //         and functions...
@@ -81,6 +97,9 @@ typedef struct envs_t
 Env_function* get_env_function_from_ast_function
 (Env_function* env_function, AST_function* ast_function);
 Env_function* init_env_function(AST_function* ast_function);
+Env_macro* init_env_macro(const char* name, int args_size, AST* code);
+Env_macro* get_env_macro_from_ast_macro(
+    Env_macro* env_macro, int args_size, AST* code);
 Env_variable* init_env_variable(char* name, size_t length);
 Env_value_list* init_env_value_list(struct ast_value_t* ast_value);
 Env* init_env();

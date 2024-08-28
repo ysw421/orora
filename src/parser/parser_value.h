@@ -8,6 +8,7 @@
 typedef struct get_value_env_t
 {
   bool is_in_parentheses;
+  bool is_operator_colon;
 } GET_VALUE_ENV;
 
 GET_VALUE_ENV* init_get_value_env();

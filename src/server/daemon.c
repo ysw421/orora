@@ -111,6 +111,7 @@ void execute_orora_code(const char* code, char* result, size_t result_size, Envs
       if (new_value)
       {
         if (new_value->type != AST_VALUE_NULL || !(ast->type == AST_FUNCTION
+              || ast->type == AST_MACRO
               || ast->type == AST_CODE
               || ast->type == AST_FOR
               || ast->type == AST_WHILE

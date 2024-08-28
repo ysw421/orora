@@ -7,6 +7,7 @@
 #include "syslib/type.h"
 #include "syslib/random.h"
 #include "syslib/input.h"
+#include "syslib/get_space.h"
 
 AST_value_stack* check_sysfunc(Envs* envs, AST_function* ast_function);
 

@@ -45,6 +45,7 @@ AST_value_stack* visitor_set_value_AST_value_stack_from_Env_variable_matrix
 #ifdef DEVELOP_MODE
 Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable);
 Env_function* visitor_get_function(Envs* envs, AST_function* ast_function);
+Env_macro* visitor_get_macro(Envs* envs, AST_macro* ast_macro);
 
 AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value);
 
@@ -53,6 +54,8 @@ void visitor_nondefine_function_error(AST_function* ast_function);
 
 AST_value_stack* visitor_get_value_from_function
 (Envs* envs, AST_function* ast_function);
+AST_value_stack* visitor_get_value_from_macro
+(Envs* envs, AST_macro* ast_macro);
 AST_value_stack* visitor_get_value_from_ast
 (Envs* envs, AST* condition);
 #endif

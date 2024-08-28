@@ -10,6 +10,8 @@ AST_value_stack* check_sysfunc(Envs* envs, AST_function* ast_function)
     return random_function(envs, ast_function);
   if (strcmp(ast_function->name, "...input") == 0)
     return input_function(envs, ast_function);
+  if (strcmp(ast_function->name, "...get.space") == 0)
+    return get_space_function(envs, ast_function);
 
   return (void*) 0;
 }

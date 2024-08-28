@@ -11,6 +11,7 @@ typedef struct get_compound_env_t
   bool is_allow_linebreak;
   bool is_in_parentheses;
   bool is_in_braces;
+  bool is_in_sqbs;
   bool is_usefull_comma;
   char* is_usefull_end;
   bool is_size_one;

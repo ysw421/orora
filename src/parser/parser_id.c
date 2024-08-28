@@ -279,6 +279,85 @@ AST* parser_value_define
   return (void*) 0;
 }
 
+AST* parser_get_macro
+(Parser* parser, AST* ast, GET_COMPOUND_ENV* compound_env)
+{
+  Token* token = parser->token;
+
+  AST* new_ast = init_ast(AST_MACRO, ast, token);
+  new_ast->value.macro_v =
+    init_ast_macro(token->value, token->length);
+
+  if (!parser->token
+      || token->type != TOKEN_ID
+//       || token->value[0] != '\\'
+      || !(token->value[0] == '\\' || token->value[0] == '#')
+      || strcmp(token->value, "#sub") == 0
+      || strcmp(token->value, "#super") == 0
+     )
+    return (void*) 0;
+
+  new_ast->value.macro_v->name = token->value;
+  new_ast->value.macro_v->name_length = strlen(token->value);
+
+  parser = parser_advance(parser, TOKEN_ID);
+
+  AST* arg = malloc(sizeof(struct ast_t));
+
+  bool is_used_super = false;
+  bool is_used_sub = false;
+  while (1)
+  {
+    arg = parser_get_condition(parser);
+    int args_size = 0;
+    while (arg)
+    {
+      args_size ++;
+      new_ast->value.macro_v->args_size = args_size;
+      new_ast->value.macro_v->args = realloc(new_ast->value.macro_v->args, args_size * sizeof(struct ast_t*));
+      new_ast->value.macro_v->args[args_size - 1] = arg->value.compound_v->items[0];
+      arg = parser_get_condition(parser);
+    }
+    bool is_used_any = false;
+    if (!is_used_super)
+    {
+      token = parser->token;
+      if (token && token->type == TOKEN_CIRCUMFLEX)
+      {
+        is_used_any = true;
+        is_used_super = true;
+        parser_advance(parser, TOKEN_CIRCUMFLEX);
+        arg = parser_get_condition(parser);
+        if (!arg)
+          orora_error("에러, macro의 ^는 {}로 감싸야함", (void*) 0);
+        new_ast->value.macro_v->super = arg->value.compound_v->items[0];
+
+        continue;
+      }
+    }
+    if (!is_used_sub)
+    {
+      token = parser->token;
+      if (token && token->type == TOKEN_UNDER)
+      {
+        is_used_any = true;
+        is_used_sub = true;
+        parser_advance(parser, TOKEN_UNDER);
+        arg = parser_get_condition(parser);
+        if (!arg)
+          orora_error("에러, macro의 ^는 {}로 감싸야함", (void*) 0);
+        new_ast->value.macro_v->sub = arg->value.compound_v->items[0];
+
+        continue;
+      }
+    }
+    if (!is_used_any)
+      break;
+  }
+
+  return new_ast;
+}
+
 AST* parser_get_function
 (Parser* parser, AST* ast, GET_COMPOUND_ENV* compound_env)
 {
@@ -394,3 +473,92 @@ AST* parser_set_function(Parser* parser, AST* ast, Token* last_token)
   return new_ast_node;
 }
 
+AST* parser_get_condition
+(Parser* parser)
+{
+  bool is_error = true;
+  AST* new_condition_ast = (void*) 0;
+
+  Token* token = parser->token;
+  if (token
+      && token->type == TOKEN_LBRACE
+      && parser->prev_token->col == token->col_first
+     )
+  {
+    parser = parser_advance(parser, TOKEN_LBRACE);
+    token = parser->token;
+
+    GET_COMPOUND_ENV* new_env = init_get_compound_env((void*) 0);
+    new_env->is_allow_linebreak = true;
+    new_env->is_in_braces = true;
+
+    new_condition_ast = 
+      parser_get_compound(parser, new_env);
+    token = parser->token;
+
+    if (
+        new_condition_ast 
+        && new_condition_ast->type == AST_COMPOUND
+        && new_condition_ast->value.compound_v->size == 1
+        && token 
+        && token->type == TOKEN_RBRACE
+       )
+    {
+      parser = parser_advance(parser, TOKEN_RBRACE);
+      is_error = false;
+    }
+  }
+  
+  if (is_error)
+  {
+    free(new_condition_ast);
+    return (void*) 0;
+  }
+  else
+    return new_condition_ast;
+}
+
+AST* parser_get_condition_sqb
+(Parser* parser)
+{
+  bool is_error = true;
+  AST* new_condition_ast = (void*) 0;
+
+  Token* token = parser->token;
+  if (token
+      && token->type == TOKEN_LSQB
+      && parser->prev_token->col == token->col_first
+     )
+  {
+    parser = parser_advance(parser, TOKEN_LSQB);
+    token = parser->token;
+
+    GET_COMPOUND_ENV* new_env = init_get_compound_env((void*) 0);
+    new_env->is_allow_linebreak = true;
+    new_env->is_in_sqbs = true;
+
+    new_condition_ast = 
+      parser_get_compound(parser, new_env);
+    token = parser->token;
+
+    if (
+        new_condition_ast 
+        && new_condition_ast->type == AST_COMPOUND
+        && new_condition_ast->value.compound_v->size == 1
+        && token 
+        && token->type == TOKEN_RSQB
+       )
+    {
+      parser = parser_advance(parser, TOKEN_RSQB);
+      is_error = false;
+    }
+  }
+  
+  if (is_error)
+  {
+    free(new_condition_ast);
+    return (void*) 0;
+  }
+  else
+    return new_condition_ast;
+}

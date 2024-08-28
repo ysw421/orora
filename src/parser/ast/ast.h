@@ -109,6 +109,24 @@ typedef struct ast_function_t
                           //    -> code->type is compound...
 } AST_function;
 
+typedef struct ast_macro_t
+{
+  char* name;
+  int name_length;
+  struct ast_t** args;
+  struct ast_t* super;
+  struct ast_t* sub;
+  int args_size;
+} AST_macro;
+
+typedef struct ast_newenv_t
+{
+  struct ast_t* name;
+  struct ast_t* args_size;
+
+  struct ast_t* code;
+} AST_newenv;
+
 typedef struct ast_string_t
 {
   char* value;
@@ -175,7 +193,10 @@ typedef struct ast_value_stack_t
     AST_VALUE_CIRCUMFLEX,
     AST_VALUE_MOD,
     AST_VALUE_UNDER,
-    AST_VALUE_COMMA
+    AST_VALUE_COMMA,
+    AST_VALUE_COLON,
+    AST_VALUE_MACRO,
+    AST_VALUE_IN,
   } type;
 
   union
@@ -189,6 +210,7 @@ typedef struct ast_value_stack_t
     struct ast_function_t* function_v;
     struct ast_cases_t* cases_v;
     struct ast_code_t* code_v;
+    struct ast_macro_t* macro_v;
   } value;
 
   struct ast_value_stack_t* next;
@@ -235,6 +257,8 @@ typedef struct ast_t
     AST_MATRIX,         // 17:
     AST_FOR,            // 18:
     AST_MATRIX_INDEX,   // 19:
+    AST_NEWENV,         // 20:
+    AST_MACRO,          // 21:
     AST_NOOP = 99       // 99: Similar with NULL
   } type;
 
@@ -243,6 +267,8 @@ typedef struct ast_t
     struct ast_compound_t* compound_v;
     struct ast_variable_t* variable_v;
     struct ast_function_t* function_v;
+    struct ast_newenv_t* newenv_v;
+    struct ast_macro_t* macro_v;
     struct ast_string_t* string_v;
     struct ast_int_t* int_v;    // I can't use a 'int'
                                 //    by variable's name... 😢
@@ -291,6 +317,8 @@ AST_value_stack* init_ast_value_stack(int type, Token* token);
 AST_value* init_ast_value();
 AST_variable* init_ast_variable(char* name, size_t length);
 AST_function* init_ast_function(char* name, size_t length);
+AST_macro* init_ast_macro(char* name, size_t length);
+AST_newenv* init_ast_newenv();
 
 AST_string* init_ast_string(Parser* parser);
 AST_int* init_ast_int(Parser* parser);

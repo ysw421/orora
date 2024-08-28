@@ -29,6 +29,28 @@ Env_function* init_env_function(AST_function* ast_function)
   return env_function;
 }
 
+Env_macro* init_env_macro(const char* name, int args_size, AST* code)
+{
+  Env_macro* env_macro =
+    (Env_macro*) malloc(sizeof(struct env_macro_t));
+
+  get_env_macro_from_ast_macro(env_macro, args_size, code);
+  env_macro->name = (char*) name;
+  env_macro->length = strlen(name);
+  env_macro->next = (void*) 0;
+
+  return env_macro;
+}
+
+Env_macro* get_env_macro_from_ast_macro(
+    Env_macro* env_macro, int args_size, AST* code)
+{
+  env_macro->args_size = args_size;
+  env_macro->code = code;
+
+  return env_macro;
+}
+
 Env_variable* init_env_variable(char* name, size_t length)
 {
   Env_variable* env_variable =
@@ -69,6 +91,9 @@ Env* init_env()
 //   env->functions->length = 0;
 //   env->functions->next = (void*) 0;
   env->functions = (void*) 0;
+
+  env->macro_size = 0;
+  env->macros = (void*) 0;
 
   return env;
 }

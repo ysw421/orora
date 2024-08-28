@@ -180,6 +180,30 @@ AST_function* init_ast_function(char* name, size_t length)
   return ast_function;
 }
 
+AST_macro* init_ast_macro(char* name, size_t length)
+{
+  AST_macro* ast_macro =
+    (AST_macro*) malloc(sizeof(struct ast_macro_t));
+  ast_macro->name = name;
+  ast_macro->args_size = 0;
+  ast_macro->args = (void*) 0;
+  ast_macro->super = (void*) 0;
+  ast_macro->sub = (void*) 0;
+
+  return ast_macro;
+}
+
+AST_newenv* init_ast_newenv()
+{
+  AST_newenv* ast_newenv =
+    (AST_newenv*) malloc(sizeof(struct ast_newenv_t));
+  ast_newenv->name = malloc(sizeof(struct ast_t));
+  ast_newenv->args_size = malloc(sizeof(struct ast_t));
+  ast_newenv->code = malloc(sizeof(struct ast_t));
+
+  return ast_newenv;
+}
+
 AST_string* init_ast_string(Parser* parser)
 {
   Token* token = parser->token;

@@ -10,7 +10,6 @@ AST* parser_get_satisfy
 (Parser* parser, AST* ast, GET_COMPOUND_ENV* compound_env);
 AST* parser_get_return
 (Parser* parser, AST* ast, GET_COMPOUND_ENV* compound_env);
-AST* parser_get_condition(Parser* parser);
 AST* parser_get_condition_and_code
 (Parser* parser, AST* ast, Token* token,
  Token* s_token, char* code,
@@ -40,6 +39,7 @@ GET_COMPOUND_ENV* init_get_compound_env(GET_COMPOUND_ENV* env)
   new_env->is_allow_linebreak = false;
   new_env->is_in_parentheses = false;
   new_env->is_in_braces = false;
+  new_env->is_in_sqbs = false;
   new_env->is_usefull_comma = false;
   new_env->is_usefull_end = (void*) 0;
   new_env->is_size_one = false;
@@ -296,6 +296,33 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
     bool is_break = true;
     switch (token->type)
     {
+      case TOKEN_NEWENVIRONMENT:
+        parser = parser_advance(parser, TOKEN_NEWENVIRONMENT);
+        token = parser->token;
+
+        AST* new_name = parser_get_condition(parser);
+        AST* new_args_size = parser_get_condition_sqb(parser);
+        AST* new_code = parser_get_condition(parser);
+
+        if (!new_name || !new_args_size || !new_code)
+        {
+          orora_error("에러, newenvironment 사용법이 잘못됨", (void*) 0);
+        }
+
+        AST_newenv* new_newenv = init_ast_newenv();
+        new_newenv->name = new_name;
+        new_newenv->args_size = new_args_size;
+        new_newenv->code = new_code;
+
+        AST* new_newenv_ast = init_ast(AST_NEWENV, ast, token);
+        new_newenv_ast->value.newenv_v = new_newenv;
+
+        ast_compound_add(ast->value.compound_v, new_newenv_ast);
+        token = parser->token;
+        
+        continue;
+        break;
+
       case TOKEN_BEGIN:
         Token* s_token = parser->token;
         char* code = parser_is_begin(parser, 3, 
@@ -384,6 +411,13 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         }
         break;
 
+      case TOKEN_RSQB:
+        if (compound_env->is_in_sqbs)
+        {
+          return parser_get_compound_end(ast, compound_env);
+        }
+        break;
+
       case TOKEN_SATISFY:
         AST* new_satisfy_ast = 
           parser_get_satisfy(parser, ast, compound_env);
@@ -397,9 +431,7 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         else
         {
           free(new_satisfy_ast);
-          orora_error("satisfy 사용법: 'satisfy (variable name):(condition1), (condition2)\n", parser);
-//           printf("satisfy 사용법: 'satisfy (variable name):(condition1), (condition2)\n");
-//           exit(1);
+          orora_error("satisfy 사용법: 'satisfy (variable name)::(condition1), (condition2)\n", parser);
         }
         break;
 
@@ -620,51 +652,6 @@ AST* parser_parse(Parser* parser)
   // Root AST...
 
   return ast;
-}
-
-AST* parser_get_condition
-(Parser* parser)
-{
-  bool is_error = true;
-  AST* new_condition_ast = (void*) 0;
-
-  Token* token = parser->token;
-  if (token
-      && token->type == TOKEN_LBRACE
-      && parser->prev_token->col == token->col_first
-     )
-  {
-    parser = parser_advance(parser, TOKEN_LBRACE);
-    token = parser->token;
-
-    GET_COMPOUND_ENV* new_env = init_get_compound_env((void*) 0);
-    new_env->is_allow_linebreak = true;
-    new_env->is_in_braces = true;
-
-    new_condition_ast = 
-      parser_get_compound(parser, new_env);
-    token = parser->token;
-
-    if (
-        new_condition_ast 
-        && new_condition_ast->type == AST_COMPOUND
-        && new_condition_ast->value.compound_v->size == 1
-        && token 
-        && token->type == TOKEN_RBRACE
-       )
-    {
-      parser = parser_advance(parser, TOKEN_RBRACE);
-      is_error = false;
-    }
-  }
-  
-  if (is_error)
-  {
-    free(new_condition_ast);
-    return (void*) 0;
-  }
-  else
-    return new_condition_ast;
 }
 
 AST* parser_get_condition_and_code
@@ -996,9 +983,9 @@ AST* parser_get_satisfy
       && main_value->stack->type == AST_VALUE_VARIABLE
       && satisfy_col == parser->prev_token->col_first
       && satisfy_col == token->col_first
-      && parser->token && token->type == TOKEN_COLON)
+      && parser->token && token->type == TOKEN_DOUBLECOLON)
   {
-    parser = parser_advance(parser, TOKEN_COLON);
+    parser = parser_advance(parser, TOKEN_DOUBLECOLON);
     token = parser->token;
 
     if (!token || satisfy_col != token->col_first)

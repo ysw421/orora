@@ -1,16 +1,50 @@
 % Variables
 T := 1
-\pi := 3.14159265
+N := "natural number"
+satisfy N :: N = "natural number"
+Z := "integer"
+satisfy Z :: Z = "integer"
+R := "real number"
+satisfy R :: R = "real number"
+
+
+% Macro
+\newenvironment{\pi}[0]{3.14159265}
+\newenvironment{\aa}[1]{#1}
+\newenvironment{\sum}[1]{
+  \begin{code}
+    ...result := 0
+    \begin{for}{...i}{#sub:#super}
+      #sub := ...i
+      ...result := ...result + #1
+    \end{for}
+    return ...result
+  \end{code}
+}
+\newenvironment{\prod}[1]{
+  \begin{code}
+    ...result := 1
+    \begin{for}{...i}{#sub:#super}
+      #sub := ...i
+      ...result := ...result \times #1
+    \end{for}
+    return ...result
+  \end{code}
+}
+\newenvironment{\mathbb}[1]{
+  ...get.space(#1)
+}
+
 
 % Functions
-print(value) := ...print(value)
+print(...v1, ...v2:="", ...v3:="", ...v4:="", ...v5:="", ...v6:="", ...v7:="", ...v8:="", ...v9:="") := ...print(...v1, ...v2, ...v3, ...v4, ...v5, ...v6, ...v7, ...v8, ...v9)
+println(...v1, ...v2:="", ...v3:="", ...v4:="", ...v5:="", ...v6:="", ...v7:="", ...v8:="", ...v9:="") := ...print(...v1, ...v2, ...v3, ...v4, ...v5, ...v6, ...v7, ...v8, ...v9, "\n")
 print.many(value) := \begin{code}
   \begin{cases}
     print(value) & ...type(value) \neg 5 \\
   \end{cases}
   return NULL
 \end{code}
-println(value) := ...println(value, "\n")
 
 ...type.to.string(value) :=  \begin{cases}
   "int"     & value = 1 \\

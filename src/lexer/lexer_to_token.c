@@ -39,6 +39,10 @@ int get_special_string_type(int length, char* string)
 
   switch (length)
   {
+    case 15:
+      if (!strcmp(string, "\\newenvironment")) return TOKEN_NEWENVIRONMENT;
+      break;
+
     case 10:
       if (!strcmp(string, "\\otherwise")) return TOKEN_OTHERWISE;
       if (!strcmp(string, "\\leftarrow")) return TOKEN_DEFINE;
@@ -76,6 +80,10 @@ int get_special_string_type(int length, char* string)
       if (!strcmp(string, "\\lor")) return TOKEN_OR;
       if (!strcmp(string, "\\neg")) return TOKEN_NEG;
       if (!strcmp(string, "\\mod")) return TOKEN_MOD;
+      break;
+
+    case 3:
+      if (!strcmp(string, "\\in")) return TOKEN_IN;
       break;
 
     default: 
@@ -145,6 +153,8 @@ INT_STRING_T* get_two_char_type(Lexer* lexer)
     result->int_v = TOKEN_OR;
   else if (!strcmp(value, "&&"))
     result->int_v = TOKEN_AND;
+  else if (!strcmp(value, "::"))
+    result->int_v = TOKEN_DOUBLECOLON;
   else
   {
     result->string_v = (void*) 0;

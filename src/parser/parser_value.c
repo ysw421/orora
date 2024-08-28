@@ -13,7 +13,7 @@ AST* parser_get_value
  Parser** parser_, AST* ast,
  Token* last_token, GET_VALUE_ENV* value_env, 
  GET_COMPOUND_ENV* compound_env
-)
+ )
 {
   bool is_in_parentheses_save = value_env->is_in_parentheses;
   Parser* parser = *parser_;
@@ -62,14 +62,14 @@ AST* parser_get_value
 
     if (is_single_value)
     {
-//       fprintf(stderr, "!@#!#@!#\n");
+      //       fprintf(stderr, "!@#!#@!#\n");
       if (is_last_single_value)
         break;
       else if (is_last_value)
       {
         while (stack->size
             && parser_precedence(stack->stack->type)
-                >= parser_precedence(AST_VALUE_DOT_PRODUCT))
+            >= parser_precedence(AST_VALUE_DOT_PRODUCT))
         {
           save_value = parser_pop_value(stack);
           parser_push_value(postfix_expression, save_value);
@@ -79,12 +79,12 @@ AST* parser_get_value
       }
       save_value = get_single_value(parser, ast, is_last_minus_value2);
       parser_push_value(postfix_expression, save_value);
-      
+
       is_last_value = true;
       is_last_minus_value = false;
       is_last_minus_value2 = false;
       is_last_single_value = true;
-//       is_last_single_value = false;
+      //       is_last_single_value = false;
       is_last_operator = false;
 
       token = parser->token;
@@ -145,8 +145,8 @@ AST* parser_get_value
       else if (is_last_minus_value2)
       {
         orora_error("에러, -연산자 다음에는 값이 와야함", (void*) 0);
-//         printf("에러, operator 뒤에는 값이 와야함\n");
-//         exit(1);
+        //         printf("에러, operator 뒤에는 값이 와야함\n");
+        //         exit(1);
       }
 
       bool is_continue = false;
@@ -158,7 +158,7 @@ AST* parser_get_value
           {
             while (stack->size
                 && parser_precedence(stack->stack->type)
-                    >= parser_precedence(AST_VALUE_DOT_PRODUCT))
+                >= parser_precedence(AST_VALUE_DOT_PRODUCT))
             {
               save_value = parser_pop_value(stack);
               parser_push_value(postfix_expression, save_value);
@@ -169,15 +169,15 @@ AST* parser_get_value
           else if (is_last_value)
           {
             orora_error("에러, 값 전에 operator가 와야함", (void*) 0);
-//             printf("에러, 값 전에 operator가 와야함\n");
-//             exit(1);
+            //             printf("에러, 값 전에 operator가 와야함\n");
+            //             exit(1);
           }
-          
-          AST* function_ast = parser_get_function(
-                                  parser, 
-                                  ast, 
-                                  compound_env
-                                );
+
+          AST* macro_ast = parser_get_macro(
+              parser,
+              ast,
+              compound_env
+              );
           token = parser->token;
 
           is_last_value = true;
@@ -187,23 +187,42 @@ AST* parser_get_value
           is_last_single_value = true;
 
           AST_value_stack* new;
-          if (function_ast)
+          if (macro_ast)
           {
-            new = init_ast_value_stack(AST_VALUE_FUNCTION, token);
-            function_ast->value.function_v->ast_type = AST_FUNCTION_VALUE;
-            new->value.function_v = function_ast->value.function_v;
+            new = init_ast_value_stack(AST_VALUE_MACRO, token);
+            new->value.macro_v = macro_ast->value.macro_v;
             parser_push_value(postfix_expression, new);
-    
+
             is_continue = true;
-            break;
           }
           else
           {
-            new = init_ast_value_stack(AST_VALUE_VARIABLE, token);
-            new->value.variable_v =
-              init_ast_variable(token->value, token->length);
-            new->value.variable_v->ast_type = AST_VARIABLE_VALUE;
-            parser_push_value(postfix_expression, new);
+            AST* function_ast = parser_get_function(
+                parser, 
+                ast, 
+                compound_env
+                );
+            token = parser->token;
+
+            AST_value_stack* new;
+            if (function_ast)
+            {
+              new = init_ast_value_stack(AST_VALUE_FUNCTION, token);
+              function_ast->value.function_v->ast_type = AST_FUNCTION_VALUE;
+              new->value.function_v = function_ast->value.function_v;
+              parser_push_value(postfix_expression, new);
+
+              is_continue = true;
+              break;
+            }
+            else
+            {
+              new = init_ast_value_stack(AST_VALUE_VARIABLE, token);
+              new->value.variable_v =
+                init_ast_variable(token->value, token->length);
+              new->value.variable_v->ast_type = AST_VARIABLE_VALUE;
+              parser_push_value(postfix_expression, new);
+            }
           }
           break;
 
@@ -238,7 +257,7 @@ AST* parser_get_value
 
           is_last_value = true;
           is_last_minus_value = false;
-//           is_last_single_value = false;
+          //           is_last_single_value = false;
           is_last_single_value = true;
           is_last_operator = false;
           break;
@@ -275,43 +294,43 @@ AST* parser_get_value
           is_last_value = true;
           is_last_minus_value = false;
           is_last_single_value = false;
-//           is_last_single_value = false;
+          //           is_last_single_value = false;
           is_last_operator = false;
           break;
 
         case TOKEN_TYPE_BEGIN:
           Token* s_token = parser->token;
           char* code = parser_is_begin(parser, 4, 
-                          "cases", "code", "function", "fun"
-                       );
+              "cases", "code", "function", "fun"
+              );
           if (code)
           {
             AST* begin_ast;
             if (!strcmp(code, "cases"))
             {
               begin_ast = parser_get_cases(
-                              parser, 
-                              ast, 
-                              token, 
-                              s_token,
-                              compound_env
-                            );
+                  parser, 
+                  ast, 
+                  token, 
+                  s_token,
+                  compound_env
+                  );
               token = parser->token;
             }
             else if (
-                     !strcmp(code, "code") 
-                     || !strcmp(code, "function") 
-                     || !strcmp(code, "fun")
-                    )
+                !strcmp(code, "code") 
+                || !strcmp(code, "function") 
+                || !strcmp(code, "fun")
+                )
             {
               begin_ast = parser_get_code(
-                              parser, 
-                              ast, 
-                              token, 
-                              s_token, 
-                              compound_env, 
-                              code
-                            );
+                  parser, 
+                  ast, 
+                  token, 
+                  s_token, 
+                  compound_env, 
+                  code
+                  );
               token = parser->token;
             }
 
@@ -321,7 +340,7 @@ AST* parser_get_value
             {
               while (stack->size
                   && parser_precedence(stack->stack->type)
-                      >= parser_precedence(AST_VALUE_DOT_PRODUCT))
+                  >= parser_precedence(AST_VALUE_DOT_PRODUCT))
               {
                 save_value = parser_pop_value(stack);
                 parser_push_value(postfix_expression, save_value);
@@ -335,8 +354,8 @@ AST* parser_get_value
             if (is_last_minus_value2)
             {
               orora_error("에러, begin은 -연산이 불가함", (void*) 0);
-//               printf("에러, begin은 -연산이 불가함\n");
-//               exit(1);
+              //               printf("에러, begin은 -연산이 불가함\n");
+              //               exit(1);
             }
 
             if (!strcmp(code, "cases"))
@@ -345,10 +364,10 @@ AST* parser_get_value
               new->value.cases_v = begin_ast->value.cases_v;
             }
             else if (
-                     !strcmp(code, "code") 
-                     || !strcmp(code, "function") 
-                     || !strcmp(code, "fun")
-                    )
+                !strcmp(code, "code") 
+                || !strcmp(code, "function") 
+                || !strcmp(code, "fun")
+                )
             {
               new = init_ast_value_stack(AST_VALUE_CODE, token);
               new->value.code_v = begin_ast->value.code_v;
@@ -356,7 +375,7 @@ AST* parser_get_value
 
             save_value = new;
             parser_push_value(postfix_expression, save_value);
-            
+
             is_last_value = true;
             is_last_minus_value = false;
             is_last_minus_value2 = false;
@@ -370,7 +389,7 @@ AST* parser_get_value
 
         case TOKEN_TYPE_OPERATOR:
           if (token->type == TOKEN_MINUS
-            && (is_last_minus_value || is_last_operator))
+              && (is_last_minus_value || is_last_operator))
           {
             is_last_minus_value2 = true;
           }
@@ -379,12 +398,12 @@ AST* parser_get_value
             if (!is_last_value && !is_operator_use_one_value(token->type))
             {
               orora_error("에러, operator는 값 다음에 와야 함", (void*) 0);
-//               printf("에러, operator는 값 다음에 와야 함\n");
-//               exit(1);
+              //               printf("에러, operator는 값 다음에 와야 함\n");
+              //               exit(1);
             }
             while (stack->size
                 && parser_precedence(stack->stack->type)
-                    >= parser_precedence(get_ast_value_type(token->type)))
+                >= parser_precedence(get_ast_value_type(token->type)))
             {
               parser_push_value(postfix_expression, parser_pop_value(stack));
             }
@@ -400,7 +419,7 @@ AST* parser_get_value
 
       if (is_continue)
         continue;
-      
+
       if (is_break)
         break;
     }
@@ -423,23 +442,23 @@ AST* parser_get_value
   if (!is_first_turn && !is_last_value)
   {
     orora_error("에러, operator 다음에는 값이 와야함", (void*) 0);
-//     printf("에러, operator 다음에는 값이 와야함\n");
-//     exit(1);
+    //     printf("에러, operator 다음에는 값이 와야함\n");
+    //     exit(1);
   }
   else if(count_of_dearkelly)
   {
     orora_error("에러, (가 끝나지 아니함", (void*) 0);
-//     printf("에러, (가 끝나지 아니함\n");
-//     exit(1);
+    //     printf("에러, (가 끝나지 아니함\n");
+    //     exit(1);
   }
   else if(count_of_brace)
   {
     orora_error("에러, {가 끝나지 아니함", (void*) 0);
-//     printf("에러, {가 끝나지 아니함\n");
-//     exit(1);
+    //     printf("에러, {가 끝나지 아니함\n");
+    //     exit(1);
   }
 
-//   free(value_env);
+  //   free(value_env);
   AST* new_ast_node =
     init_ast(AST_VALUE, ast, last_token);
   new_ast_node->value.value_v = postfix_expression;
@@ -528,8 +547,8 @@ AST* parser_get_new_matrix_ast(AST* ast, Parser* parser)
   return new_ast_node;
 }
 
-AST_value_stack* parser_get_new_int_ast_value_stack
-  (Parser* parser, bool is_minus)
+  AST_value_stack* parser_get_new_int_ast_value_stack
+(Parser* parser, bool is_minus)
 {
   Token* token = parser->token;
 
@@ -543,8 +562,8 @@ AST_value_stack* parser_get_new_int_ast_value_stack
   return new;
 }
 
-AST_value_stack* parser_get_new_float_ast_value_stack
-  (Parser* parser, bool is_minus)
+  AST_value_stack* parser_get_new_float_ast_value_stack
+(Parser* parser, bool is_minus)
 {
   Token* token = parser->token;
 
@@ -558,16 +577,16 @@ AST_value_stack* parser_get_new_float_ast_value_stack
   return new;
 }
 
-AST_value_stack* parser_get_new_string_ast_value_stack
-  (Parser* parser, bool is_minus)
+  AST_value_stack* parser_get_new_string_ast_value_stack
+(Parser* parser, bool is_minus)
 {
   Token* token = parser->token;
 
   if (is_minus)
   {
     orora_error("에러, string에는 -연산이 불가함", (void*) 0);
-//     printf("에러, string에는 -연산이 불가함\n");
-//     exit(1);
+    //     printf("에러, string에는 -연산이 불가함\n");
+    //     exit(1);
   }
   AST_value_stack* new =
     init_ast_value_stack(AST_VALUE_STRING, token);
@@ -576,16 +595,16 @@ AST_value_stack* parser_get_new_string_ast_value_stack
   return new;
 }
 
-AST_value_stack* parser_get_new_null_ast_value_stack
-  (Parser* parser, bool is_minus)
+  AST_value_stack* parser_get_new_null_ast_value_stack
+(Parser* parser, bool is_minus)
 {
   Token* token = parser->token;
 
   if (is_minus)
   {
     orora_error("에러, null에는 -연산이 불가함", (void*) 0);
-//     printf("에러, null에는 -연산이 불가함\n");
-//     exit(1);
+    //     printf("에러, null에는 -연산이 불가함\n");
+    //     exit(1);
   }
   AST_value_stack* new = 
     init_ast_value_stack(AST_VALUE_NULL, token);
@@ -595,8 +614,8 @@ AST_value_stack* parser_get_new_null_ast_value_stack
   return new;
 }
 
-AST_value_stack* parser_get_new_bool_ast_value_stack
-  (Parser* parser, bool is_minus)
+  AST_value_stack* parser_get_new_bool_ast_value_stack
+(Parser* parser, bool is_minus)
 {
   Token* token = parser->token;
 
@@ -610,8 +629,8 @@ AST_value_stack* parser_get_new_bool_ast_value_stack
   return new;
 }
 
-AST_value_stack* parser_get_new_matrix_ast_value_stack
-  (Parser* parser, bool is_minus)
+  AST_value_stack* parser_get_new_matrix_ast_value_stack
+(Parser* parser, bool is_minus)
 {
   Token* token = parser->token;
 
@@ -687,17 +706,17 @@ AST_value_stack* parser_pop_value(AST_value* value)
 {
   if (value->size == 0)
   {
-//     int required =
-//       snprintf(NULL, 0, "에러, %s가 무엇이죠??::type: %d",
-//     token->value, token->type);
-//     char* error_message = malloc((required + 1) * sizeof(char));
-//     snprintf(error_message, required + 1,
-//               "에러, %s가 무엇이죠??::type: %d",
-//               token->value, token->type);
-//     error(error_message, parser, token);
+    //     int required =
+    //       snprintf(NULL, 0, "에러, %s가 무엇이죠??::type: %d",
+    //     token->value, token->type);
+    //     char* error_message = malloc((required + 1) * sizeof(char));
+    //     snprintf(error_message, required + 1,
+    //               "에러, %s가 무엇이죠??::type: %d",
+    //               token->value, token->type);
+    //     error(error_message, parser, token);
     orora_error("에러, 삭제 불가함", (void*) 0);
-//     printf("에러, 삭제 불가함");
-//     exit(1);
+    //     printf("에러, 삭제 불가함");
+    //     exit(1);
   }
   value->size --;
   AST_value_stack* snode = value->stack;
@@ -721,6 +740,7 @@ GET_VALUE_ENV* init_get_value_env()
 {
   GET_VALUE_ENV* new_env = malloc(sizeof(GET_VALUE_ENV));
   new_env->is_in_parentheses = false;
+  new_env->is_operator_colon = true;
 
   return new_env;
 }
@@ -735,6 +755,7 @@ int parser_precedence(int ast_stack_id)
       break;
 
     case AST_VALUE_COMMA:         // ,
+    case AST_VALUE_COLON:         // :
       return 2;
       break;
 
@@ -748,35 +769,39 @@ int parser_precedence(int ast_stack_id)
       return 4;
       break;
 
+    case AST_VALUE_IN:            // in
+      return 5;
+      break;
+
     case AST_VALUE_LESS:          // <
     case AST_VALUE_GREATER:       // >
     case AST_VALUE_LESSEQUAL:     // <=
     case AST_VALUE_GREATEREQUAL:  // >=
-      return 5;
+      return 6;
       break;
 
     case AST_VALUE_PLUS:          // +
     case AST_VALUE_MINUS:         // -
-      return 6;
+      return 7;
       break;
 
     case AST_VALUE_DOT_PRODUCT:   // \cdot
     case AST_VALUE_PRODUCT:       // *, \times
     case AST_VALUE_DIV:          // /, \div
     case AST_VALUE_MOD:          // \mod
-      return 7;
-      break;
-
-    case AST_VALUE_CIRCUMFLEX:    // ^
       return 8;
       break;
 
-    case AST_VALUE_UNDER:         // _
+    case AST_VALUE_CIRCUMFLEX:    // ^
       return 9;
       break;
 
-    case AST_VALUE_NEG:           // !, \neg
+    case AST_VALUE_UNDER:         // _
       return 10;
+      break;
+
+    case AST_VALUE_NEG:           // !, \neg
+      return 11;
       break;
 
     case AST_VALUE_RPAR:          // )
@@ -784,7 +809,7 @@ int parser_precedence(int ast_stack_id)
       return 99;
       break;
   }
-  
+
   return -1;
 }
 
@@ -810,6 +835,8 @@ bool is_operator(int token_id)
     case TOKEN_MOD:
     case TOKEN_UNDER:
     case TOKEN_COMMA:
+    case TOKEN_COLON:
+    case TOKEN_IN:
       return true;
   }
 
@@ -850,6 +877,8 @@ int get_ast_value_type(int token_id)
     case TOKEN_MOD:                 return AST_VALUE_MOD;
     case TOKEN_UNDER:               return AST_VALUE_UNDER;
     case TOKEN_COMMA:               return AST_VALUE_COMMA;
+    case TOKEN_COLON:               return AST_VALUE_COLON;
+    case TOKEN_IN:                  return AST_VALUE_IN;
   }
 
   return -1;
@@ -877,6 +906,8 @@ int get_token_type(int ast_value_id)
     case AST_VALUE_MOD:             return TOKEN_MOD;
     case AST_VALUE_UNDER:           return TOKEN_UNDER;
     case AST_VALUE_COMMA:           return TOKEN_COMMA;
+    case AST_VALUE_COLON:           return TOKEN_COLON;
+    case AST_VALUE_IN:              return TOKEN_IN;
   }
 
   return -1;

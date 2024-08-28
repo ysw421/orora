@@ -174,6 +174,16 @@ AST_value_stack* visitor_print_function(Envs* envs, AST_function* ast_function)
         visitor_print_function_value(new_value);
         break;
 
+      case AST_MACRO:
+        AST_macro* ast_macro_arg_macro =
+          ast_function_arg->value.macro_v;
+
+        new_value = 
+          visitor_get_value_from_macro(envs, ast_macro_arg_macro);
+
+        visitor_print_function_value(new_value);
+        break;
+
       case AST_CODE:
       case AST_CASES:
         new_value = 

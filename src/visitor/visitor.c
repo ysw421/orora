@@ -15,6 +15,8 @@ orora_value_type* get_single_value_type(int ast_type);
 
 Env_variable* visitor_get_variable(Envs* envs, AST_variable* ast_variable);
 Env_function* visitor_get_function(Envs* envs, AST_function* ast_function);
+Env_macro* visitor_get_macro(Envs* envs, AST_macro* ast_macro);
+Env_macro* visitor_get_macro_newenv(Envs* envs, const char* name, AST_newenv* ast_macro);
 
 Env_variable* visitor_variable
 (Envs* envs, AST_variable* ast_variable);
@@ -24,6 +26,7 @@ Env_variable* visitor_variable
 
 Env_variable* visitor_variable_define(Envs* envs, AST_variable* ast_variable);
 Env_function* visitor_function_define(Envs* envs, AST_function* ast_function);
+Env_macro* visitor_macro_define(Envs* envs, AST_newenv* ast_newenv);
 
 AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value);
 
@@ -60,6 +63,9 @@ AST_value_stack* visitor_operator_power(AST_value_stack* result,
 AST_value_stack* visitor_operator_mod(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
+AST_value_stack* visitor_operator_colon(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2);
 AST_value_stack* visitor_operator_comma(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2);
@@ -67,11 +73,15 @@ AST_value_stack* visitor_operator_under(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2,
     Envs* envs);
+AST_value_stack* visitor_operator_in(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2);
 
 AST_value_stack* get_variable_from_Env_variable
 (Envs* envs, AST_value_stack* ast);
 Env_variable* visitor_variable_satisfy(Envs* envs, AST_variable* ast_variable);
 
+void visitor_env_variable_autotype(Envs* new_envs, Env_variable* env_variable, AST* ast);
 
 
 struct AST_VALUE_STACK_INDEX_T
@@ -106,6 +116,8 @@ AST_value_stack* visitor_get_value_from_ast
 (Envs* envs, AST* condition);
 AST_value_stack* visitor_get_value_from_function
 (Envs* envs, AST_function* ast_function);
+AST_value_stack* visitor_get_value_from_macro
+(Envs* envs, AST_macro* ast_macro);
 AST_value_stack* visitor_get_value_from_variable
 (Envs* envs, Env_variable* env_variable);
 AST_value_stack* visitor_get_value_from_cases
@@ -141,6 +153,10 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
 
   switch (ast->type)
   {
+    case AST_NEWENV:
+      visitor_macro_define(envs, ast->value.newenv_v);
+      break;
+
     case AST_MATRIX_INDEX:
       AST_matrix_index* ast_matrix_index = ast->value.matrix_index_v;
 
@@ -180,6 +196,14 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
           visitor_get_value_from_variable(envs, env_variable);
       else
         visitor_get_value_from_variable(envs, env_variable);
+      break;
+
+    case AST_MACRO:
+      if (INTERACTIVE_MODE)
+        get_visitor_env->output =
+          visitor_get_value_from_macro(envs, ast->value.macro_v);
+      else
+        visitor_get_value_from_macro(envs, ast->value.macro_v);
       break;
 
     case AST_FUNCTION:
@@ -275,7 +299,6 @@ GET_VISITOR_ENV* visitor_visit(Envs* envs, AST* ast)
       break;
 
     default:
-      printf("!!! %d\n", ast->type);
       return get_visitor_env;
   }
 
@@ -411,6 +434,13 @@ void visitor_nondefine_function_error(AST_function* ast_function)
 //   exit(1);
 }
 
+void visitor_nondefine_macro_error(AST_macro* ast_macro)
+{
+  const char* error_log = "에러 정의되지 않은 macro: ";
+  error_log = const_strcat(error_log, ast_macro->name);
+  orora_error(error_log, (void*) 0);
+}
+
 Env_function* visitor_get_function(Envs* envs, AST_function* ast_function)
 {
   Env_function* check_function = envs->local->functions;
@@ -446,6 +476,80 @@ Env_function* visitor_get_function(Envs* envs, AST_function* ast_function)
     return (void*) 0;
 
   return visitor_get_function(envs->global, ast_function);
+}
+
+Env_macro* visitor_get_macro(Envs* envs, AST_macro* ast_macro)
+{
+  Env_macro* check_macro = envs->local->macros;
+
+  Env_macro* snode = (void*) 0;
+  while (check_macro)
+  {
+    if (!strcmp(check_macro->name, ast_macro->name))
+    {
+      if (snode)
+      {
+        snode->next = check_macro->next;
+        check_macro->next = envs->local->macros;
+        envs->local->macros = check_macro;
+      }
+      return check_macro;
+    }
+    if (snode)
+    {
+      snode = snode->next;
+    }
+    else
+    {
+      snode = envs->local->macros;
+    }
+    if (!check_macro->next)
+      break;
+
+    check_macro = check_macro->next;
+  }
+
+  if (!envs->global)
+    return (void*) 0;
+
+  return visitor_get_macro(envs->global, ast_macro);
+}
+
+Env_macro* visitor_get_macro_newenv(Envs* envs, const char* name, AST_newenv* ast_macro)
+{
+  Env_macro* check_macro = envs->local->macros;
+
+  Env_macro* snode = (void*) 0;
+  while (check_macro)
+  {
+    if (!strcmp(check_macro->name, name))
+    {
+      if (snode)
+      {
+        snode->next = check_macro->next;
+        check_macro->next = envs->local->macros;
+        envs->local->macros = check_macro;
+      }
+      return check_macro;
+    }
+    if (snode)
+    {
+      snode = snode->next;
+    }
+    else
+    {
+      snode = envs->local->macros;
+    }
+    if (!check_macro->next)
+      break;
+
+    check_macro = check_macro->next;
+  }
+
+  if (!envs->global)
+    return (void*) 0;
+
+  return visitor_get_macro_newenv(envs->global, name, ast_macro);
 }
 
 AST_value_stack* visitor_get_value_from_ast
@@ -505,6 +609,14 @@ AST_value_stack* visitor_get_value_from_ast
         visitor_get_value_from_function(
             envs,
             condition->value.function_v
+        );
+      break;
+
+    case AST_MACRO:
+      condition_value = 
+        visitor_get_value_from_macro(
+            envs,
+            condition->value.macro_v
         );
       break;
 
@@ -568,6 +680,221 @@ AST_value_stack* visitor_get_value_from_code
   }
 
   return init_ast_value_stack(AST_VALUE_NULL, (void*) 0);
+}
+
+void visitor_env_variable_autotype(Envs* new_envs, Env_variable* env_variable, AST* ast)
+{
+  if (ast->type == AST_VARIABLE)
+  {
+    switch (ast->value.variable_v->ast_type)
+    {
+      case AST_VARIABLE_VALUE:
+        Env_variable* value_variable =
+          visitor_get_variable(new_envs,
+              ast->value.variable_v);
+        if (!value_variable)
+        {
+          visitor_nondefine_variable_error(
+              ast->value.variable_v);
+        }
+
+        env_variable->type = value_variable->type;
+        env_variable->value = value_variable->value;
+        break;
+
+      case AST_VARIABLE_DEFINE:
+        value_variable =
+          visitor_variable_define(new_envs,
+              ast->value.variable_v);
+        env_variable->type = value_variable->type;
+        env_variable->value = value_variable->value;
+
+        const char* satisfy_condition = "!\\begin{code}";
+        satisfy_condition = const_strcat(satisfy_condition, ast->value.variable_v->name);
+        satisfy_condition = const_strcat(satisfy_condition, ":=");
+        satisfy_condition = const_strcat(satisfy_condition, env_variable->name);
+        satisfy_condition = const_strcat(satisfy_condition, "\\end{code}");
+
+        off_t len = strlen(satisfy_condition);
+        off_t* len_p = &len;
+        Lexer* satisfy_lexer = init_lexer((char*) satisfy_condition, len_p);
+        Parser* satisfy_parser = init_parser(satisfy_lexer);
+        AST* satisfy_ast = parser_parse(satisfy_parser);
+
+        AST_value* satisfy = init_ast_value();
+        satisfy->size = 2;
+        satisfy->stack = satisfy_ast->value.compound_v->items[0]->value.value_v->stack;
+
+        env_variable->satisfy_size = 1;
+        env_variable->satisfy = init_env_value_list(satisfy);
+        break;
+
+      default:
+        orora_error("에러, 해당 에러는 발생 불가함", (void*) 0);
+        //             printf("에러, 해당 에러는 발생 불가함\n");
+        //             exit(1);
+    }
+  }
+  else
+  {
+    AST_value_stack* new_value = 
+      visitor_get_value_from_ast(new_envs, ast);
+    orora_value_type* variable_type =
+      get_single_value_type(new_value->type);
+    env_variable =
+      variable_type
+      ->visitor_set_value_Env_variable_from_AST_value_stack(
+          env_variable,
+          new_value
+          );
+  }
+  //   switch (new_value->type)
+  //   {
+  //     case AST_VALUE_INT:
+  //       env_variable->type = ENV_VARIABLE_INT;
+  //       env_variable->value.int_v = new_value->value.int_v;
+  //       break;
+  // 
+  //     case AST_VALUE_FLOAT:
+  //       env_variable->type = ENV_VARIABLE_FLOAT;
+  //       env_variable->value.float_v = new_value->value.float_v;
+  //       break;
+  // 
+  //     case AST_VALUE_STRING:
+  //       env_variable->type = ENV_VARIABLE_STRING;
+  //       env_variable->value.string_v = new_value->value.string_v;
+  //       break;
+  // 
+  //     case AST_VALUE_BOOL:
+  //       env_variable->type = ENV_VARIABLE_BOOL;
+  //       env_variable->value.bool_v = new_value->value.bool_v;
+  //       break;
+  // 
+  //     case AST_VALUE_MATRIX:
+  //       env_variable->type = ENV_VARIABLE_MATRIX;
+  //       env_variable->value.matrix_v = new_value->value.matrix_v;
+  //       break;
+  // 
+  //     case AST_VALUE_NULL:
+  //       env_variable->type = ENV_VARIABLE_NULL;
+  //       //         env_variable->value.null_v = (void*) 0;
+  //       break;
+  // 
+  //     default:
+  //       orora_error("에러, 변수의 타입이 없음", (void*) 0);
+  //   }
+}
+
+AST_value_stack* visitor_get_value_from_macro
+(Envs* envs, AST_macro* ast_macro)
+{
+  Env_macro* env_macro =
+    visitor_get_macro(envs, ast_macro);
+  if (!env_macro)
+  {
+//     AST_value_stack* result = check_sysfunc(envs, ast_function);
+
+//     if (result)
+    if (0)
+      return (void*) 0;
+//       return result;
+    else
+    {
+//       free(result);
+      visitor_nondefine_macro_error(ast_macro);
+    }
+  }
+
+  Envs* new_envs = visitor_merge_envs(envs);
+
+  if (env_macro->args_size != ast_macro->args_size)
+    orora_error("에러, macro의 argument 개수가 다름", (void*) 0);
+
+  if (ast_macro->super)
+  {
+    const char* arg_name = "#super";
+    Env_variable* env_variable = init_env_variable(
+        (char*) arg_name,
+        strlen(arg_name)
+      );
+    env_variable->next = new_envs->local->variables;
+    new_envs->local->variable_size ++;
+    new_envs->local->variables = env_variable;
+
+    visitor_env_variable_autotype(envs, env_variable, ast_macro->super);
+  }
+
+  if (ast_macro->sub)
+  {
+    const char* arg_name = "#sub";
+    Env_variable* env_variable = init_env_variable(
+        (char*) arg_name,
+        strlen(arg_name)
+      );
+    env_variable->next = new_envs->local->variables;
+    new_envs->local->variable_size ++;
+    new_envs->local->variables = env_variable;
+
+    visitor_env_variable_autotype(envs, env_variable, ast_macro->sub);
+  }
+
+  for (int i = 0; i < env_macro->args_size; i++)
+  {
+    const char* arg_name = "#";
+    arg_name = const_strcat(arg_name, int_to_string(i+1));
+//     Env_variable* env_variable = init_env_variable(
+//         (char*) arg_name,
+//         strlen(arg_name)
+//       );
+    AST_macro* ast_macro_ast = init_ast_macro((char*) arg_name, (size_t) strlen(arg_name));
+    AST* name_string_ast = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+    name_string_ast->value.value_v = init_ast_value();
+    name_string_ast->value.value_v->size = 1;
+    name_string_ast->value.value_v->stack = init_ast_value_stack(AST_VALUE_MACRO, (void*) 0);
+    name_string_ast->value.value_v->stack->value.macro_v = ast_macro_ast;
+
+    AST* name_ast = init_ast(AST_COMPOUND, (void*) 0, (void*) 0);
+    name_ast->value.compound_v = init_ast_compound();
+    name_ast->value.compound_v->size = 1;
+    name_ast->value.compound_v->items[0] = name_string_ast;
+
+    AST_int* ast_int = (AST_int*) malloc(sizeof(struct ast_int_t));
+    ast_int->value = 0;
+    AST* args_size = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+    args_size->value.value_v = init_ast_value();
+    args_size->value.value_v->size = 1;
+    args_size->value.value_v->stack = init_ast_value_stack(AST_VALUE_INT, (void*) 0);
+    args_size->value.value_v->stack->value.int_v = ast_int;
+    AST* args_size_ast = init_ast(AST_COMPOUND, (void*) 0, (void*) 0);
+    args_size_ast->value.compound_v = init_ast_compound();
+    args_size_ast->value.compound_v->size = 1;
+    args_size_ast->value.compound_v->items[0] = args_size;
+
+    AST* code_ast = init_ast(AST_COMPOUND, (void*) 0, (void*) 0);
+    code_ast->value.compound_v = init_ast_compound();
+    code_ast->value.compound_v->size = 1;
+    code_ast->value.compound_v->items[0] = ast_macro->args[i];
+
+    AST_newenv* newenv = init_ast_newenv();
+    newenv->name = name_ast;
+    newenv->args_size = args_size_ast;
+    newenv->code = code_ast;
+
+    visitor_macro_define(new_envs, newenv);
+
+//     env_variable->next = new_envs->local->variables;
+//     new_envs->local->variable_size ++;
+//     new_envs->local->variables = env_variable;
+// 
+//     visitor_env_variable_autotype(envs, env_variable, ast_macro->args[i]);
+  }
+
+  AST_value_stack* result = 
+    visitor_get_value_from_ast(new_envs, env_macro->code);
+
+  free(new_envs);
+  
+  return result;
 }
 
 AST_value_stack* visitor_get_value_from_function
@@ -709,6 +1036,59 @@ Env_function* visitor_function_define(Envs* envs, AST_function* ast_function)
   }
 
   return env_function;
+}
+
+Env_macro* visitor_macro_define(Envs* envs, AST_newenv* ast_newenv)
+{
+  AST* macro_name_ast = ast_newenv->name->value.compound_v->items[0];
+  AST* macro_args_size_ast = ast_newenv->args_size->value.compound_v->items[0];
+  AST* macro_code_ast = ast_newenv->code->value.compound_v->items[0];
+  if (!macro_name_ast
+      || ast_newenv->name->value.compound_v->size != 1
+      || ast_newenv->args_size->value.compound_v->size != 1
+      || ast_newenv->code->value.compound_v->size != 1
+      || macro_name_ast->type != AST_VALUE
+      || macro_name_ast->value.value_v->size != 1
+      || macro_name_ast->value.value_v->stack->type != AST_VALUE_MACRO
+      || macro_args_size_ast->type != AST_VALUE
+      || macro_args_size_ast->value.value_v->size != 1
+      || macro_args_size_ast->value.value_v->stack->type != AST_VALUE_INT
+      )
+  {
+    orora_error("에러, newenvironment 설정 잘못되었음", (void*) 0);
+  }
+  AST_value_stack* macro_name = macro_name_ast->value.value_v->stack;
+  AST_value_stack* macro_args_size = macro_args_size_ast->value.value_v->stack;
+  if (!macro_name
+      || macro_name->type != AST_VALUE_MACRO
+      || (macro_name->value.string_v->value[0] != '\\'
+          && macro_name->value.string_v->value[0] != '#')
+      || !macro_args_size
+      || macro_args_size->type != AST_VALUE_INT
+      || macro_args_size->value.int_v->value > 9
+      || macro_args_size->value.int_v->value < 0
+      )
+  {
+    orora_error("에러, newenvironment 설정 잘못되었음", (void*) 0);
+  }
+  Env_macro* env_macro =
+    visitor_get_macro_newenv(envs, macro_name->value.string_v->value, ast_newenv);
+
+  if (env_macro)
+  {
+    get_env_macro_from_ast_macro(env_macro, macro_args_size->value.int_v->value, macro_code_ast);
+  }
+  else
+  {
+    env_macro = init_env_macro(macro_name->value.string_v->value, macro_args_size->value.int_v->value, macro_code_ast);
+
+    Env* local_env = envs->local;
+    env_macro->next = local_env->macros;
+    local_env->macro_size ++;
+    local_env->macros = env_macro;
+  }
+
+  return env_macro;
 }
 
 Env_variable* visitor_variable_define_from_value
@@ -1003,6 +1383,14 @@ struct AST_VALUE_STACK_INDEX_T* visitor_get_matrix_index(Envs* envs, AST_value* 
           parser_push_value(stack, new_value_stack);
           break;
 
+        case AST_VALUE_MACRO:
+          AST_macro* ast_macro = text->value.macro_v;
+          new_value_stack = 
+            visitor_get_value_from_macro(envs, ast_macro);
+
+          parser_push_value(stack, new_value_stack);
+          break;
+
         case AST_VALUE_CASES:
           parser_push_value(
               stack, 
@@ -1083,6 +1471,10 @@ struct AST_VALUE_STACK_INDEX_T* visitor_get_matrix_index(Envs* envs, AST_value* 
 
         case AST_VALUE_MOD:
           result = visitor_operator_mod(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_COLON:
+          result = visitor_operator_colon(result, operand1, operand2);
           break;
 
         case AST_VALUE_CIRCUMFLEX:
@@ -1247,6 +1639,14 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
           parser_push_value(stack, new_value_stack);
           break;
 
+        case AST_VALUE_MACRO:
+          AST_macro* ast_macro = text->value.macro_v;
+          new_value_stack = 
+            visitor_get_value_from_macro(envs, ast_macro);
+
+          parser_push_value(stack, new_value_stack);
+          break;
+
         case AST_VALUE_CASES:
           parser_push_value(
               stack, 
@@ -1329,8 +1729,16 @@ AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
           result = visitor_operator_mod(result, operand1, operand2);
           break;
 
+        case AST_VALUE_COLON:
+          result = visitor_operator_colon(result, operand1, operand2);
+          break;
+
         case AST_VALUE_CIRCUMFLEX:
           result = visitor_operator_power(result, operand1, operand2);
+          break;
+
+        case AST_VALUE_IN:
+          result = visitor_operator_in(result, operand1, operand2);
           break;
 
         case AST_VALUE_EQUAL:
@@ -1922,7 +2330,7 @@ GET_VISITOR_ENV* visitor_run_for(Envs* envs, AST_for* ast_for)
 
       case AST_VALUE_NULL:
         env_variable->type = ENV_VARIABLE_NULL;
-//         env_variable->value.null_v = (void*) 0;
+        //         env_variable->value.null_v = (void*) 0;
         break;
 
       default:

@@ -18,11 +18,13 @@ AST_value_stack* visitor_operator_minus(AST_value_stack* result, AST_value_stack
 AST_value_stack* visitor_operator_product(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* visitor_operator_div(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* visitor_operator_mod(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+AST_value_stack* visitor_operator_colon(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* visitor_operator_power(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* visitor_operator_equal(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* visitor_operator_less(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* visitor_operator_greater(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* visitor_operator_comma(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+AST_value_stack* visitor_operator_in(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 
 
 // Plus
@@ -76,6 +78,9 @@ AST_value_stack* operator_div_matrix(AST_value_stack* result, AST_value_stack* o
 // Mod
 AST_value_stack* operator_mod_int_int(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 
+// Colon
+AST_value_stack* operator_colon_int_int(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+
 // Power
 AST_value_stack* operator_power_int_int(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* operator_power_int_float(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
@@ -125,13 +130,22 @@ AST_value_stack* operator_comma_v_m(AST_value_stack* result, AST_value_stack* op
 AST_value_stack* operator_comma_m_v(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* operator_comma_m_m(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 
+// In
+AST_value_stack* operator_in_int_matrix(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+AST_value_stack* operator_in_float_matrix(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+AST_value_stack* operator_in_string_matrix(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+AST_value_stack* operator_in_bool_matrix(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+AST_value_stack* operator_in_matrix_matrix(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+AST_value_stack* operator_in_null_matrix(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+AST_value_stack* operator_in_v_string(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
+
 
 AST_value_stack* visitor_operator(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2,
     struct operation_t operation[],
     size_t operation_size
-)
+    )
 {
   int op1 = operand1->type;
   int op2 = operand2->type;
@@ -290,6 +304,17 @@ AST_value_stack* visitor_operator_mod(AST_value_stack* result,
   return visitor_operator(result, operand1, operand2, mod_op, sizeof(mod_op)/sizeof(struct operation_t));
 }
 
+AST_value_stack* visitor_operator_colon(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  struct operation_t colon_op[] = {
+    {AST_VALUE_INT, AST_VALUE_INT, operator_colon_int_int},
+  };
+
+  return visitor_operator(result, operand1, operand2, colon_op, sizeof(colon_op)/sizeof(struct operation_t));
+}
+
 AST_value_stack* visitor_operator_power(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
@@ -410,6 +435,28 @@ AST_value_stack* visitor_operator_comma(AST_value_stack* result,
   };
 
   return visitor_operator(result, operand1, operand2, comma_op, sizeof(comma_op)/sizeof(struct operation_t));
+}
+
+AST_value_stack* visitor_operator_in(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  struct operation_t in_op[] = {
+    {AST_VALUE_INT,   AST_VALUE_MATRIX,    operator_in_int_matrix},
+    {AST_VALUE_FLOAT, AST_VALUE_MATRIX,    operator_in_float_matrix},
+    {AST_VALUE_STRING,AST_VALUE_MATRIX,    operator_in_string_matrix},
+    {AST_VALUE_BOOL,  AST_VALUE_MATRIX,    operator_in_bool_matrix},
+    {AST_VALUE_MATRIX,AST_VALUE_MATRIX,    operator_in_matrix_matrix},
+    {AST_VALUE_NULL,  AST_VALUE_MATRIX,    operator_in_null_matrix},
+    {AST_VALUE_INT,   AST_VALUE_STRING,    operator_in_v_string},
+    {AST_VALUE_FLOAT, AST_VALUE_STRING,    operator_in_v_string},
+    {AST_VALUE_STRING,AST_VALUE_STRING,    operator_in_v_string},
+    {AST_VALUE_BOOL,  AST_VALUE_STRING,    operator_in_v_string},
+    {AST_VALUE_MATRIX,AST_VALUE_STRING,    operator_in_v_string},
+    {AST_VALUE_NULL,  AST_VALUE_STRING,    operator_in_v_string},
+  };
+
+  return visitor_operator(result, operand1, operand2, in_op, sizeof(in_op)/sizeof(struct operation_t));
 }
 
 
@@ -586,188 +633,188 @@ AST_value_stack* operator_minus_int_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_INT;
-    result->value.int_v = malloc(sizeof(struct ast_int_t));
-    result->value.int_v->value =
-        operand1->value.int_v->value - operand2->value.int_v->value;
-    return result;
+  result->type = AST_VALUE_INT;
+  result->value.int_v = malloc(sizeof(struct ast_int_t));
+  result->value.int_v->value =
+    operand1->value.int_v->value - operand2->value.int_v->value;
+  return result;
 }
 
 AST_value_stack* operator_minus_int_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    if (operand1->type == AST_VALUE_INT)
-        result->value.float_v->value =
-            operand1->value.int_v->value - operand2->value.float_v->value;
-    else
-      result->value.float_v->value =
-        operand1->value.float_v->value - operand2->value.int_v->value;
-    return result;
+  result->type = AST_VALUE_FLOAT;
+  result->value.float_v = malloc(sizeof(struct ast_float_t));
+  if (operand1->type == AST_VALUE_INT)
+    result->value.float_v->value =
+      operand1->value.int_v->value - operand2->value.float_v->value;
+  else
+    result->value.float_v->value =
+      operand1->value.float_v->value - operand2->value.int_v->value;
+  return result;
 }
 
 AST_value_stack* operator_minus_float_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    if (operand1->type == AST_VALUE_INT)
-        result->value.float_v->value =
-            operand1->value.int_v->value - operand2->value.float_v->value;
-    else
-      result->value.float_v->value =
-        operand1->value.float_v->value - operand2->value.int_v->value;
-    return result;
+  result->type = AST_VALUE_FLOAT;
+  result->value.float_v = malloc(sizeof(struct ast_float_t));
+  if (operand1->type == AST_VALUE_INT)
+    result->value.float_v->value =
+      operand1->value.int_v->value - operand2->value.float_v->value;
+  else
+    result->value.float_v->value =
+      operand1->value.float_v->value - operand2->value.int_v->value;
+  return result;
 }
 
 AST_value_stack* operator_minus_int_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_INT;
-    result->value.int_v = malloc(sizeof(struct ast_int_t));
-    if (operand1->type == AST_VALUE_INT)
-        result->value.int_v->value =
-            operand1->value.int_v->value - (operand2->value.bool_v->value ? 1 : 0);
-    else
-      result->value.int_v->value =
-        operand1->value.float_v->value - (operand2->value.bool_v->value ? 1 : 0);
-    return result;
+  result->type = AST_VALUE_INT;
+  result->value.int_v = malloc(sizeof(struct ast_int_t));
+  if (operand1->type == AST_VALUE_INT)
+    result->value.int_v->value =
+      operand1->value.int_v->value - (operand2->value.bool_v->value ? 1 : 0);
+  else
+    result->value.int_v->value =
+      operand1->value.float_v->value - (operand2->value.bool_v->value ? 1 : 0);
+  return result;
 }
 
 AST_value_stack* operator_minus_bool_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_INT;
-    result->value.int_v = malloc(sizeof(struct ast_int_t));
-    if (operand1->type == AST_VALUE_INT)
-        result->value.int_v->value =
-            (operand1->value.bool_v->value ? 1 : 0) - operand2->value.int_v->value;
-    else
-      result->value.int_v->value =
-        (operand1->value.bool_v->value ? 1 : 0) - operand2->value.float_v->value;
-    return result;
+  result->type = AST_VALUE_INT;
+  result->value.int_v = malloc(sizeof(struct ast_int_t));
+  if (operand1->type == AST_VALUE_INT)
+    result->value.int_v->value =
+      (operand1->value.bool_v->value ? 1 : 0) - operand2->value.int_v->value;
+  else
+    result->value.int_v->value =
+      (operand1->value.bool_v->value ? 1 : 0) - operand2->value.float_v->value;
+  return result;
 }
 
 AST_value_stack* operator_minus_float_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value =
-        operand1->value.float_v->value - operand2->value.float_v->value;
-    return result;
+  result->type = AST_VALUE_FLOAT;
+  result->value.float_v = malloc(sizeof(struct ast_float_t));
+  result->value.float_v->value =
+    operand1->value.float_v->value - operand2->value.float_v->value;
+  return result;
 }
 
 AST_value_stack* operator_minus_float_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    if (operand1->type == AST_VALUE_FLOAT)
-        result->value.float_v->value =
-            operand1->value.float_v->value - (operand2->value.bool_v->value ? 1.0 : 0.0);
-    else
-      result->value.float_v->value =
-        (operand1->value.bool_v->value ? 1.0 : 0.0) - operand2->value.float_v->value;
-    return result;
+  result->type = AST_VALUE_FLOAT;
+  result->value.float_v = malloc(sizeof(struct ast_float_t));
+  if (operand1->type == AST_VALUE_FLOAT)
+    result->value.float_v->value =
+      operand1->value.float_v->value - (operand2->value.bool_v->value ? 1.0 : 0.0);
+  else
+    result->value.float_v->value =
+      (operand1->value.bool_v->value ? 1.0 : 0.0) - operand2->value.float_v->value;
+  return result;
 }
 
 AST_value_stack* operator_minus_bool_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    if (operand1->type == AST_VALUE_FLOAT)
-        result->value.float_v->value =
-            (operand1->value.bool_v->value ? 1.0 : 0.0) - operand2->value.float_v->value;
-    else
-      result->value.float_v->value =
-        (operand1->value.bool_v->value ? 1.0 : 0.0) - operand2->value.float_v->value;
-    return result;
+  result->type = AST_VALUE_FLOAT;
+  result->value.float_v = malloc(sizeof(struct ast_float_t));
+  if (operand1->type == AST_VALUE_FLOAT)
+    result->value.float_v->value =
+      (operand1->value.bool_v->value ? 1.0 : 0.0) - operand2->value.float_v->value;
+  else
+    result->value.float_v->value =
+      (operand1->value.bool_v->value ? 1.0 : 0.0) - operand2->value.float_v->value;
+  return result;
 }
 
 AST_value_stack* operator_minus_bool_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_INT;
-    result->value.int_v = malloc(sizeof(struct ast_int_t));
-    result->value.int_v->value =
-        (operand1->value.bool_v->value ? 1 : 0) - (operand2->value.bool_v->value ? 1 : 0);
-    return result;
+  result->type = AST_VALUE_INT;
+  result->value.int_v = malloc(sizeof(struct ast_int_t));
+  result->value.int_v->value =
+    (operand1->value.bool_v->value ? 1 : 0) - (operand2->value.bool_v->value ? 1 : 0);
+  return result;
 }
 
 AST_value_stack* operator_minus_matrix_matrix(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    AST_matrix* matrix1 = operand1->value.matrix_v;
-    AST_matrix* matrix2 = operand2->value.matrix_v;
+  AST_matrix* matrix1 = operand1->value.matrix_v;
+  AST_matrix* matrix2 = operand2->value.matrix_v;
 
-    if (matrix1->row_size != matrix2->row_size || matrix1->col_size != matrix2->col_size) {
-        orora_error("에러, 행렬 뺄셈시 크기가 같아야 함", (void*) 0);
-        return (void*) 0;
-    }
+  if (matrix1->row_size != matrix2->row_size || matrix1->col_size != matrix2->col_size) {
+    orora_error("에러, 행렬 뺄셈시 크기가 같아야 함", (void*) 0);
+    return (void*) 0;
+  }
 
-    int matrix_size = matrix1->row_size * matrix1->col_size;
+  int matrix_size = matrix1->row_size * matrix1->col_size;
 
-    result->type = AST_VALUE_MATRIX;
-    result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
-    result->value.matrix_v->row_size = matrix1->row_size;
-    result->value.matrix_v->col_size = matrix1->col_size;
-    result->value.matrix_v->value = malloc(matrix_size * sizeof(struct ast_t));
+  result->type = AST_VALUE_MATRIX;
+  result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+  result->value.matrix_v->row_size = matrix1->row_size;
+  result->value.matrix_v->col_size = matrix1->col_size;
+  result->value.matrix_v->value = malloc(matrix_size * sizeof(struct ast_t));
 
-    for (int i = 0; i < matrix_size; i++) {
-        AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
-        new_value->value.value_v = init_ast_value();
-        new_value->value.value_v->size = 1;
-        new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
-        visitor_operator_minus(
-            new_value->value.value_v->stack,
-            matrix1->value[i]->value.value_v->stack,
-            matrix2->value[i]->value.value_v->stack
+  for (int i = 0; i < matrix_size; i++) {
+    AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+    new_value->value.value_v = init_ast_value();
+    new_value->value.value_v->size = 1;
+    new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+    visitor_operator_minus(
+        new_value->value.value_v->stack,
+        matrix1->value[i]->value.value_v->stack,
+        matrix2->value[i]->value.value_v->stack
         );
-        result->value.matrix_v->value[i] = new_value;
-    }
+    result->value.matrix_v->value[i] = new_value;
+  }
 
-    return result;
+  return result;
 }
 
 AST_value_stack* operator_minus_matrix(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    AST_matrix* matrix = (operand1->type == AST_VALUE_MATRIX) ? operand1->value.matrix_v : operand2->value.matrix_v;
-    int matrix_size = matrix->row_size * matrix->col_size;
+  AST_matrix* matrix = (operand1->type == AST_VALUE_MATRIX) ? operand1->value.matrix_v : operand2->value.matrix_v;
+  int matrix_size = matrix->row_size * matrix->col_size;
 
-    result->type = AST_VALUE_MATRIX;
-    result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
-    result->value.matrix_v->row_size = matrix->row_size;
-    result->value.matrix_v->col_size = matrix->col_size;
-    result->value.matrix_v->value = malloc(matrix_size * sizeof(struct ast_t));
+  result->type = AST_VALUE_MATRIX;
+  result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+  result->value.matrix_v->row_size = matrix->row_size;
+  result->value.matrix_v->col_size = matrix->col_size;
+  result->value.matrix_v->value = malloc(matrix_size * sizeof(struct ast_t));
 
-    for (int i = 0; i < matrix_size; i++) {
-        AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
-        new_value->value.value_v = init_ast_value();
-        new_value->value.value_v->size = 1;
-        new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
-        visitor_operator_minus(
-            new_value->value.value_v->stack,
-            (operand1->type == AST_VALUE_MATRIX) ? matrix->value[i]->value.value_v->stack : operand1,
-            (operand2->type == AST_VALUE_MATRIX) ? matrix->value[i]->value.value_v->stack : operand2
+  for (int i = 0; i < matrix_size; i++) {
+    AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+    new_value->value.value_v = init_ast_value();
+    new_value->value.value_v->size = 1;
+    new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+    visitor_operator_minus(
+        new_value->value.value_v->stack,
+        (operand1->type == AST_VALUE_MATRIX) ? matrix->value[i]->value.value_v->stack : operand1,
+        (operand2->type == AST_VALUE_MATRIX) ? matrix->value[i]->value.value_v->stack : operand2
         );
-        result->value.matrix_v->value[i] = new_value;
-    }
+    result->value.matrix_v->value[i] = new_value;
+  }
 
-    return result;
+  return result;
 }
 
 // Product
@@ -812,217 +859,217 @@ AST_value_stack* operator_product_int_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_INT;
-    result->value.int_v = malloc(sizeof(struct ast_int_t));
-    result->value.int_v->value =
-        operand1->value.int_v->value * operand2->value.int_v->value;
-    return result;
+  result->type = AST_VALUE_INT;
+  result->value.int_v = malloc(sizeof(struct ast_int_t));
+  result->value.int_v->value =
+    operand1->value.int_v->value * operand2->value.int_v->value;
+  return result;
 }
 
 AST_value_stack* operator_product_int_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    if (operand1->type == AST_VALUE_INT)
-        result->value.float_v->value =
-            operand1->value.int_v->value * operand2->value.float_v->value;
-    else
-        result->value.float_v->value =
-            operand1->value.float_v->value * operand2->value.int_v->value;
-    return result;
+  result->type = AST_VALUE_FLOAT;
+  result->value.float_v = malloc(sizeof(struct ast_float_t));
+  if (operand1->type == AST_VALUE_INT)
+    result->value.float_v->value =
+      operand1->value.int_v->value * operand2->value.float_v->value;
+  else
+    result->value.float_v->value =
+      operand1->value.float_v->value * operand2->value.int_v->value;
+  return result;
 }
 
 AST_value_stack* operator_product_float_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    if (operand1->type == AST_VALUE_INT)
-        result->value.float_v->value =
-            operand1->value.int_v->value * operand2->value.float_v->value;
-    else
-        result->value.float_v->value =
-            operand1->value.float_v->value * operand2->value.int_v->value;
-    return result;
+  result->type = AST_VALUE_FLOAT;
+  result->value.float_v = malloc(sizeof(struct ast_float_t));
+  if (operand1->type == AST_VALUE_INT)
+    result->value.float_v->value =
+      operand1->value.int_v->value * operand2->value.float_v->value;
+  else
+    result->value.float_v->value =
+      operand1->value.float_v->value * operand2->value.int_v->value;
+  return result;
 }
 
 AST_value_stack* operator_product_int_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_INT;
-    result->value.int_v = malloc(sizeof(struct ast_int_t));
-    if (operand1->type == AST_VALUE_INT)
-        result->value.int_v->value =
-            operand1->value.int_v->value * (operand2->value.bool_v->value ? 1 : 0);
-    else
-        result->value.int_v->value =
-            operand1->value.float_v->value * (operand2->value.bool_v->value ? 1 : 0);
-    return result;
+  result->type = AST_VALUE_INT;
+  result->value.int_v = malloc(sizeof(struct ast_int_t));
+  if (operand1->type == AST_VALUE_INT)
+    result->value.int_v->value =
+      operand1->value.int_v->value * (operand2->value.bool_v->value ? 1 : 0);
+  else
+    result->value.int_v->value =
+      operand1->value.float_v->value * (operand2->value.bool_v->value ? 1 : 0);
+  return result;
 }
 
 AST_value_stack* operator_product_float_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value =
-        operand1->value.float_v->value * operand2->value.float_v->value;
-    return result;
+  result->type = AST_VALUE_FLOAT;
+  result->value.float_v = malloc(sizeof(struct ast_float_t));
+  result->value.float_v->value =
+    operand1->value.float_v->value * operand2->value.float_v->value;
+  return result;
 }
 
 AST_value_stack* operator_product_float_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value =
-        operand1->value.float_v->value * (operand2->value.bool_v->value ? 1.0 : 0.0);
-    return result;
+  result->type = AST_VALUE_FLOAT;
+  result->value.float_v = malloc(sizeof(struct ast_float_t));
+  result->value.float_v->value =
+    operand1->value.float_v->value * (operand2->value.bool_v->value ? 1.0 : 0.0);
+  return result;
 }
 
 AST_value_stack* operator_product_bool_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    if (operand1->type == AST_VALUE_FLOAT)
-        result->value.float_v->value =
-            (operand1->value.bool_v->value ? 1.0 : 0.0) * operand2->value.float_v->value;
-    else
-        result->value.float_v->value =
-            (operand1->value.bool_v->value ? 1.0 : 0.0) * operand2->value.float_v->value;
-    return result;
+  result->type = AST_VALUE_FLOAT;
+  result->value.float_v = malloc(sizeof(struct ast_float_t));
+  if (operand1->type == AST_VALUE_FLOAT)
+    result->value.float_v->value =
+      (operand1->value.bool_v->value ? 1.0 : 0.0) * operand2->value.float_v->value;
+  else
+    result->value.float_v->value =
+      (operand1->value.bool_v->value ? 1.0 : 0.0) * operand2->value.float_v->value;
+  return result;
 }
 
 AST_value_stack* operator_product_bool_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_INT;
-    result->value.int_v = malloc(sizeof(struct ast_int_t));
-    result->value.int_v->value =
-        (operand1->value.bool_v->value ? 1 : 0) * (operand2->value.bool_v->value ? 1 : 0);
-    return result;
+  result->type = AST_VALUE_INT;
+  result->value.int_v = malloc(sizeof(struct ast_int_t));
+  result->value.int_v->value =
+    (operand1->value.bool_v->value ? 1 : 0) * (operand2->value.bool_v->value ? 1 : 0);
+  return result;
 }
 
 AST_value_stack* operator_product_matrix_matrix(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    AST_matrix* matrix1 = operand1->value.matrix_v;
-    AST_matrix* matrix2 = operand2->value.matrix_v;
+  AST_matrix* matrix1 = operand1->value.matrix_v;
+  AST_matrix* matrix2 = operand2->value.matrix_v;
 
-    if (matrix1->col_size != matrix2->row_size) {
-        orora_error("에러, 행렬의 곱셈시 첫 행렬의 열과 두번째 행렬의 행의 크기가 같아야 함", (void*) 0);
-        return (void*) 0;
+  if (matrix1->col_size != matrix2->row_size) {
+    orora_error("에러, 행렬의 곱셈시 첫 행렬의 열과 두번째 행렬의 행의 크기가 같아야 함", (void*) 0);
+    return (void*) 0;
+  }
+
+  result->type = AST_VALUE_MATRIX;
+  result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+  result->value.matrix_v->row_size = matrix1->row_size;
+  result->value.matrix_v->col_size = matrix2->col_size;
+  int result_size = result->value.matrix_v->row_size * result->value.matrix_v->col_size;
+  result->value.matrix_v->value = malloc(result_size * sizeof(struct ast_t));
+
+  for (int i = 0; i < matrix1->row_size; i++) {
+    for (int j = 0; j < matrix2->col_size; j++) {
+      AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+      new_value->value.value_v = init_ast_value();
+      new_value->value.value_v->size = 1;
+      new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+      new_value->value.value_v->stack->type = AST_VALUE_INT;
+      new_value->value.value_v->stack->value.int_v = malloc(sizeof(struct ast_int_t));
+      new_value->value.value_v->stack->value.int_v->value = 0;
+
+      for (int k = 0; k < matrix1->col_size; k++) {
+        AST_value_stack* temp_result = malloc(sizeof(AST_value_stack));
+        visitor_operator_product(
+            temp_result,
+            matrix1->value[i * matrix1->col_size + k]->value.value_v->stack,
+            matrix2->value[k * matrix2->col_size + j]->value.value_v->stack
+            );
+
+        AST_value_stack* sum_result = malloc(sizeof(AST_value_stack));
+        visitor_operator_plus(
+            sum_result,
+            new_value->value.value_v->stack,
+            temp_result
+            );
+
+        free(new_value->value.value_v->stack);
+        new_value->value.value_v->stack = sum_result;
+
+        free(temp_result);
+      }
+
+      result->value.matrix_v->value[i * matrix2->col_size + j] = new_value;
     }
+  }
 
-    result->type = AST_VALUE_MATRIX;
-    result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
-    result->value.matrix_v->row_size = matrix1->row_size;
-    result->value.matrix_v->col_size = matrix2->col_size;
-    int result_size = result->value.matrix_v->row_size * result->value.matrix_v->col_size;
-    result->value.matrix_v->value = malloc(result_size * sizeof(struct ast_t));
-
-    for (int i = 0; i < matrix1->row_size; i++) {
-        for (int j = 0; j < matrix2->col_size; j++) {
-            AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
-            new_value->value.value_v = init_ast_value();
-            new_value->value.value_v->size = 1;
-            new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
-            new_value->value.value_v->stack->type = AST_VALUE_INT;
-            new_value->value.value_v->stack->value.int_v = malloc(sizeof(struct ast_int_t));
-            new_value->value.value_v->stack->value.int_v->value = 0;
-
-            for (int k = 0; k < matrix1->col_size; k++) {
-                AST_value_stack* temp_result = malloc(sizeof(AST_value_stack));
-                visitor_operator_product(
-                    temp_result,
-                    matrix1->value[i * matrix1->col_size + k]->value.value_v->stack,
-                    matrix2->value[k * matrix2->col_size + j]->value.value_v->stack
-                );
-                
-                AST_value_stack* sum_result = malloc(sizeof(AST_value_stack));
-                visitor_operator_plus(
-                    sum_result,
-                    new_value->value.value_v->stack,
-                    temp_result
-                );
-                
-                free(new_value->value.value_v->stack);
-                new_value->value.value_v->stack = sum_result;
-                
-                free(temp_result);
-            }
-            
-            result->value.matrix_v->value[i * matrix2->col_size + j] = new_value;
-        }
-    }
-
-    return result;
+  return result;
 }
 
 AST_value_stack* operator_product_matrix(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    AST_matrix* matrix = (operand1->type == AST_VALUE_MATRIX) ? operand1->value.matrix_v : operand2->value.matrix_v;
-    AST_value_stack* scalar = (operand1->type == AST_VALUE_MATRIX) ? operand2 : operand1;
-    int matrix_size = matrix->row_size * matrix->col_size;
+  AST_matrix* matrix = (operand1->type == AST_VALUE_MATRIX) ? operand1->value.matrix_v : operand2->value.matrix_v;
+  AST_value_stack* scalar = (operand1->type == AST_VALUE_MATRIX) ? operand2 : operand1;
+  int matrix_size = matrix->row_size * matrix->col_size;
 
-    result->type = AST_VALUE_MATRIX;
-    result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
-    result->value.matrix_v->row_size = matrix->row_size;
-    result->value.matrix_v->col_size = matrix->col_size;
-    result->value.matrix_v->value = malloc(matrix_size * sizeof(struct ast_t));
+  result->type = AST_VALUE_MATRIX;
+  result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+  result->value.matrix_v->row_size = matrix->row_size;
+  result->value.matrix_v->col_size = matrix->col_size;
+  result->value.matrix_v->value = malloc(matrix_size * sizeof(struct ast_t));
 
-    for (int i = 0; i < matrix_size; i++) {
-        AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
-        new_value->value.value_v = init_ast_value();
-        new_value->value.value_v->size = 1;
-        new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
-        visitor_operator_product(
-            new_value->value.value_v->stack,
-            matrix->value[i]->value.value_v->stack,
-            scalar
+  for (int i = 0; i < matrix_size; i++) {
+    AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+    new_value->value.value_v = init_ast_value();
+    new_value->value.value_v->size = 1;
+    new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+    visitor_operator_product(
+        new_value->value.value_v->stack,
+        matrix->value[i]->value.value_v->stack,
+        scalar
         );
-        result->value.matrix_v->value[i] = new_value;
-    }
+    result->value.matrix_v->value[i] = new_value;
+  }
 
-    return result;
+  return result;
 }
 
 AST_value_stack* operator_product_string_string(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_STRING;
-    AST_string* string_v = malloc(sizeof(struct ast_string_t));
-    string_v->value_length =
-        operand1->value.string_v->value_length +
-        operand2->value.string_v->value_length - 1; // -1 for the extra quote
-    string_v->real_value =
-        malloc((string_v->value_length - 3) * sizeof(char));
-    string_v->real_value[0] = '\0';
+  result->type = AST_VALUE_STRING;
+  AST_string* string_v = malloc(sizeof(struct ast_string_t));
+  string_v->value_length =
+    operand1->value.string_v->value_length +
+    operand2->value.string_v->value_length - 1; // -1 for the extra quote
+  string_v->real_value =
+    malloc((string_v->value_length - 3) * sizeof(char));
+  string_v->real_value[0] = '\0';
 
-    strcat(string_v->real_value, operand1->value.string_v->real_value);
-    strcat(string_v->real_value, operand2->value.string_v->real_value);
+  strcat(string_v->real_value, operand1->value.string_v->real_value);
+  strcat(string_v->real_value, operand2->value.string_v->real_value);
 
-    string_v->value =
-        malloc((string_v->value_length - 1) * sizeof(char));
-    string_v->value[0] = '\0';
-    strcat(string_v->value, "\"");
-    strcat(string_v->value, string_v->real_value);
-    strcat(string_v->value, "\"");
-    result->value.string_v = string_v;
-    return result;
+  string_v->value =
+    malloc((string_v->value_length - 1) * sizeof(char));
+  string_v->value[0] = '\0';
+  strcat(string_v->value, "\"");
+  strcat(string_v->value, string_v->real_value);
+  strcat(string_v->value, "\"");
+  result->value.string_v = string_v;
+  return result;
 }
 
 // Division
@@ -1030,15 +1077,15 @@ AST_value_stack* operator_div_int_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    if (operand2->value.int_v->value == 0) {
-        orora_error("에러, 0으로 나눌 수 없음", (void*) 0);
-        return (void*) 0;
-    }
-    result->type = AST_VALUE_INT;
-    result->value.int_v = malloc(sizeof(struct ast_int_t));
-    result->value.int_v->value =
-        operand1->value.int_v->value / operand2->value.int_v->value;
-    return result;
+  if (operand2->value.int_v->value == 0) {
+    orora_error("에러, 0으로 나눌 수 없음", (void*) 0);
+    return (void*) 0;
+  }
+  result->type = AST_VALUE_INT;
+  result->value.int_v = malloc(sizeof(struct ast_int_t));
+  result->value.int_v->value =
+    operand1->value.int_v->value / operand2->value.int_v->value;
+  return result;
 }
 
 AST_value_stack* operator_div_int_float(AST_value_stack* result,
@@ -1067,8 +1114,8 @@ AST_value_stack* operator_div_int_float(AST_value_stack* result,
     result->value.float_v->value =
       operand1->value.float_v->value / (float)operand2->value.int_v->value;
   }
-   
-    return result;
+
+  return result;
 }
 
 AST_value_stack* operator_div_int_bool(AST_value_stack* result,
@@ -1098,22 +1145,22 @@ AST_value_stack* operator_div_int_bool(AST_value_stack* result,
     result->value.int_v->value =
       (operand1->value.bool_v->value ? 1 : 0) / operand2->value.int_v->value;
   }
-    return result;
+  return result;
 }
 
 AST_value_stack* operator_div_float_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    if (operand2->value.float_v->value == 0.0) {
-        orora_error("에러, 0으로 나눌 수 없음", (void*) 0);
-        return (void*) 0;
-    }
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value =
-        operand1->value.float_v->value / operand2->value.float_v->value;
-    return result;
+  if (operand2->value.float_v->value == 0.0) {
+    orora_error("에러, 0으로 나눌 수 없음", (void*) 0);
+    return (void*) 0;
+  }
+  result->type = AST_VALUE_FLOAT;
+  result->value.float_v = malloc(sizeof(struct ast_float_t));
+  result->value.float_v->value =
+    operand1->value.float_v->value / operand2->value.float_v->value;
+  return result;
 }
 
 AST_value_stack* operator_div_float_bool(AST_value_stack* result,
@@ -1141,107 +1188,107 @@ AST_value_stack* operator_div_float_bool(AST_value_stack* result,
     result->value.int_v = malloc(sizeof(struct ast_int_t));
     result->value.int_v->value = operand1->value.bool_v->value ? 1 : 0;
   }
-    return result;
+  return result;
 }
 
 AST_value_stack* operator_div_bool_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    if (!operand2->value.bool_v->value) {
-        orora_error("에러, 0(false)으로 나눌 수 없음", (void*) 0);
-        return (void*) 0;
-    }
-    result->type = AST_VALUE_INT;
-    result->value.int_v = malloc(sizeof(struct ast_int_t));
-    result->value.int_v->value = operand1->value.bool_v->value ? 1 : 0;
-    return result;
+  if (!operand2->value.bool_v->value) {
+    orora_error("에러, 0(false)으로 나눌 수 없음", (void*) 0);
+    return (void*) 0;
+  }
+  result->type = AST_VALUE_INT;
+  result->value.int_v = malloc(sizeof(struct ast_int_t));
+  result->value.int_v->value = operand1->value.bool_v->value ? 1 : 0;
+  return result;
 }
 
 AST_value_stack* operator_div_matrix_matrix(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    AST_matrix* matrix1 = operand1->value.matrix_v;
-    AST_matrix* matrix2 = operand2->value.matrix_v;
+  AST_matrix* matrix1 = operand1->value.matrix_v;
+  AST_matrix* matrix2 = operand2->value.matrix_v;
 
-    if (matrix1->row_size != matrix2->row_size || matrix1->col_size != matrix2->col_size) {
-        orora_error("에러, 행렬 나눗셈시 크기가 같아야 함", (void*) 0);
-        return (void*) 0;
-    }
+  if (matrix1->row_size != matrix2->row_size || matrix1->col_size != matrix2->col_size) {
+    orora_error("에러, 행렬 나눗셈시 크기가 같아야 함", (void*) 0);
+    return (void*) 0;
+  }
 
-    int matrix_size = matrix1->row_size * matrix1->col_size;
+  int matrix_size = matrix1->row_size * matrix1->col_size;
 
-    result->type = AST_VALUE_MATRIX;
-    result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
-    result->value.matrix_v->row_size = matrix1->row_size;
-    result->value.matrix_v->col_size = matrix1->col_size;
-    result->value.matrix_v->value = malloc(matrix_size * sizeof(struct ast_t));
+  result->type = AST_VALUE_MATRIX;
+  result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+  result->value.matrix_v->row_size = matrix1->row_size;
+  result->value.matrix_v->col_size = matrix1->col_size;
+  result->value.matrix_v->value = malloc(matrix_size * sizeof(struct ast_t));
 
-    for (int i = 0; i < matrix_size; i++) {
-        AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
-        new_value->value.value_v = init_ast_value();
-        new_value->value.value_v->size = 1;
-        new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
-        visitor_operator_div(
-            new_value->value.value_v->stack,
-            matrix1->value[i]->value.value_v->stack,
-            matrix2->value[i]->value.value_v->stack
+  for (int i = 0; i < matrix_size; i++) {
+    AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+    new_value->value.value_v = init_ast_value();
+    new_value->value.value_v->size = 1;
+    new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+    visitor_operator_div(
+        new_value->value.value_v->stack,
+        matrix1->value[i]->value.value_v->stack,
+        matrix2->value[i]->value.value_v->stack
         );
-        result->value.matrix_v->value[i] = new_value;
-    }
+    result->value.matrix_v->value[i] = new_value;
+  }
 
-    return result;
+  return result;
 }
 
 AST_value_stack* operator_div_matrix(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    AST_matrix* matrix;
-    AST_value_stack* scalar;
-    int is_matrix_first;
+  AST_matrix* matrix;
+  AST_value_stack* scalar;
+  int is_matrix_first;
 
-    if (operand1->type == AST_VALUE_MATRIX) {
-        matrix = operand1->value.matrix_v;
-        scalar = operand2;
-        is_matrix_first = 1;
+  if (operand1->type == AST_VALUE_MATRIX) {
+    matrix = operand1->value.matrix_v;
+    scalar = operand2;
+    is_matrix_first = 1;
+  } else {
+    matrix = operand2->value.matrix_v;
+    scalar = operand1;
+    is_matrix_first = 0;
+  }
+
+  int matrix_size = matrix->row_size * matrix->col_size;
+
+  result->type = AST_VALUE_MATRIX;
+  result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+  result->value.matrix_v->row_size = matrix->row_size;
+  result->value.matrix_v->col_size = matrix->col_size;
+  result->value.matrix_v->value = malloc(matrix_size * sizeof(struct ast_t));
+
+  for (int i = 0; i < matrix_size; i++) {
+    AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+    new_value->value.value_v = init_ast_value();
+    new_value->value.value_v->size = 1;
+    new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+    if (is_matrix_first) {
+      visitor_operator_div(
+          new_value->value.value_v->stack,
+          matrix->value[i]->value.value_v->stack,
+          scalar
+          );
     } else {
-        matrix = operand2->value.matrix_v;
-        scalar = operand1;
-        is_matrix_first = 0;
+      visitor_operator_div(
+          new_value->value.value_v->stack,
+          scalar,
+          matrix->value[i]->value.value_v->stack
+          );
     }
+    result->value.matrix_v->value[i] = new_value;
+  }
 
-    int matrix_size = matrix->row_size * matrix->col_size;
-
-    result->type = AST_VALUE_MATRIX;
-    result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
-    result->value.matrix_v->row_size = matrix->row_size;
-    result->value.matrix_v->col_size = matrix->col_size;
-    result->value.matrix_v->value = malloc(matrix_size * sizeof(struct ast_t));
-
-    for (int i = 0; i < matrix_size; i++) {
-        AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
-        new_value->value.value_v = init_ast_value();
-        new_value->value.value_v->size = 1;
-        new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
-        if (is_matrix_first) {
-            visitor_operator_div(
-                new_value->value.value_v->stack,
-                matrix->value[i]->value.value_v->stack,
-                scalar
-            );
-        } else {
-            visitor_operator_div(
-                new_value->value.value_v->stack,
-                scalar,
-                matrix->value[i]->value.value_v->stack
-            );
-        }
-        result->value.matrix_v->value[i] = new_value;
-    }
-
-    return result;
+  return result;
 }
 
 // Mod
@@ -1249,15 +1296,64 @@ AST_value_stack* operator_mod_int_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    if (operand2->value.int_v->value == 0) {
-        orora_error("에러, 0으로 나눌 수 없음", (void*) 0);
-        return (void*) 0;
+  if (operand2->value.int_v->value == 0) {
+    orora_error("에러, 0으로 나눌 수 없음", (void*) 0);
+    return (void*) 0;
+  }
+  result->type = AST_VALUE_INT;
+  result->value.int_v = malloc(sizeof(struct ast_int_t));
+  result->value.int_v->value =
+    operand1->value.int_v->value % operand2->value.int_v->value;
+  return result;
+}
+
+// Colon
+AST_value_stack* operator_colon_int_int(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  result->type = AST_VALUE_MATRIX;
+  result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+  if (operand1->value.int_v->value > operand2->value.int_v->value)
+  {
+    result->value.matrix_v->row_size = operand1->value.int_v->value - operand2->value.int_v->value + 1;
+    result->value.matrix_v->col_size = 1;
+    result->value.matrix_v->value = malloc(result->value.matrix_v->row_size * sizeof(struct ast_t));
+    int temp = operand1->value.int_v->value;
+
+    while (temp >= operand2->value.int_v->value)
+    {
+      AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+      new_value->value.value_v = init_ast_value();
+      new_value->value.value_v->size = 1;
+      new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+      new_value->value.value_v->stack->type = AST_VALUE_INT;
+      new_value->value.value_v->stack->value.int_v = malloc(sizeof(struct ast_int_t));
+      new_value->value.value_v->stack->value.int_v->value = temp;
+      result->value.matrix_v->value[operand1->value.int_v->value - temp] = new_value;
+      temp--;
     }
-    result->type = AST_VALUE_INT;
-    result->value.int_v = malloc(sizeof(struct ast_int_t));
-    result->value.int_v->value =
-        operand1->value.int_v->value % operand2->value.int_v->value;
-    return result;
+  } else
+  {
+    result->value.matrix_v->row_size = operand2->value.int_v->value - operand1->value.int_v->value + 1;
+    result->value.matrix_v->col_size = 1;
+    result->value.matrix_v->value = malloc(result->value.matrix_v->row_size * sizeof(struct ast_t));
+    int temp = operand1->value.int_v->value;
+
+    while (temp <= operand2->value.int_v->value)
+    {
+      AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+      new_value->value.value_v = init_ast_value();
+      new_value->value.value_v->size = 1;
+      new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+      new_value->value.value_v->stack->type = AST_VALUE_INT;
+      new_value->value.value_v->stack->value.int_v = malloc(sizeof(struct ast_int_t));
+      new_value->value.value_v->stack->value.int_v->value = temp;
+      result->value.matrix_v->value[temp - operand1->value.int_v->value] = new_value;
+      temp++;
+    }
+  }
+  return result;
 }
 
 // Power
@@ -1265,196 +1361,196 @@ AST_value_stack* operator_power_int_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_INT;
-    result->value.int_v = malloc(sizeof(struct ast_int_t));
-    result->value.int_v->value = (int)pow(operand1->value.int_v->value,
-                                          operand2->value.int_v->value);
-    return result;
+  result->type = AST_VALUE_INT;
+  result->value.int_v = malloc(sizeof(struct ast_int_t));
+  result->value.int_v->value = (int)pow(operand1->value.int_v->value,
+      operand2->value.int_v->value);
+  return result;
 }
 
 AST_value_stack* operator_power_int_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value = pow(operand1->value.int_v->value,
-                                       operand2->value.float_v->value);
-    return result;
+  result->type = AST_VALUE_FLOAT;
+  result->value.float_v = malloc(sizeof(struct ast_float_t));
+  result->value.float_v->value = pow(operand1->value.int_v->value,
+      operand2->value.float_v->value);
+  return result;
 }
 
 AST_value_stack* operator_power_float_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value = pow(operand1->value.float_v->value,
-                                       operand2->value.int_v->value);
-    return result;
+  result->type = AST_VALUE_FLOAT;
+  result->value.float_v = malloc(sizeof(struct ast_float_t));
+  result->value.float_v->value = pow(operand1->value.float_v->value,
+      operand2->value.int_v->value);
+  return result;
 }
 
 AST_value_stack* operator_power_float_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_FLOAT;
-    result->value.float_v = malloc(sizeof(struct ast_float_t));
-    result->value.float_v->value = pow(operand1->value.float_v->value,
-                                       operand2->value.float_v->value);
-    return result;
+  result->type = AST_VALUE_FLOAT;
+  result->value.float_v = malloc(sizeof(struct ast_float_t));
+  result->value.float_v->value = pow(operand1->value.float_v->value,
+      operand2->value.float_v->value);
+  return result;
 }
 
 AST_value_stack* operator_power_matrix_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    AST_matrix* matrix = operand1->value.matrix_v;
-    int exponent = operand2->value.int_v->value;
+  AST_matrix* matrix = operand1->value.matrix_v;
+  int exponent = operand2->value.int_v->value;
 
-    // 전치 행렬 연산
-    if (operand2->is_T == 1) {
-        result->type = AST_VALUE_MATRIX;
-        result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
-        result->value.matrix_v->row_size = matrix->col_size;
-        result->value.matrix_v->col_size = matrix->row_size;
-        int matrix_size = matrix->row_size * matrix->col_size;
-        result->value.matrix_v->value = malloc(matrix_size * sizeof(struct ast_t));
-
-        for (int i = 0; i < matrix->row_size; i++) {
-            for (int j = 0; j < matrix->col_size; j++) {
-                AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
-                new_value->value.value_v = init_ast_value();
-                new_value->value.value_v->size = 1;
-                new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
-                *(new_value->value.value_v->stack) = *(matrix->value[j * matrix->row_size + i]->value.value_v->stack);
-                result->value.matrix_v->value[i * matrix->col_size + j] = new_value;
-            }
-        }
-        return result;
-    }
-
-    // 역행렬 연산 (지원하지 않음)
-    if (exponent == -1) {
-        orora_error("에러, 행렬의 역행렬은 아직 지원하지 않음", (void*) 0);
-        return (void*) 0;
-    }
-
-    // 일반적인 거듭제곱 연산
-    if (matrix->row_size != matrix->col_size) {
-        orora_error("에러, 행렬 거듭제곱은 정사각 행렬에만 적용 가능", (void*) 0);
-        return (void*) 0;
-    }
-
+  // 전치 행렬 연산
+  if (operand2->is_T == 1) {
     result->type = AST_VALUE_MATRIX;
     result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
-    result->value.matrix_v->row_size = matrix->row_size;
-    result->value.matrix_v->col_size = matrix->col_size;
+    result->value.matrix_v->row_size = matrix->col_size;
+    result->value.matrix_v->col_size = matrix->row_size;
     int matrix_size = matrix->row_size * matrix->col_size;
     result->value.matrix_v->value = malloc(matrix_size * sizeof(struct ast_t));
 
-    // 단위 행렬로 초기화
-    for (int i = 0; i < matrix_size; i++) {
+    for (int i = 0; i < matrix->row_size; i++) {
+      for (int j = 0; j < matrix->col_size; j++) {
+        AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+        new_value->value.value_v = init_ast_value();
+        new_value->value.value_v->size = 1;
+        new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+        *(new_value->value.value_v->stack) = *(matrix->value[j * matrix->row_size + i]->value.value_v->stack);
+        result->value.matrix_v->value[i * matrix->col_size + j] = new_value;
+      }
+    }
+    return result;
+  }
+
+  // 역행렬 연산 (지원하지 않음)
+  if (exponent == -1) {
+    orora_error("에러, 행렬의 역행렬은 아직 지원하지 않음", (void*) 0);
+    return (void*) 0;
+  }
+
+  // 일반적인 거듭제곱 연산
+  if (matrix->row_size != matrix->col_size) {
+    orora_error("에러, 행렬 거듭제곱은 정사각 행렬에만 적용 가능", (void*) 0);
+    return (void*) 0;
+  }
+
+  result->type = AST_VALUE_MATRIX;
+  result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+  result->value.matrix_v->row_size = matrix->row_size;
+  result->value.matrix_v->col_size = matrix->col_size;
+  int matrix_size = matrix->row_size * matrix->col_size;
+  result->value.matrix_v->value = malloc(matrix_size * sizeof(struct ast_t));
+
+  // 단위 행렬로 초기화
+  for (int i = 0; i < matrix_size; i++) {
+    AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+    new_value->value.value_v = init_ast_value();
+    new_value->value.value_v->size = 1;
+    new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
+    new_value->value.value_v->stack->type = AST_VALUE_INT;
+    new_value->value.value_v->stack->value.int_v = malloc(sizeof(struct ast_int_t));
+    new_value->value.value_v->stack->value.int_v->value = (i % (matrix->row_size + 1) == 0) ? 1 : 0;
+    result->value.matrix_v->value[i] = new_value;
+  }
+
+  // 거듭제곱 연산
+  for (int k = 0; k < exponent; k++) {
+    AST_value_stack* temp = malloc(sizeof(AST_value_stack));
+    temp->type = AST_VALUE_MATRIX;
+    temp->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+    temp->value.matrix_v->row_size = matrix->row_size;
+    temp->value.matrix_v->col_size = matrix->col_size;
+    temp->value.matrix_v->value = malloc(matrix_size * sizeof(struct ast_t));
+
+    for (int i = 0; i < matrix->row_size; i++) {
+      for (int j = 0; j < matrix->col_size; j++) {
         AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
         new_value->value.value_v = init_ast_value();
         new_value->value.value_v->size = 1;
         new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
         new_value->value.value_v->stack->type = AST_VALUE_INT;
         new_value->value.value_v->stack->value.int_v = malloc(sizeof(struct ast_int_t));
-        new_value->value.value_v->stack->value.int_v->value = (i % (matrix->row_size + 1) == 0) ? 1 : 0;
-        result->value.matrix_v->value[i] = new_value;
-    }
+        new_value->value.value_v->stack->value.int_v->value = 0;
 
-    // 거듭제곱 연산
-    for (int k = 0; k < exponent; k++) {
-        AST_value_stack* temp = malloc(sizeof(AST_value_stack));
-        temp->type = AST_VALUE_MATRIX;
-        temp->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
-        temp->value.matrix_v->row_size = matrix->row_size;
-        temp->value.matrix_v->col_size = matrix->col_size;
-        temp->value.matrix_v->value = malloc(matrix_size * sizeof(struct ast_t));
+        for (int m = 0; m < matrix->col_size; m++) {
+          AST_value_stack* product = malloc(sizeof(AST_value_stack));
+          visitor_operator_product(
+              product,
+              result->value.matrix_v->value[i * matrix->col_size + m]->value.value_v->stack,
+              matrix->value[m * matrix->col_size + j]->value.value_v->stack
+              );
 
-        for (int i = 0; i < matrix->row_size; i++) {
-            for (int j = 0; j < matrix->col_size; j++) {
-                AST* new_value = init_ast(AST_VALUE, (void*) 0, (void*) 0);
-                new_value->value.value_v = init_ast_value();
-                new_value->value.value_v->size = 1;
-                new_value->value.value_v->stack = malloc(sizeof(AST_value_stack));
-                new_value->value.value_v->stack->type = AST_VALUE_INT;
-                new_value->value.value_v->stack->value.int_v = malloc(sizeof(struct ast_int_t));
-                new_value->value.value_v->stack->value.int_v->value = 0;
+          AST_value_stack* sum = malloc(sizeof(AST_value_stack));
+          visitor_operator_plus(
+              sum,
+              new_value->value.value_v->stack,
+              product
+              );
 
-                for (int m = 0; m < matrix->col_size; m++) {
-                    AST_value_stack* product = malloc(sizeof(AST_value_stack));
-                    visitor_operator_product(
-                        product,
-                        result->value.matrix_v->value[i * matrix->col_size + m]->value.value_v->stack,
-                        matrix->value[m * matrix->col_size + j]->value.value_v->stack
-                    );
-                    
-                    AST_value_stack* sum = malloc(sizeof(AST_value_stack));
-                    visitor_operator_plus(
-                        sum,
-                        new_value->value.value_v->stack,
-                        product
-                    );
-                    
-                    free(new_value->value.value_v->stack);
-                    new_value->value.value_v->stack = sum;
-                    
-                    free(product);
-                }
-                
-                temp->value.matrix_v->value[i * matrix->col_size + j] = new_value;
-            }
+          free(new_value->value.value_v->stack);
+          new_value->value.value_v->stack = sum;
+
+          free(product);
         }
 
-        // 결과를 temp에서 result로 복사
-        for (int i = 0; i < matrix_size; i++) {
-            free(result->value.matrix_v->value[i]);
-            result->value.matrix_v->value[i] = temp->value.matrix_v->value[i];
-        }
-        
-        free(temp->value.matrix_v);
-        free(temp);
+        temp->value.matrix_v->value[i * matrix->col_size + j] = new_value;
+      }
     }
 
-    return result;
+    // 결과를 temp에서 result로 복사
+    for (int i = 0; i < matrix_size; i++) {
+      free(result->value.matrix_v->value[i]);
+      result->value.matrix_v->value[i] = temp->value.matrix_v->value[i];
+    }
+
+    free(temp->value.matrix_v);
+    free(temp);
+  }
+
+  return result;
 }
 
 AST_value_stack* operator_power_string_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    int repeat_count = operand2->value.int_v->value;
-    
-    if (repeat_count < 0) {
-        orora_error("에러, 문자열 반복 횟수는 0 이상이어야 함", (void*) 0);
-        return (void*) 0;
-    }
-    
-    result->type = AST_VALUE_STRING;
-    AST_string* string_v = malloc(sizeof(struct ast_string_t));
-    
-    size_t original_length = strlen(operand1->value.string_v->real_value);
-    string_v->value_length = (original_length * repeat_count) + 3;    
+  int repeat_count = operand2->value.int_v->value;
 
-    string_v->real_value = malloc(string_v->value_length - 3);
-    string_v->real_value[0] = '\0';
-    
-    for (int i = 0; i < repeat_count; i++) {
-        strcat(string_v->real_value, operand1->value.string_v->real_value);
-    }
-    
-    string_v->value = malloc(string_v->value_length);
-    string_v->value[0] = '\0';
-    
-    strcat(string_v->value, "\"");
-    strcat(string_v->value, string_v->real_value);
-    strcat(string_v->value, "\"");
-    
-    result->value.string_v = string_v;
-    return result;
+  if (repeat_count < 0) {
+    orora_error("에러, 문자열 반복 횟수는 0 이상이어야 함", (void*) 0);
+    return (void*) 0;
+  }
+
+  result->type = AST_VALUE_STRING;
+  AST_string* string_v = malloc(sizeof(struct ast_string_t));
+
+  size_t original_length = strlen(operand1->value.string_v->real_value);
+  string_v->value_length = (original_length * repeat_count) + 3;    
+
+  string_v->real_value = malloc(string_v->value_length - 3);
+  string_v->real_value[0] = '\0';
+
+  for (int i = 0; i < repeat_count; i++) {
+    strcat(string_v->real_value, operand1->value.string_v->real_value);
+  }
+
+  string_v->value = malloc(string_v->value_length);
+  string_v->value[0] = '\0';
+
+  strcat(string_v->value, "\"");
+  strcat(string_v->value, string_v->real_value);
+  strcat(string_v->value, "\"");
+
+  result->value.string_v = string_v;
+  return result;
 }
 
 // Equal
@@ -1462,32 +1558,32 @@ AST_value_stack* operator_equal_null_null(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = true;
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = true;
+  return result;
 }
 
 AST_value_stack* operator_equal_string_string(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (strcmp(operand1->value.string_v->value, operand2->value.string_v->value) == 0);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (strcmp(operand1->value.string_v->value, operand2->value.string_v->value) == 0);
+  return result;
 }
 
 AST_value_stack* operator_equal_int_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (operand1->value.int_v->value == operand2->value.int_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (operand1->value.int_v->value == operand2->value.int_v->value);
+  return result;
 }
 
 AST_value_stack* operator_equal_int_float(AST_value_stack* result,
@@ -1499,16 +1595,16 @@ AST_value_stack* operator_equal_int_float(AST_value_stack* result,
     result->type = AST_VALUE_BOOL;
     result->value.bool_v = malloc(sizeof(struct ast_bool_t));
     result->value.bool_v->value = 
-        ((float)operand1->value.int_v->value == operand2->value.float_v->value);
+      ((float)operand1->value.int_v->value == operand2->value.float_v->value);
   }
   else
   {
     result->type = AST_VALUE_BOOL;
     result->value.bool_v = malloc(sizeof(struct ast_bool_t));
     result->value.bool_v->value = 
-        (operand1->value.float_v->value == (float)operand2->value.int_v->value);
+      (operand1->value.float_v->value == (float)operand2->value.int_v->value);
   }
-    return result;
+  return result;
 }
 
 AST_value_stack* operator_equal_int_bool(AST_value_stack* result,
@@ -1520,26 +1616,26 @@ AST_value_stack* operator_equal_int_bool(AST_value_stack* result,
     result->type = AST_VALUE_BOOL;
     result->value.bool_v = malloc(sizeof(struct ast_bool_t));
     result->value.bool_v->value = 
-        (operand1->value.int_v->value == (operand2->value.bool_v->value ? 1 : 0));
+      (operand1->value.int_v->value == (operand2->value.bool_v->value ? 1 : 0));
   } else
   {
     result->type = AST_VALUE_BOOL;
     result->value.bool_v = malloc(sizeof(struct ast_bool_t));
     result->value.bool_v->value = 
-        ((operand1->value.bool_v->value ? 1 : 0) == operand2->value.int_v->value);
+      ((operand1->value.bool_v->value ? 1 : 0) == operand2->value.int_v->value);
   }
-    return result;
+  return result;
 }
 
 AST_value_stack* operator_equal_float_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (operand1->value.float_v->value == operand2->value.float_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (operand1->value.float_v->value == operand2->value.float_v->value);
+  return result;
 }
 
 AST_value_stack* operator_equal_float_bool(AST_value_stack* result,
@@ -1551,65 +1647,65 @@ AST_value_stack* operator_equal_float_bool(AST_value_stack* result,
     result->type = AST_VALUE_BOOL;
     result->value.bool_v = malloc(sizeof(struct ast_bool_t));
     result->value.bool_v->value = 
-        (operand1->value.float_v->value == (operand2->value.bool_v->value ? 1.0 : 0.0));
+      (operand1->value.float_v->value == (operand2->value.bool_v->value ? 1.0 : 0.0));
   } else
   {
     result->type = AST_VALUE_BOOL;
     result->value.bool_v = malloc(sizeof(struct ast_bool_t));
     result->value.bool_v->value = 
-        ((operand1->value.bool_v->value ? 1.0 : 0.0) == operand2->value.float_v->value);
+      ((operand1->value.bool_v->value ? 1.0 : 0.0) == operand2->value.float_v->value);
   }
-    return result;
+  return result;
 }
 
 AST_value_stack* operator_equal_bool_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (operand1->value.bool_v->value == operand2->value.bool_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (operand1->value.bool_v->value == operand2->value.bool_v->value);
+  return result;
 }
 
 AST_value_stack* operator_equal_matrix_matrix(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    AST_matrix* matrix1 = operand1->value.matrix_v;
-    AST_matrix* matrix2 = operand2->value.matrix_v;
+  AST_matrix* matrix1 = operand1->value.matrix_v;
+  AST_matrix* matrix2 = operand2->value.matrix_v;
 
-    if (matrix1->row_size != matrix2->row_size || matrix1->col_size != matrix2->col_size) {
-        result->type = AST_VALUE_BOOL;
-        result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-        result->value.bool_v->value = false;
-        return result;
-    }
-
-    int matrix_size = matrix1->row_size * matrix1->col_size;
+  if (matrix1->row_size != matrix2->row_size || matrix1->col_size != matrix2->col_size) {
     result->type = AST_VALUE_BOOL;
     result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = true;
+    result->value.bool_v->value = false;
+    return result;
+  }
 
-    for (int i = 0; i < matrix_size; i++) {
-        AST_value_stack* comparison_result = malloc(sizeof(AST_value_stack));
-        visitor_operator_equal(
-            comparison_result,
-            matrix1->value[i]->value.value_v->stack,
-            matrix2->value[i]->value.value_v->stack
+  int matrix_size = matrix1->row_size * matrix1->col_size;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = true;
+
+  for (int i = 0; i < matrix_size; i++) {
+    AST_value_stack* comparison_result = malloc(sizeof(AST_value_stack));
+    visitor_operator_equal(
+        comparison_result,
+        matrix1->value[i]->value.value_v->stack,
+        matrix2->value[i]->value.value_v->stack
         );
-        
-        if (!comparison_result->value.bool_v->value) {
-            result->value.bool_v->value = false;
-            free(comparison_result);
-            break;
-        }
-        
-        free(comparison_result);
+
+    if (!comparison_result->value.bool_v->value) {
+      result->value.bool_v->value = false;
+      free(comparison_result);
+      break;
     }
 
-    return result;
+    free(comparison_result);
+  }
+
+  return result;
 }
 
 // Less
@@ -1617,99 +1713,99 @@ AST_value_stack* operator_less_int_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (operand1->value.int_v->value < operand2->value.int_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (operand1->value.int_v->value < operand2->value.int_v->value);
+  return result;
 }
 
 AST_value_stack* operator_less_int_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        ((float)operand1->value.int_v->value < operand2->value.float_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    ((float)operand1->value.int_v->value < operand2->value.float_v->value);
+  return result;
 }
 
 AST_value_stack* operator_less_float_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (operand1->value.float_v->value < (float)operand2->value.int_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (operand1->value.float_v->value < (float)operand2->value.int_v->value);
+  return result;
 }
 
 AST_value_stack* operator_less_int_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (operand1->value.int_v->value < (operand2->value.bool_v->value ? 1 : 0));
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (operand1->value.int_v->value < (operand2->value.bool_v->value ? 1 : 0));
+  return result;
 }
 
 AST_value_stack* operator_less_bool_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        ((operand1->value.bool_v->value ? 1 : 0) < operand2->value.int_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    ((operand1->value.bool_v->value ? 1 : 0) < operand2->value.int_v->value);
+  return result;
 }
 
 AST_value_stack* operator_less_float_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (operand1->value.float_v->value < operand2->value.float_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (operand1->value.float_v->value < operand2->value.float_v->value);
+  return result;
 }
 
 AST_value_stack* operator_less_float_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (operand1->value.float_v->value < (operand2->value.bool_v->value ? 1.0 : 0.0));
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (operand1->value.float_v->value < (operand2->value.bool_v->value ? 1.0 : 0.0));
+  return result;
 }
 
 AST_value_stack* operator_less_bool_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        ((operand1->value.bool_v->value ? 1.0 : 0.0) < operand2->value.float_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    ((operand1->value.bool_v->value ? 1.0 : 0.0) < operand2->value.float_v->value);
+  return result;
 }
 
 AST_value_stack* operator_less_bool_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (!operand1->value.bool_v->value && operand2->value.bool_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (!operand1->value.bool_v->value && operand2->value.bool_v->value);
+  return result;
 }
 
 // Greater
@@ -1717,99 +1813,99 @@ AST_value_stack* operator_greater_int_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (operand1->value.int_v->value > operand2->value.int_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (operand1->value.int_v->value > operand2->value.int_v->value);
+  return result;
 }
 
 AST_value_stack* operator_greater_int_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        ((float)operand1->value.int_v->value > operand2->value.float_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    ((float)operand1->value.int_v->value > operand2->value.float_v->value);
+  return result;
 }
 
 AST_value_stack* operator_greater_float_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (operand1->value.float_v->value > (float)operand2->value.int_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (operand1->value.float_v->value > (float)operand2->value.int_v->value);
+  return result;
 }
 
 AST_value_stack* operator_greater_int_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (operand1->value.int_v->value > (operand2->value.bool_v->value ? 1 : 0));
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (operand1->value.int_v->value > (operand2->value.bool_v->value ? 1 : 0));
+  return result;
 }
 
 AST_value_stack* operator_greater_bool_int(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        ((operand1->value.bool_v->value ? 1 : 0) > operand2->value.int_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    ((operand1->value.bool_v->value ? 1 : 0) > operand2->value.int_v->value);
+  return result;
 }
 
 AST_value_stack* operator_greater_float_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (operand1->value.float_v->value > operand2->value.float_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (operand1->value.float_v->value > operand2->value.float_v->value);
+  return result;
 }
 
 AST_value_stack* operator_greater_float_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (operand1->value.float_v->value > (operand2->value.bool_v->value ? 1.0 : 0.0));
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (operand1->value.float_v->value > (operand2->value.bool_v->value ? 1.0 : 0.0));
+  return result;
 }
 
 AST_value_stack* operator_greater_bool_float(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        ((operand1->value.bool_v->value ? 1.0 : 0.0) > operand2->value.float_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    ((operand1->value.bool_v->value ? 1.0 : 0.0) > operand2->value.float_v->value);
+  return result;
 }
 
 AST_value_stack* operator_greater_bool_bool(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    result->type = AST_VALUE_BOOL;
-    result->value.bool_v = malloc(sizeof(struct ast_bool_t));
-    result->value.bool_v->value = 
-        (operand1->value.bool_v->value && !operand2->value.bool_v->value);
-    return result;
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = 
+    (operand1->value.bool_v->value && !operand2->value.bool_v->value);
+  return result;
 }
 
 // Comma
@@ -1817,25 +1913,25 @@ AST_value_stack* operator_comma_v_v(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)
 {
-    AST* v1 = init_ast(AST_VALUE, (void*) 0, (void*) 0);
-    v1->value.value_v = init_ast_value();
-    v1->value.value_v->size = 1;
-    v1->value.value_v->stack = malloc(sizeof(AST_value_stack));
-    *(v1->value.value_v->stack) = *operand1;
-    AST* v2 = init_ast(AST_VALUE, (void*) 0, (void*) 0);
-    v2->value.value_v = init_ast_value();
-    v2->value.value_v->size = 1;
-    v2->value.value_v->stack = malloc(sizeof(AST_value_stack));
-    *(v2->value.value_v->stack) = *operand2;
+  AST* v1 = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+  v1->value.value_v = init_ast_value();
+  v1->value.value_v->size = 1;
+  v1->value.value_v->stack = malloc(sizeof(AST_value_stack));
+  *(v1->value.value_v->stack) = *operand1;
+  AST* v2 = init_ast(AST_VALUE, (void*) 0, (void*) 0);
+  v2->value.value_v = init_ast_value();
+  v2->value.value_v->size = 1;
+  v2->value.value_v->stack = malloc(sizeof(AST_value_stack));
+  *(v2->value.value_v->stack) = *operand2;
 
-    result->type = AST_VALUE_MATRIX;
-    result->value.bool_v = malloc(sizeof(struct ast_matrix_t));
-    result->value.matrix_v->row_size = 2;
-    result->value.matrix_v->col_size = 1;
-    result->value.matrix_v->value = malloc(2 * sizeof(struct ast_t));
-    result->value.matrix_v->value[0] = v1;
-    result->value.matrix_v->value[1] = v2;
-    return result;
+  result->type = AST_VALUE_MATRIX;
+  result->value.matrix_v = malloc(sizeof(struct ast_matrix_t));
+  result->value.matrix_v->row_size = 2;
+  result->value.matrix_v->col_size = 1;
+  result->value.matrix_v->value = malloc(2 * sizeof(struct ast_t));
+  result->value.matrix_v->value[0] = v1;
+  result->value.matrix_v->value[1] = v2;
+  return result;
 }
 
 AST_value_stack* operator_comma_v_m(AST_value_stack* result,
@@ -1927,5 +2023,172 @@ AST_value_stack* operator_comma_m_m(AST_value_stack* result,
     }
   }
 
+  return result;
+}
+
+// In
+AST_value_stack* operator_in_int_matrix(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = false;
+
+  for (int i = 0; i < operand2->value.matrix_v->row_size * operand2->value.matrix_v->col_size; i++) 
+  {
+    if (operand1->value.int_v->value == operand2->value.matrix_v->value[i]->value.value_v->stack->value.int_v->value) 
+    {
+      result->value.bool_v->value = true;
+      break;
+    }
+  }
+
+  return result;
+}
+
+AST_value_stack* operator_in_float_matrix(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = false;
+
+  for (int i = 0; i < operand2->value.matrix_v->row_size * operand2->value.matrix_v->col_size; i++) 
+  {
+    if (operand1->value.float_v->value == operand2->value.matrix_v->value[i]->value.value_v->stack->value.float_v->value) 
+    {
+      result->value.bool_v->value = true;
+      break;
+    }
+  }
+
+  return result;
+}
+
+AST_value_stack* operator_in_string_matrix(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = false;
+
+  for (int i = 0; i < operand2->value.matrix_v->row_size * operand2->value.matrix_v->col_size; i++) 
+  {
+    if (strcmp(operand1->value.string_v->value, operand2->value.matrix_v->value[i]->value.value_v->stack->value.string_v->value) == 0) 
+    {
+      result->value.bool_v->value = true;
+      break;
+    }
+  }
+
+  return result;
+}
+
+AST_value_stack* operator_in_bool_matrix(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = false;
+
+  for (int i = 0; i < operand2->value.matrix_v->row_size * operand2->value.matrix_v->col_size; i++) 
+  {
+    if (operand1->value.bool_v->value == (operand2->value.matrix_v->value[i]->value.value_v->stack->value.bool_v->value ? 1 : 0)) 
+    {
+      result->value.bool_v->value = true;
+      break;
+    }
+  }
+
+  return result;
+}
+
+AST_value_stack* operator_in_matrix_matrix(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = false;
+
+  for (int i = 0; i < operand2->value.matrix_v->row_size * operand2->value.matrix_v->col_size; i++) 
+  {
+    AST_value_stack* comparison_result = malloc(sizeof(AST_value_stack));
+    visitor_operator_equal(
+        comparison_result,
+        operand1,
+        operand2->value.matrix_v->value[i]->value.value_v->stack
+        );
+
+    if (comparison_result->value.bool_v->value) 
+    {
+      result->value.bool_v->value = true;
+      free(comparison_result);
+      break;
+    }
+
+    free(comparison_result);
+  }
+
+  return result;
+}
+
+AST_value_stack* operator_in_null_matrix(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = false;
+  
+  for (int i = 0; i < operand2->value.matrix_v->row_size * operand2->value.matrix_v->col_size; i++) 
+  {
+    if (operand2->value.matrix_v->value[i]->type == AST_NULL) 
+    {
+      result->value.bool_v->value = true;
+      break;
+    }
+  }
+
+  return result;
+}
+
+AST_value_stack* operator_in_v_string(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = false;
+
+  if (strcmp(operand2->value.string_v->real_value, "real number") == 0)
+  {
+    if (operand1->type == AST_VALUE_INT || operand1->type == AST_VALUE_FLOAT)
+    {
+      result->value.bool_v->value = true;
+    }
+  }
+  else if (strcmp(operand2->value.string_v->real_value, "integer") == 0)
+  {
+    if (operand1->type == AST_VALUE_INT)
+    {
+      result->value.bool_v->value = true;
+    }
+  }
+  else if (strcmp(operand2->value.string_v->real_value, "natural number") == 0)
+  {
+    if (operand1->type == AST_VALUE_INT && operand1->value.int_v->value >= 0)
+    {
+      result->value.bool_v->value = true;
+    }
+  }
+  else
+  {
+    orora_error("에러, 정의되지 않은 공간", (void*) 0);
+  }
   return result;
 }

@@ -54,6 +54,9 @@ typedef struct
     TOKEN_CDOT,               // 42: \cdot : dot product
     TOKEN_MOD,                // 43: \mod
     TOKEN_UNDER,              // 44: _
+    TOKEN_NEWENVIRONMENT,     // 45: \newenvironment
+    TOKEN_IN,                 // 46: in
+    TOKEN_DOUBLECOLON,        // 47: ::
     TOKEN_NOOP                // 99:
   } type;
 
