@@ -1584,6 +1584,40 @@ struct AST_VALUE_STACK_INDEX_T* visitor_get_matrix_index(Envs* envs, AST_value* 
 
 AST_value_stack* visitor_get_value(Envs* envs, AST_value* ast_value)
 {
+  // if (!ast_value)
+  //   return (void*) 0;
+  // if (ast_value->size == 1 && ast_value->stack->type == AST_VALUE_MATRIX_INDEX)
+  // {
+  //   AST_matrix_index* ast_matrix_index = ast_value->stack->value.matrix_index_v;
+
+  //   struct AST_VALUE_STACK_INDEX_T* index = visitor_get_matrix_index(envs, ast_matrix_index->index->value.value_v);
+
+  //   size_t index_size = index->index_size;
+  //   if (index_size == 1)
+  //   {
+  //     index->index[0]->value.value_v->stack = visitor_get_value_from_ast(envs, ast_matrix_index->value);
+  //   }
+  //   else
+  //   {
+  //     AST_value_stack* value_ast = visitor_get_value_from_ast(envs, ast_matrix_index->value);
+  //     if (value_ast->type != AST_VALUE_MATRIX)
+  //     {
+  //       orora_error("에러, 대입값은 (1, n) 행렬이어야 함..", (void*) 0);
+  //     }
+  //     AST_matrix* value_matrix = value_ast->value.matrix_v;
+  //     if (!(value_matrix->col_size == 1 && value_matrix->row_size == index_size))
+  //     {
+  //       orora_error("에러, 대입값은 (1, n) 행렬이어야 함.", (void*) 0);
+  //     }
+  //     for (int i = 0; i < index_size; i++)
+  //     {
+  //       index->index[i]->value.value_v->stack = visitor_get_value_from_ast(envs, value_matrix->value[i]);
+  //     }
+  //   }
+  //   AST_value_stack* result = malloc(sizeof(AST_value_stack));
+  //   result->type = AST_VALUE_NULL;
+  //   return result;
+  // }
   AST_value* stack = init_ast_value();
   AST_value_stack* text;
   int max_cnt = ast_value->size;

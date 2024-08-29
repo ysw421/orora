@@ -44,6 +44,54 @@ AST* parser_parse_variable
   return parser_set_variable_value(parser, ast, last_token);
 }
 
+AST* parser_parse_matrix_index(Parser* parser, AST* ast,
+    Token* last_token, AST* index_node, GET_COMPOUND_ENV* compound_env)
+{
+  Token* token = parser->token;
+
+  parser = parser_advance(parser, TOKEN_DEFINE);
+  token = parser->token;
+
+  if (!token)
+  {
+    orora_error("에러, ':=' 사용에 목적이 없음.", parser);
+//     printf("에러, ':=' 사용에 목적이 없음.");
+//     exit(1);
+  }
+
+  // Check value
+  if (parser->prev_token->col != token->col_first)
+  {
+    orora_error("에러, ':=' 뒤에는 값이 와야함.", parser);
+//     printf("에러, ':=' 뒤에는 값이 와야함.");
+//     exit(1);
+  }
+  AST* value_node =
+      parser_get_value(
+          &parser, 
+          ast, 
+          token, 
+          init_get_value_env(), 
+          compound_env
+        );
+  token = parser->prev_token;
+
+  if (!value_node)
+  {
+    orora_error("에러, ':=' 뒤에는 값이 와야함...", parser);
+  }
+
+  AST* new_ast_node_ =
+    init_ast(AST_MATRIX_INDEX, ast, last_token);
+  new_ast_node_->value.matrix_index_v =
+    init_ast_matrix_index();
+  new_ast_node_->value.matrix_index_v->index = index_node;
+  new_ast_node_->value.matrix_index_v->value = value_node;
+
+  token = parser->token;
+  return new_ast_node_;
+}
+
 AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
     AST_function* fa, GET_COMPOUND_ENV* compound_env)
 {

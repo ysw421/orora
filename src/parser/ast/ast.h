@@ -197,6 +197,7 @@ typedef struct ast_value_stack_t
     AST_VALUE_COLON,
     AST_VALUE_MACRO,
     AST_VALUE_IN,
+    AST_VALUE_MATRIX_INDEX,
   } type;
 
   union
@@ -211,6 +212,7 @@ typedef struct ast_value_stack_t
     struct ast_cases_t* cases_v;
     struct ast_code_t* code_v;
     struct ast_macro_t* macro_v;
+    struct ast_matrix_index_t* matrix_index_v;
   } value;
 
   struct ast_value_stack_t* next;

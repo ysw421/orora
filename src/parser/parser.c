@@ -514,7 +514,9 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         break;
     }
     if (is_break)
+    {
       break;
+    }
 
     // check value
     Token* stoken = parser->token;
@@ -566,59 +568,74 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
         free(stoken);
         token = parser->token;
 
-        bool is_used = false;
-        if (token)
+        if (token && token->type == TOKEN_DEFINE && value_node->value.value_v->stack->type == AST_VALUE_UNDER)
         {
-          if (token->type == TOKEN_DEFINE && value_node->value.value_v->stack->type == AST_VALUE_UNDER)
-          {
-            Token* last_token = parser->prev_token;
-            AST* index_node = value_node;
-            // matrix value definition
-            
-            parser = parser_advance(parser, TOKEN_DEFINE);
-            Token* token = parser->token;
+        //   Token* last_token = parser->prev_token;
+        //   AST* index_node = value_node;
+        //   // matrix value definition
+          
+        //   parser = parser_advance(parser, TOKEN_DEFINE);
 
-            if (!token)
-            {
-              orora_error("에러, ':=' 사용에 목적이 없음.", parser);
-            }
+        //   Token* token = parser->token;
 
-            // Check value
-            if (parser->prev_token->col != token->col_first)
-            {
-              orora_error("에러, ':=' 뒤에는 값이 와야함.", parser);
-            }
-            value_node =
-                parser_get_value(
-                    &parser, 
-                    ast, 
-                    token, 
-                    init_get_value_env(), 
-                    compound_env
-                  );
+        //   if (!token)
+        //   {
+        //     orora_error("에러, ':=' 사용에 목적이 없음.", parser);
+        // //     printf("에러, ':=' 사용에 목적이 없음.");
+        // //     exit(1);
+        //   }
 
-            token = parser->prev_token;
-            if (!value_node)
-            {
-              orora_error("에러, ':=' 뒤에는 값이 와야함.", parser);
-            }
+        //   // Check value
+        //   if (parser->prev_token->col != token->col_first)
+        //   {
+        //     orora_error("에러, ':=' 뒤에는 값이 와야함.", parser);
+        // //     printf("에러, ':=' 뒤에는 값이 와야함.");
+        // //     exit(1);
+        //   }
+        //   value_node =
+        //       parser_get_value(
+        //           &parser, 
+        //           ast, 
+        //           token, 
+        //           init_get_value_env(), 
+        //           compound_env
+        //         );
+        //   token = parser->prev_token;
 
-            AST* new_ast_node =
-              init_ast(AST_MATRIX_INDEX, ast, last_token);
-            new_ast_node->value.matrix_index_v =
-              init_ast_matrix_index();
-            new_ast_node->value.matrix_index_v->index = index_node;
-            new_ast_node->value.matrix_index_v->value = value_node;
+        //   if (!value_node)
+        //   {
+        //     orora_error("에러, ':=' 뒤에는 값이 와야함...", parser);
+        //   }
 
-            ast_compound_add(ast->value.compound_v, new_ast_node);
-            token = parser->token;
-            
-            is_used = true;
-            break;
-          }
+        //   AST* new_ast_node_ =
+        //     init_ast(AST_MATRIX_INDEX, ast, last_token);
+        //   new_ast_node_->value.matrix_index_v =
+        //     init_ast_matrix_index();
+        //   new_ast_node_->value.matrix_index_v->index = index_node;
+        //   new_ast_node_->value.matrix_index_v->value = value_node;
 
+        //   // AST* new_ast_node = init_ast(AST_VALUE, ast, last_token);
+        //   // new_ast_node->value.value_v = init_ast_value();
+        //   // new_ast_node->value.value_v->size = 1;
+        //   // new_ast_node->value.value_v->stack = init_ast_value_stack(AST_VALUE_MATRIX_INDEX, last_token);
+        //   // new_ast_node->value.value_v->stack->value.matrix_index_v = new_ast_node_->value.matrix_index_v;
+
+          ast_compound_add(ast->value.compound_v,
+                            parser_parse_matrix_index(
+                                parser, 
+                                ast, 
+                                parser->prev_token, 
+                                value_node,
+                                compound_env
+                              )
+                            );
+          token = parser->token;
+          // if (!token)
+          // {
+          //   break;            
+          // }
         }
-        if (!is_used)
+        else
         {
           ast_compound_add(ast->value.compound_v, value_node);
           token = parser->token;
