@@ -90,6 +90,7 @@ AST_value_stack* operator_power_matrix_int(AST_value_stack* result, AST_value_st
 AST_value_stack* operator_power_string_int(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 
 // Equal
+AST_value_stack* operator_equal_not(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* operator_equal_null_null(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* operator_equal_string_string(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
 AST_value_stack* operator_equal_int_int(AST_value_stack* result, AST_value_stack* operand1, AST_value_stack* operand2);
@@ -336,18 +337,42 @@ AST_value_stack* visitor_operator_equal(AST_value_stack* result,
     AST_value_stack* operand2)
 {
   struct operation_t equal_op[] = {
-    {AST_VALUE_NULL,  AST_VALUE_NULL,   operator_equal_null_null},
-    {AST_VALUE_STRING,AST_VALUE_STRING, operator_equal_string_string},
     {AST_VALUE_INT,   AST_VALUE_INT,    operator_equal_int_int},
     {AST_VALUE_INT,   AST_VALUE_FLOAT,  operator_equal_int_float},
-    {AST_VALUE_FLOAT, AST_VALUE_INT,    operator_equal_int_float},
+    {AST_VALUE_INT,   AST_VALUE_STRING, operator_equal_not},
     {AST_VALUE_INT,   AST_VALUE_BOOL,   operator_equal_int_bool},
-    {AST_VALUE_BOOL,  AST_VALUE_INT,    operator_equal_int_bool},
+    {AST_VALUE_INT,   AST_VALUE_MATRIX, operator_equal_not},
+    {AST_VALUE_INT,   AST_VALUE_NULL,   operator_equal_not},
+    {AST_VALUE_FLOAT, AST_VALUE_INT,    operator_equal_int_float},
     {AST_VALUE_FLOAT, AST_VALUE_FLOAT,  operator_equal_float_float},
+    {AST_VALUE_FLOAT, AST_VALUE_STRING, operator_equal_not},
     {AST_VALUE_FLOAT, AST_VALUE_BOOL,   operator_equal_float_bool},
+    {AST_VALUE_FLOAT, AST_VALUE_MATRIX, operator_equal_not},
+    {AST_VALUE_FLOAT, AST_VALUE_NULL,   operator_equal_not},
+    {AST_VALUE_STRING,AST_VALUE_INT,    operator_equal_not},
+    {AST_VALUE_STRING,AST_VALUE_FLOAT,  operator_equal_not},
+    {AST_VALUE_STRING,AST_VALUE_STRING, operator_equal_string_string},
+    {AST_VALUE_STRING,AST_VALUE_BOOL,   operator_equal_not},
+    {AST_VALUE_STRING,AST_VALUE_MATRIX, operator_equal_not},
+    {AST_VALUE_STRING,AST_VALUE_NULL,   operator_equal_not},
+    {AST_VALUE_BOOL,  AST_VALUE_INT,    operator_equal_int_bool},
     {AST_VALUE_BOOL,  AST_VALUE_FLOAT,  operator_equal_float_bool},
+    {AST_VALUE_BOOL,  AST_VALUE_STRING, operator_equal_not},
     {AST_VALUE_BOOL,  AST_VALUE_BOOL,   operator_equal_bool_bool},
+    {AST_VALUE_BOOL,  AST_VALUE_MATRIX, operator_equal_not},
+    {AST_VALUE_BOOL,  AST_VALUE_NULL,   operator_equal_not},
+    {AST_VALUE_MATRIX,AST_VALUE_INT,    operator_equal_not},
+    {AST_VALUE_MATRIX,AST_VALUE_FLOAT,  operator_equal_not},
+    {AST_VALUE_MATRIX,AST_VALUE_STRING, operator_equal_not},
+    {AST_VALUE_MATRIX,AST_VALUE_BOOL,   operator_equal_not},
     {AST_VALUE_MATRIX,AST_VALUE_MATRIX, operator_equal_matrix_matrix},
+    {AST_VALUE_MATRIX,AST_VALUE_NULL,   operator_equal_not},
+    {AST_VALUE_NULL,  AST_VALUE_INT,    operator_equal_not},
+    {AST_VALUE_NULL,  AST_VALUE_FLOAT,  operator_equal_not},
+    {AST_VALUE_NULL,  AST_VALUE_STRING, operator_equal_not},
+    {AST_VALUE_NULL,  AST_VALUE_BOOL,   operator_equal_not},
+    {AST_VALUE_NULL,  AST_VALUE_MATRIX, operator_equal_not},
+    {AST_VALUE_NULL,  AST_VALUE_NULL,   operator_equal_null_null},
   };
 
   return visitor_operator(result, operand1, operand2, equal_op, sizeof(equal_op)/sizeof(struct operation_t));
@@ -1081,10 +1106,10 @@ AST_value_stack* operator_div_int_int(AST_value_stack* result,
     orora_error("에러, 0으로 나눌 수 없음", (void*) 0);
     return (void*) 0;
   }
-  result->type = AST_VALUE_INT;
-  result->value.int_v = malloc(sizeof(struct ast_int_t));
-  result->value.int_v->value =
-    operand1->value.int_v->value / operand2->value.int_v->value;
+  result->type = AST_VALUE_FLOAT;
+  result->value.float_v = malloc(sizeof(struct ast_float_t));
+  result->value.float_v->value =
+    (float) operand1->value.int_v->value / (float) operand2->value.int_v->value;
   return result;
 }
 
@@ -1554,6 +1579,16 @@ AST_value_stack* operator_power_string_int(AST_value_stack* result,
 }
 
 // Equal
+AST_value_stack* operator_equal_not(AST_value_stack* result,
+    AST_value_stack* operand1,
+    AST_value_stack* operand2)
+{
+  result->type = AST_VALUE_BOOL;
+  result->value.bool_v = malloc(sizeof(struct ast_bool_t));
+  result->value.bool_v->value = false;
+  return result;
+}
+
 AST_value_stack* operator_equal_null_null(AST_value_stack* result,
     AST_value_stack* operand1,
     AST_value_stack* operand2)

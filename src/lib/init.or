@@ -9,9 +9,9 @@ satisfy R :: R = "real number"
 
 
 % Macro
-\newenvironment{\pi}[0]{3.14159265}
-\newenvironment{\aa}[1]{#1}
-\newenvironment{\sum}[1]{
+\newcommand{\pi}[0]{3.14159265}
+\newcommand{\aa}[1]{#1}
+\newcommand{\sum}[1]{
   \begin{code}
     ...result := 0
     \begin{for}{...i}{#sub:#super}
@@ -21,7 +21,7 @@ satisfy R :: R = "real number"
     return ...result
   \end{code}
 }
-\newenvironment{\prod}[1]{
+\newcommand{\prod}[1]{
   \begin{code}
     ...result := 1
     \begin{for}{...i}{#sub:#super}
@@ -31,9 +31,10 @@ satisfy R :: R = "real number"
     return ...result
   \end{code}
 }
-\newenvironment{\mathbb}[1]{
+\newcommand{\mathbb}[1]{
   ...get.space(#1)
 }
+\newcommand{\frac}[2]{#1 / #2}
 
 
 % Functions
@@ -55,7 +56,7 @@ print.many(value) := \begin{code}
   "null"    & value = 6 \\
 \end{cases}
 
-type(value) := print(...type.to.string(...type(value)))
+type(value) := ...type.to.string(...type(value))
 
 random() := ...random()
 

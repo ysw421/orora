@@ -18,12 +18,14 @@ AST_value_stack* type_function(Envs* envs, AST_function* ast_function)
         is_value = true;
       }
       break;
+
     case AST_FUNCTION:
       if (ast_function_arg->value.function_v->ast_type == AST_FUNCTION_VALUE)
       {
         is_value = true;
       }
       break;
+
     case AST_VALUE:
     case AST_CODE:
     case AST_CASES:

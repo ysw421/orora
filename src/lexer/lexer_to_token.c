@@ -39,8 +39,8 @@ int get_special_string_type(int length, char* string)
 
   switch (length)
   {
-    case 15:
-      if (!strcmp(string, "\\newenvironment")) return TOKEN_NEWENVIRONMENT;
+    case 11:
+      if (!strcmp(string, "\\newcommand")) return TOKEN_NEWENVIRONMENT;
       break;
 
     case 10:
@@ -67,8 +67,6 @@ int get_special_string_type(int length, char* string)
     case 5:
       if (!strcmp(string, "\\cdot")) return TOKEN_CDOT;
       if (!strcmp(string, "\\left")) return TOKEN_LEFT;
-      if (!strcmp(string, "\\leqq")) return TOKEN_LESSEQUAL;
-      if (!strcmp(string, "\\geqq")) return TOKEN_GREATEREQUAL;
       if (!strcmp(string, "\\land")) return TOKEN_AND;
       if (!strcmp(string, "\\over")) return TOKEN_SLASH;
       break;
@@ -80,6 +78,8 @@ int get_special_string_type(int length, char* string)
       if (!strcmp(string, "\\lor")) return TOKEN_OR;
       if (!strcmp(string, "\\neg")) return TOKEN_NEG;
       if (!strcmp(string, "\\mod")) return TOKEN_MOD;
+      if (!strcmp(string, "\\leq")) return TOKEN_LESSEQUAL;
+      if (!strcmp(string, "\\geq")) return TOKEN_GREATEREQUAL;
       break;
 
     case 3:
