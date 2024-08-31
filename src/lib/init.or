@@ -10,7 +10,6 @@ satisfy R :: R = "real number"
 
 % Macro
 \newcommand{\pi}[0]{3.14159265}
-\newcommand{\aa}[1]{#1}
 \newcommand{\sum}[1]{
   \begin{code}
     ...result := 0

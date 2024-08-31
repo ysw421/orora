@@ -875,6 +875,12 @@ AST_value_stack* visitor_get_value_from_macro
     code_ast->value.compound_v->size = 1;
     code_ast->value.compound_v->items[0] = ast_macro->args[i];
 
+    if (ast_macro->args[i]->type == AST_VARIABLE && ast_macro->args[i]->value.variable_v->ast_type == AST_VARIABLE_DEFINE)
+    {
+      Env_variable* env_variable = visitor_variable_define(new_envs, ast_macro->args[i]->value.variable_v);
+
+    }
+
     AST_newenv* newenv = init_ast_newenv();
     newenv->name = name_ast;
     newenv->args_size = args_size_ast;
@@ -1926,112 +1932,160 @@ Envs* visitor_get_envs_from_function
   }
 
   Env_variable** args = malloc(sizeof(Env_variable*) * env_function->args_size);
+  Env_macro** macros = malloc(sizeof(Env_macro*) * env_function->args_size);
+  bool is_variable[env_function->args_size];
+
+  int args_cnt = 0;
+  int macros_cnt = 0;
 
   for (int i = 0; i < env_function->args_size; i ++)
   {
-    AST_variable* ast_variable =
-      env_function->args[i]->value.variable_v;
-    if (i < ast_function->args_size)
+    if (env_function->args[i]->type == AST_VARIABLE)
     {
-      AST* ast = ast_function->args[i];
-      Env_variable* env_variable =
-        init_env_variable(ast_variable->name,
-                          ast_variable->name_length);
-
-      if (ast->type == AST_VARIABLE)
+      is_variable[i] = true;
+      AST_variable* ast_variable =
+        env_function->args[i]->value.variable_v;
+      if (i < ast_function->args_size)
       {
-        switch (ast->value.variable_v->ast_type)
+        AST* ast = ast_function->args[i];
+        Env_variable* env_variable =
+          init_env_variable(ast_variable->name,
+                            ast_variable->name_length);
+
+        if (ast->type == AST_VARIABLE)
         {
-          case AST_VARIABLE_VALUE:
-            Env_variable* value_variable =
-              visitor_get_variable(new_envs,
-                  ast->value.variable_v);
-            if (!value_variable)
-            {
-              visitor_nondefine_variable_error(
-                  ast->value.variable_v);
-            }
+          switch (ast->value.variable_v->ast_type)
+          {
+            case AST_VARIABLE_VALUE:
+              Env_variable* value_variable =
+                visitor_get_variable(new_envs,
+                    ast->value.variable_v);
+              if (!value_variable)
+              {
+                visitor_nondefine_variable_error(
+                    ast->value.variable_v);
+              }
 
-            env_variable->type = value_variable->type;
-            env_variable->value = value_variable->value;
-            break;
-            
-          case AST_VARIABLE_DEFINE:
-            value_variable =
-              visitor_variable_define(new_envs,
-                  ast->value.variable_v);
-            env_variable->type = value_variable->type;
-            env_variable->value = value_variable->value;
-            break;
+              env_variable->type = value_variable->type;
+              env_variable->value = value_variable->value;
+              break;
+              
+            case AST_VARIABLE_DEFINE:
+              value_variable =
+                visitor_variable_define(new_envs,
+                    ast->value.variable_v);
+              env_variable->type = value_variable->type;
+              env_variable->value = value_variable->value;
+              break;
 
-          default:
-            orora_error("에러, 해당 에러는 발생 불가함", (void*) 0);
-//             printf("에러, 해당 에러는 발생 불가함\n");
-//             exit(1);
+            default:
+              orora_error("에러, 해당 에러는 발생 불가함", (void*) 0);
+  //             printf("에러, 해당 에러는 발생 불가함\n");
+  //             exit(1);
+          }
         }
+        else
+        {
+          AST_value_stack* new_value = 
+            visitor_get_value_from_ast(new_envs, ast);
+          orora_value_type* variable_type =
+            get_single_value_type(new_value->type);
+          env_variable =
+            variable_type
+              ->visitor_set_value_Env_variable_from_AST_value_stack(
+                  env_variable,
+                  new_value
+                );
+        }
+
+  //       Envs* global_envs = new_envs->global;
+  //       Env_variable* global_variable =
+  //         visitor_get_variable(global_envs, ast_variable);
+  //       if (global_variable)
+  //       {
+  //         global_variable->type = env_variable->type;
+  //         global_variable->value = env_variable->value;
+  //       }
+  //       else
+  //       {
+  //         global_variable = get_deep_copy_env_variable(env_variable);
+  //         global_variable->next = global_envs->local->variables;
+  //         global_envs->local->variable_size ++;
+  //         global_envs->local->variables = global_variable;
+  //       }
+
+  //       Env* local_env = new_envs->local;
+  //       env_variable->next = local_env->variables;
+  //       local_env->variable_size ++;
+  //       local_env->variables = env_variable;
+        args[args_cnt] = env_variable;
+        args_cnt ++;
       }
       else
       {
-        AST_value_stack* new_value = 
-          visitor_get_value_from_ast(new_envs, ast);
-        orora_value_type* variable_type =
-          get_single_value_type(new_value->type);
-        env_variable =
-          variable_type
-            ->visitor_set_value_Env_variable_from_AST_value_stack(
-                env_variable,
-                new_value
-              );
+        if (env_function->args[i]
+            ->value.variable_v->ast_type == AST_VARIABLE_DEFINE)
+        {
+          Env_variable* env_variable =
+            init_env_variable(ast_variable->name,
+                            ast_variable->name_length);
+          
+          env_variable = visitor_variable_define(new_envs, env_function->args[i]->value.variable_v);
+          args[args_cnt] = env_variable;
+          args_cnt ++;
+        }
+        else
+        {
+          orora_error("에러, 함수의 매개변수 개수가 다름", (void*) 0);
+  //         printf("에러, 함수의 매개변수 개수가 다름\n");
+  //         exit(1);
+        }
       }
+    }
+    else if (env_function->args[i]->type == AST_VALUE
+             && env_function->args[i]->value.value_v->stack->type == AST_VALUE_MACRO)
+    {
+      is_variable[i] = false;
+      AST_macro* ast_macro = env_function->args[i]->value.value_v->stack->value.macro_v;
+      if (i < ast_function->args_size)
+      {
+        AST* ast = ast_function->args[i];
 
-//       Envs* global_envs = new_envs->global;
-//       Env_variable* global_variable =
-//         visitor_get_variable(global_envs, ast_variable);
-//       if (global_variable)
-//       {
-//         global_variable->type = env_variable->type;
-//         global_variable->value = env_variable->value;
-//       }
-//       else
-//       {
-//         global_variable = get_deep_copy_env_variable(env_variable);
-//         global_variable->next = global_envs->local->variables;
-//         global_envs->local->variable_size ++;
-//         global_envs->local->variables = global_variable;
-//       }
-
-//       Env* local_env = new_envs->local;
-//       env_variable->next = local_env->variables;
-//       local_env->variable_size ++;
-//       local_env->variables = env_variable;
-      args[i] = env_variable;
+        Env_macro* env_macro =
+          init_env_macro(ast_macro->name, 0, ast);
+        
+        macros[macros_cnt] = env_macro;
+        macros_cnt ++;
+      }
+      else
+      {
+        orora_error("에러, macro는 기본 값 설정이 불가함", (void*) 0);
+      }
     }
     else
     {
-      if (env_function->args[i]
-          ->value.variable_v->ast_type == AST_VARIABLE_DEFINE)
-      {
-        Env_variable* env_variable =
-          init_env_variable(ast_variable->name,
-                          ast_variable->name_length);
-        
-        env_variable = visitor_variable_define(new_envs, env_function->args[i]->value.variable_v);
-        args[i] = env_variable;
-      }
-      else
-      {
-        orora_error("에러, 함수의 매개변수 개수가 다름", (void*) 0);
-//         printf("에러, 함수의 매개변수 개수가 다름\n");
-//         exit(1);
-      }
+      orora_error("에러, 함수의 매개변수는 변수 또는 매크로만 가능함..", (void*) 0);
     }
   }
   Env* local_env = new_envs->local;
+  int variable_cnt = 0;
+  int macro_cnt = 0;
   for (int i = 0; i < env_function->args_size; i ++)
   {
-    args[i]->next = local_env->variables;
-    local_env->variable_size ++;
-    local_env->variables = args[i];
+    if (is_variable[i])
+    {
+      args[variable_cnt]->next = local_env->variables;
+      local_env->variable_size ++;
+      local_env->variables = args[variable_cnt];
+      variable_cnt ++;
+    }
+    else
+    {
+      macros[macro_cnt]->next = local_env->macros;
+      local_env->macro_size ++;
+      local_env->macros = macros[macro_cnt];
+      macro_cnt ++;
+    }
   }
 
   return new_envs;

@@ -141,6 +141,22 @@ AST* parser_parse_function(Parser* parser, AST* ast, Token* last_token,
                 check_arg_num * sizeof(char*));
           s_arg_variaable_name[check_arg_num - 1] = variable_name;
         }
+        else if (fa->args[i]->type == AST_VALUE
+            && fa->args[i]->value.value_v->stack->type == AST_VALUE_MACRO)
+        {
+          char* macro_name =
+            fa->args[i]->value.value_v->stack->value.macro_v->name;
+          for (int j = 0; j < check_arg_num; j ++)
+          {
+            if (!strcmp(s_arg_variaable_name[j], macro_name))
+            {
+              const char* error_message = "에러, 함수 ";
+              error_message = const_strcat(error_message, fa->name);
+              error_message = const_strcat(error_message, "의 argument 이름이 중복됨");
+              orora_error(error_message, parser);
+            }
+          }          
+        }
         else
         {
           const char* error_message = "에러, 함수 ";

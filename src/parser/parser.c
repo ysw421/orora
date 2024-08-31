@@ -563,6 +563,76 @@ AST* parser_get_compound(Parser* parser, GET_COMPOUND_ENV* compound_env)
             );
         token = parser->token;
       }
+      else if (value_node->value.value_v->size == 1
+        && value_node->value.value_v->stack->type == AST_VALUE_MACRO
+        && value_node->value.value_v->stack->value.macro_v->args_size == 0
+        && parser
+        && parser->prev_token
+        && parser->token
+        && parser->token->type == TOKEN_DEFINE
+        && parser->prev_token->col == parser->token->col_first)
+      {
+        parser = parser_advance(parser, TOKEN_DEFINE);
+        token = parser->token;
+
+        if (!token)
+        {
+          orora_error("에러, ':=' 사용에 목적이 없음.", parser);
+        }
+
+        if (parser->prev_token->col != token->col_first)
+        {
+          orora_error("에러, ':=' 뒤에는 값이 와야함.", parser);
+        }
+
+        AST* macro_value_node =
+          parser_get_value(
+              &parser, 
+              ast, 
+              token, 
+              init_get_value_env(), 
+              compound_env
+            );
+        token = parser->prev_token;
+
+        if (!macro_value_node)
+        {
+          orora_error("에러, ':=' 뒤에는 값이 와야함...", parser);
+        }
+
+        AST* args_ast = init_ast(AST_COMPOUND, ast, token);
+        args_ast->value.compound_v = init_ast_compound();
+        args_ast->value.compound_v->size = 1;
+        args_ast->value.compound_v->items = malloc(sizeof(AST*));
+        args_ast->value.compound_v->items[0] = init_ast(AST_VALUE, ast, token);
+        args_ast->value.compound_v->items[0]->value.value_v = init_ast_value();
+        args_ast->value.compound_v->items[0]->value.value_v->size = 1;
+        args_ast->value.compound_v->items[0]->value.value_v->stack = init_ast_value_stack(AST_VALUE_INT, token);
+        args_ast->value.compound_v->items[0]->value.value_v->stack->value.int_v = malloc(sizeof(struct ast_int_t));
+        args_ast->value.compound_v->items[0]->value.value_v->stack->value.int_v->value = 0;
+
+        AST* code_ast = init_ast(AST_COMPOUND, ast, token);
+        code_ast->value.compound_v = init_ast_compound();
+        code_ast->value.compound_v->size = 1;
+        code_ast->value.compound_v->items = malloc(sizeof(AST*));
+        code_ast->value.compound_v->items[0] = macro_value_node;
+
+        AST* name_ast = init_ast(AST_COMPOUND, ast, token);
+        name_ast->value.compound_v = init_ast_compound();
+        name_ast->value.compound_v->size = 1;
+        name_ast->value.compound_v->items = malloc(sizeof(AST*));
+        name_ast->value.compound_v->items[0] = value_node;
+
+        AST* new_ast_node =
+          init_ast(AST_NEWENV, ast, token);
+        new_ast_node->value.newenv_v = init_ast_newenv();
+        new_ast_node->value.newenv_v->name = name_ast;
+        new_ast_node->value.newenv_v->args_size = args_ast;
+        new_ast_node->value.newenv_v->code = code_ast;
+
+        ast_compound_add(ast->value.compound_v, new_ast_node);
+        token = parser->token;
+      }
       else
       {
         free(stoken);
